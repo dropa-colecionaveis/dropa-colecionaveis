@@ -131,7 +131,7 @@ export const authOptions: NextAuthOptions = {
         if (dbUser) {
           token.id = dbUser.id
           token.email = dbUser.email
-          token.name = dbUser.name
+          token.name = dbUser.name || dbUser.email || 'User'
         }
       }
       return token
