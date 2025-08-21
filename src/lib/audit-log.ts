@@ -308,7 +308,7 @@ export async function getAuditStats(days: number = 30): Promise<{
       WHERE createdAt >= ${startDate}
       GROUP BY DATE(createdAt)
       ORDER BY date ASC
-    ` as Array<{ date: string; count: number }>
+    `.then(result => result as Array<{ date: string; count: number }>)
   ])
 
   return {
