@@ -6,6 +6,14 @@ import { achievementEngine } from '@/lib/achievements'
 
 export async function GET(req: Request) {
   try {
+    // Skip during build time
+    if (process.env.NODE_ENV === 'test' || !process.env.DATABASE_URL) {
+      return NextResponse.json({
+        achievements: [],
+        categories: ['COLLECTOR', 'EXPLORER', 'TRADER', 'MILESTONE', 'SPECIAL']
+      })
+    }
+
     const session = await getServerSession(authOptions)
     const { searchParams } = new URL(req.url)
     const category = searchParams.get('category')
@@ -99,6 +107,11 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    // Skip during build time
+    if (process.env.NODE_ENV === 'test' || !process.env.DATABASE_URL) {
+      return NextResponse.json({ error: 'Not available during build' }, { status: 503 })
+    }
+
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.id) {
