@@ -166,7 +166,7 @@ export async function POST(req: Request) {
 
         openedItems.push({
           ...selectedItem,
-          limitedEdition: limitedEditionInfo
+          limitedEdition: limitedEditionInfo || undefined
         })
       }
 

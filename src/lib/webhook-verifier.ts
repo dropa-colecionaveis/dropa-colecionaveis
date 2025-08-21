@@ -325,11 +325,13 @@ class WebhookVerifier {
     const parts = ip.split('.')
     if (parts.length !== 4) return null
     
-    return parts.reduce((acc, part) => {
+    let result = 0
+    for (const part of parts) {
       const num = parseInt(part)
       if (isNaN(num) || num < 0 || num > 255) return null
-      return (acc << 8) + num
-    }, 0)
+      result = (result << 8) + num
+    }
+    return result
   }
 
   // Generate webhook URL for configuration

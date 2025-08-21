@@ -31,7 +31,7 @@ export interface SecurityEvent {
   method?: string
   description: string
   metadata?: Record<string, any>
-  timestamp: Date
+  timestamp?: Date
 }
 
 export interface SecurityLogEntry {

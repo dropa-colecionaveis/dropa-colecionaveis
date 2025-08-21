@@ -19,7 +19,7 @@ export async function PUT(req: Request, { params }: { params: { packId: string }
     const packId = params.packId
 
     // Validate that probabilities add up to 100
-    const total = Object.values(probabilities).reduce((sum, val) => sum + (parseFloat(val as string) || 0), 0)
+    const total = Object.values(probabilities).reduce((sum: number, val) => sum + (parseFloat(val as string) || 0), 0)
     if (Math.abs(total - 100) > 0.01) {
       return NextResponse.json(
         { error: 'Probabilities must add up to 100%' },

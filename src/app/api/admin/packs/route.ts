@@ -78,7 +78,7 @@ export async function POST(req: Request) {
         isActive: true,
         probabilities: {
           create: Object.entries(probabilities).map(([rarity, percentage]) => ({
-            rarity,
+            rarity: rarity as any,
             percentage: parseFloat(percentage as string)
           }))
         }

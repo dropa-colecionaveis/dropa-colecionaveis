@@ -97,7 +97,7 @@ export default function AdminPacks() {
     if (!editingPack) return
 
     // Validate that probabilities add up to 100
-    const total = Object.values(probabilities).reduce((sum, val) => sum + (parseFloat(val) || 0), 0)
+    const total = Object.values(probabilities).reduce((sum: number, val) => sum + (parseFloat(val) || 0), 0)
     if (Math.abs(total - 100) > 0.01) {
       alert('❌ As probabilidades devem somar exatamente 100%!')
       return
@@ -158,7 +158,7 @@ export default function AdminPacks() {
   }
 
   const getTotalPercentage = () => {
-    return Object.values(probabilities).reduce((sum, val) => sum + (parseFloat(val) || 0), 0)
+    return Object.values(probabilities).reduce((sum: number, val) => sum + (parseFloat(val) || 0), 0)
   }
 
   const getPackTypeEmoji = (type: string) => {
@@ -208,7 +208,7 @@ export default function AdminPacks() {
     }
 
     // Validate probabilities sum to 100
-    const total = Object.values(probabilities).reduce((sum, val) => sum + (parseFloat(val) || 0), 0)
+    const total = Object.values(probabilities).reduce((sum: number, val) => sum + (parseFloat(val) || 0), 0)
     if (Math.abs(total - 100) > 0.01) {
       alert('❌ As probabilidades devem somar exatamente 100%!')
       return
