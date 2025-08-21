@@ -126,7 +126,7 @@ class SecurityLogger {
           userAgent: event.userAgent,
           endpoint: event.endpoint,
           method: event.method,
-          timestamp: event.timestamp.toISOString(),
+          timestamp: event.timestamp?.toISOString() || new Date().toISOString(),
           ...event.metadata
         },
         ipAddress: event.ipAddress,
