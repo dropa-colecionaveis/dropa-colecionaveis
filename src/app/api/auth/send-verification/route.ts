@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     const userAgent = req.headers.get('user-agent')
 
     // Create verification token
-    const result = await emailVerificationService.createVerificationToken(
+    const result = await emailVerificationService.generateEmailVerificationToken(
       session.user.id,
       ip || undefined,
       userAgent || undefined
