@@ -662,8 +662,8 @@ export async function POST(req: NextRequest) {
     await securityLogger.log({
       type: 'API_ERROR',
       severity: 'HIGH',
-      userId: session?.user?.id,
-      userEmail: session?.user?.email,
+      userId: undefined,
+      userEmail: undefined,
       ipAddress,
       userAgent,
       endpoint: '/api/payments/mercadopago/card',
