@@ -21,7 +21,7 @@ export async function GET(req: Request) {
 
     const stats = await autoSellService.getAutoSellStats(session.user.id, days)
 
-    let history = []
+    let history: any[] = []
     if (includeHistory) {
       const startDate = new Date()
       startDate.setDate(startDate.getDate() - days)

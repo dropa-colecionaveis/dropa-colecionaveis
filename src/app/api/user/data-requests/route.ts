@@ -17,7 +17,7 @@ export async function GET(req: Request) {
 
     // For now, return empty array since we don't have DataRequest model yet
     // In production, you'd query the actual data requests from database
-    const requests = []
+    const requests: any[] = []
 
     return NextResponse.json({
       success: true,
