@@ -9,7 +9,7 @@ import { Rarity, TransactionType } from '@prisma/client'
 interface OpenedItem {
   id: string
   name: string
-  description: string
+  description: string | null
   rarity: Rarity
   value: number
   imageUrl: string
