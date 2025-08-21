@@ -235,7 +235,7 @@ async function processPaymentUpdate(
           failedAt: mappedStatus === 'REJECTED' ? new Date() : payment.failedAt,
           failureReason: mappedStatus === 'REJECTED' ? `Rejected by payment processor` : payment.failureReason,
           webhookData: {
-            ...payment.webhookData,
+            ...(payment.webhookData || {}),
             lastWebhook: {
               status,
               receivedAt: new Date().toISOString(),
