@@ -1,0 +1,517 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "windows", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String                   @id @default(cuid())
+  email                String                   @unique
+  name                 String?
+  password             String
+  credits              Int                      @default(0)
+  hasReceivedFreePack  Boolean                  @default(false)
+  role                 UserRole                 @default(USER)
+  isActive             Boolean                  @default(true)
+  emailVerified        Boolean                  @default(false)
+  emailVerifiedAt      DateTime?
+  lastLoginAt          DateTime?
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
+  provider             String?
+  providerAccountId    String?
+  emailVerificationTokens EmailVerificationToken[]
+  adminLogs            AdminLog[]
+  autoSellConfig       AutoSellConfig?
+  autoSellLogs         AutoSellLog[]
+  freePackGrants       FreePackGrant[]
+  marketplaceListings  MarketplaceListing[]
+  marketplaceSales     MarketplaceTransaction[] @relation("Seller")
+  marketplacePurchases MarketplaceTransaction[] @relation("Buyer")
+  packOpenings         PackOpening[]
+  rankings             Ranking[]
+  transactions         Transaction[]
+  userAchievements     UserAchievement[]
+  userCollections      UserCollection[]
+  userItemProtections  UserItemProtection[]
+  userItems            UserItem[]
+  userStats            UserStats?
+  payments             Payment[]
+
+  @@map("users")
+}
+
+model Item {
+  id               String           @id @default(cuid())
+  name             String
+  description      String?
+  imageUrl         String
+  rarity           Rarity
+  value            Int
+  isActive         Boolean          @default(true)
+  collectionId     String?
+  itemNumber       Int?
+  isLimitedEdition Boolean          @default(false)
+  maxEditions      Int?
+  currentEditions  Int              @default(0)
+  createdAt        DateTime         @default(now())
+  collection       Collection?      @relation(fields: [collectionId], references: [id])
+  limitedEditions  LimitedEdition[]
+  userItems        UserItem[]
+
+  @@map("items")
+}
+
+model Pack {
+  id             String            @id @default(cuid())
+  type           PackType
+  name           String
+  description    String?
+  price          Int
+  isActive       Boolean           @default(true)
+  createdAt      DateTime          @default(now())
+  freePackGrants FreePackGrant[]
+  packOpenings   PackOpening[]
+  probabilities  PackProbability[]
+
+  @@map("packs")
+}
+
+model PackProbability {
+  id         String @id @default(cuid())
+  packId     String
+  rarity     Rarity
+  percentage Float
+  pack       Pack   @relation(fields: [packId], references: [id], onDelete: Cascade)
+
+  @@unique([packId, rarity])
+  @@map("pack_probabilities")
+}
+
+model PackOpening {
+  id        String   @id @default(cuid())
+  userId    String
+  packId    String
+  itemId    String
+  createdAt DateTime @default(now())
+  pack      Pack     @relation(fields: [packId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("pack_openings")
+}
+
+model FreePackGrant {
+  id        String    @id @default(cuid())
+  userId    String
+  packId    String
+  grantedAt DateTime  @default(now())
+  claimed   Boolean   @default(false)
+  claimedAt DateTime?
+  pack      Pack      @relation(fields: [packId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("free_pack_grants")
+}
+
+model UserItem {
+  id                  String               @id @default(cuid())
+  userId              String
+  itemId              String
+  obtainedAt          DateTime             @default(now())
+  limitedEditionId    String?
+  marketplaceListings MarketplaceListing[]
+  protection          UserItemProtection?
+  limitedEdition      LimitedEdition?      @relation(fields: [limitedEditionId], references: [id])
+  item                Item                 @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_items")
+}
+
+model Transaction {
+  id                       String          @id @default(cuid())
+  userId                   String
+  type                     TransactionType
+  amount                   Int
+  description              String?
+  createdAt                DateTime        @default(now())
+  marketplaceTransactionId String?
+  user                     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("transactions")
+}
+
+model Collection {
+  id              String           @id @default(cuid())
+  name            String           @unique
+  description     String?
+  themeId         String?
+  customTheme     String?
+  imageUrl        String?
+  maxItems        Int
+  isActive        Boolean          @default(true)
+  isLimited       Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+  theme           Theme?           @relation(fields: [themeId], references: [id])
+  items           Item[]
+  userCollections UserCollection[]
+
+  @@map("collections")
+}
+
+model Theme {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  displayName String
+  description String?
+  emoji       String       @default("📚")
+  colorClass  String       @default("from-gray-500/20 to-slate-500/20")
+  borderClass String       @default("border-gray-500/30")
+  isActive    Boolean      @default(true)
+  isSystem    Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  collections Collection[]
+
+  @@map("themes")
+}
+
+model UserCollection {
+  id           String     @id @default(cuid())
+  userId       String
+  collectionId String
+  itemsOwned   Int        @default(0)
+  completedAt  DateTime?
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, collectionId])
+  @@map("user_collections")
+}
+
+model LimitedEdition {
+  id           String     @id @default(cuid())
+  itemId       String
+  serialNumber Int
+  mintedAt     DateTime   @default(now())
+  item         Item       @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  userItems    UserItem[]
+
+  @@unique([itemId, serialNumber])
+  @@map("limited_editions")
+}
+
+model MarketplaceListing {
+  id           String                   @id @default(cuid())
+  userItemId   String
+  sellerId     String
+  price        Int
+  description  String?
+  status       ListingStatus            @default(ACTIVE)
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @updatedAt
+  seller       User                     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  userItem     UserItem                 @relation(fields: [userItemId], references: [id], onDelete: Cascade)
+  transactions MarketplaceTransaction[]
+
+  @@map("marketplace_listings")
+}
+
+model MarketplaceTransaction {
+  id             String             @id @default(cuid())
+  listingId      String
+  buyerId        String
+  sellerId       String
+  amount         Int
+  marketplaceFee Int
+  status         TransactionStatus  @default(PENDING)
+  createdAt      DateTime           @default(now())
+  completedAt    DateTime?
+  seller         User               @relation("Seller", fields: [sellerId], references: [id], onDelete: Cascade)
+  buyer          User               @relation("Buyer", fields: [buyerId], references: [id], onDelete: Cascade)
+  listing        MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@map("marketplace_transactions")
+}
+
+model Achievement {
+  id               String              @id @default(cuid())
+  name             String              @unique
+  description      String
+  icon             String
+  category         AchievementCategory
+  type             AchievementType
+  condition        Json
+  points           Int
+  isSecret         Boolean             @default(false)
+  isActive         Boolean             @default(true)
+  createdAt        DateTime            @default(now())
+  userAchievements UserAchievement[]
+
+  @@map("achievements")
+}
+
+model UserAchievement {
+  id            String      @id @default(cuid())
+  userId        String
+  achievementId String
+  unlockedAt    DateTime    @default(now())
+  progress      Int         @default(0)
+  isCompleted   Boolean     @default(false)
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@map("user_achievements")
+}
+
+model UserStats {
+  id                   String    @id @default(cuid())
+  userId               String    @unique
+  totalXP              Int       @default(0)
+  level                Int       @default(1)
+  totalPacksOpened     Int       @default(0)
+  totalCreditsSpent    Int       @default(0)
+  totalItemsCollected  Int       @default(0)
+  collectionsCompleted Int       @default(0)
+  marketplaceSales     Int       @default(0)
+  marketplacePurchases Int       @default(0)
+  rareItemsFound       Int       @default(0)
+  epicItemsFound       Int       @default(0)
+  legendaryItemsFound  Int       @default(0)
+  currentStreak        Int       @default(0)
+  longestStreak        Int       @default(0)
+  lastActivityAt       DateTime?
+  updatedAt            DateTime  @updatedAt
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_stats")
+}
+
+model Ranking {
+  id        String          @id @default(cuid())
+  userId    String
+  category  RankingCategory
+  position  Int
+  value     Int
+  seasonId  String?
+  updatedAt DateTime        @updatedAt
+  season    Season?         @relation(fields: [seasonId], references: [id])
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, category, seasonId])
+  @@index([category, seasonId, position])
+  @@map("rankings")
+}
+
+model Season {
+  id        String    @id @default(cuid())
+  name      String
+  startDate DateTime
+  endDate   DateTime
+  isActive  Boolean   @default(true)
+  rewards   Json
+  createdAt DateTime  @default(now())
+  rankings  Ranking[]
+
+  @@map("seasons")
+}
+
+model AutoSellConfig {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  sellCommon    Boolean  @default(true)
+  sellUncommon  Boolean  @default(true)
+  sellRare      Boolean  @default(false)
+  sellEpic      Boolean  @default(false)
+  sellLegendary Boolean  @default(false)
+  keepQuantity  Int      @default(1)
+  sellLimitedEd Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("auto_sell_configs")
+}
+
+model AutoSellLog {
+  id         String   @id @default(cuid())
+  userId     String
+  userItemId String
+  itemName   String
+  price      Int
+  configUsed Json
+  status     String
+  reason     String?
+  listingId  String?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([status])
+  @@map("auto_sell_logs")
+}
+
+model UserItemProtection {
+  id         String   @id @default(cuid())
+  userId     String
+  userItemId String   @unique
+  protected  Boolean  @default(true)
+  reason     String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  userItem   UserItem @relation(fields: [userItemId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("user_item_protections")
+}
+
+model AdminLog {
+  id          String   @id @default(cuid())
+  userId      String
+  action      String
+  description String
+  metadata    Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([action])
+  @@map("admin_logs")
+}
+
+model Payment {
+  id                   String        @id @default(cuid())
+  userId               String
+  externalId           String?       // Mercado Pago payment ID
+  status               PaymentStatus @default(PENDING)
+  method               PaymentMethod
+  amount               Float         // Amount in BRL
+  credits              Int           // Credits to be granted
+  packageId            Int?          // Reference to credit package
+  mercadoPagoData      Json?         // Store MP response data
+  pixQrCode            String?       // PIX QR code data
+  pixQrCodeBase64      String?       // PIX QR code as base64
+  pixCopyPaste         String?       // PIX copy-paste code
+  expiresAt            DateTime?     // Payment expiration
+  approvedAt           DateTime?     // When payment was approved
+  failedAt             DateTime?     // When payment failed
+  failureReason        String?       // Failure reason
+  webhookData          Json?         // Webhook notification data
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  user                 User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([externalId])
+  @@map("payments")
+}
+
+enum Rarity {
+  COMUM
+  INCOMUM
+  RARO
+  EPICO
+  LENDARIO
+}
+
+enum PackType {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+  DIAMOND
+}
+
+enum ListingStatus {
+  ACTIVE
+  SOLD
+  CANCELLED
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum TransactionType {
+  PURCHASE_CREDITS
+  PACK_PURCHASE
+  MARKETPLACE_SALE
+  MARKETPLACE_PURCHASE
+  MARKETPLACE_FEE
+  ADMIN_CREDIT_GRANT
+}
+
+enum AchievementCategory {
+  COLLECTOR
+  TRADER
+  EXPLORER
+  SOCIAL
+  SPECIAL
+  MILESTONE
+}
+
+enum AchievementType {
+  PROGRESS
+  MILESTONE
+  COLLECTION
+  STREAK
+  RARE
+}
+
+enum RankingCategory {
+  TOTAL_XP
+  PACK_OPENER
+  COLLECTOR
+  TRADER
+  WEEKLY_ACTIVE
+  MONTHLY_ACTIVE
+}
+
+enum UserRole {
+  USER
+  MODERATOR
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  EXPIRED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  PIX
+  CREDIT_CARD
+  DEBIT_CARD
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("email_verification_tokens")
+}
