@@ -450,7 +450,8 @@ export async function POST(req: NextRequest) {
         response = await createPaymentPureREST(ultraMinimalTokenData)
         console.log('🎉 REAL PAYMENT SUCCEEDED!')
       } catch (pureRestError) {
-        console.log('❌ Real payment failed:', pureRestError.message)
+        const errorMessage = pureRestError instanceof Error ? pureRestError.message : String(pureRestError)
+        console.log('❌ Real payment failed:', errorMessage)
         
         // For production, you'd want to throw the error
         // For development, let's provide helpful error
