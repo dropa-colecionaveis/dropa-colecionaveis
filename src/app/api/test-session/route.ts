@@ -15,7 +15,7 @@ export async function GET(req: Request) {
   } catch (error) {
     console.error('Session test error:', error)
     return NextResponse.json({
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
       session: null,
       hasSession: false
     })
