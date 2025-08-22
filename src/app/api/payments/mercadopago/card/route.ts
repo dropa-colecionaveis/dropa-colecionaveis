@@ -663,21 +663,21 @@ export async function POST(req: NextRequest) {
     try {
       const { securityLogger } = await import('@/lib/security-logger')
       await securityLogger.log({
-      type: 'API_ERROR',
-      severity: 'HIGH',
-      userId: undefined,
-      userEmail: undefined,
-      ipAddress,
-      userAgent,
-      endpoint: '/api/payments/mercadopago/card',
-      method: 'POST',
-      description: `Payment API error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      metadata: {
-        errorType: error instanceof Error ? error.constructor.name : 'Unknown',
-        processingTime: Date.now() - startTime,
-        stack: error instanceof Error ? error.stack : undefined
-      }
-    })
+        type: 'API_ERROR',
+        severity: 'HIGH',
+        userId: undefined,
+        userEmail: undefined,
+        ipAddress,
+        userAgent,
+        endpoint: '/api/payments/mercadopago/card',
+        method: 'POST',
+        description: `Payment API error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        metadata: {
+          errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+          processingTime: Date.now() - startTime,
+          stack: error instanceof Error ? error.stack : undefined
+        }
+      })
     } catch (logError) {
       console.error('Failed to log security error:', logError)
     }

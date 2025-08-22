@@ -311,18 +311,23 @@ async function processPaymentUpdate(
   } catch (error) {
     console.error(`❌ Error processing payment update for ${paymentId}:`, error)
 
-    await securityLogger.log({
-      type: 'API_ERROR',
-      severity: 'HIGH',
-      ipAddress,
-      description: `Failed to process payment update: ${paymentId}`,
-      metadata: {
-        paymentId,
-        status,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        webhookData
-      }
-    })
+    try {
+      const { securityLogger } = await import('@/lib/security-logger')
+      await securityLogger.log({
+        type: 'API_ERROR',
+        severity: 'HIGH',
+        ipAddress,
+        description: `Failed to process payment update: ${paymentId}`,
+        metadata: {
+          paymentId,
+          status,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          webhookData
+        }
+      })
+    } catch (logError) {
+      console.error('Failed to log payment update error:', logError)
+    }
 
     throw error
   }
@@ -337,11 +342,22 @@ export async function GET(req: NextRequest) {
     return new Response(challenge, { status: 200 })
   }
 
-  return NextResponse.json({
-    service: 'Mercado Pago Webhook Endpoint',
-    status: 'active',
-    timestamp: new Date().toISOString(),
-    webhookURL: webhookVerifier.generateWebhookURL(),
-    setupInstructions: webhookVerifier.getWebhookSetupInstructions()
-  })
+  try {
+    const { webhookVerifier } = await import('@/lib/webhook-verifier')
+    return NextResponse.json({
+      service: 'Mercado Pago Webhook Endpoint',
+      status: 'active',
+      timestamp: new Date().toISOString(),
+      webhookURL: webhookVerifier.generateWebhookURL(),
+      setupInstructions: webhookVerifier.getWebhookSetupInstructions()
+    })
+  } catch (error) {
+    console.error('Error loading webhook verifier:', error)
+    return NextResponse.json({
+      service: 'Mercado Pago Webhook Endpoint',
+      status: 'active',
+      timestamp: new Date().toISOString(),
+      error: 'Could not load webhook configuration'
+    })
+  }
 }
