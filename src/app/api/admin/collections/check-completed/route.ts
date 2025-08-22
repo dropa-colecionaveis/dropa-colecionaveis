@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { userStatsService } from '@/lib/user-stats'
-import { prisma } from '@/lib/prisma'
 
 export async function POST(req: Request) {
   try {
+    const { authOptions } = await import('@/lib/auth')
+    const { userStatsService } = await import('@/lib/user-stats')
+    const { prisma } = await import('@/lib/prisma')
+    
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.id) {
@@ -64,6 +65,9 @@ export async function POST(req: Request) {
 // GET para listar status de coleções do usuário
 export async function GET(req: Request) {
   try {
+    const { authOptions } = await import('@/lib/auth')
+    const { prisma } = await import('@/lib/prisma')
+    
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.id) {
