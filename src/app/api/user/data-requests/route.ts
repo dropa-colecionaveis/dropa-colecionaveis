@@ -105,6 +105,8 @@ export async function POST(req: Request) {
 
 async function handleDataExport(user: any, reason: string) {
   try {
+    const { prisma } = await import('@/lib/prisma')
+    
     // Get user's complete data
     const userData = await prisma.user.findUnique({
       where: { id: user.id },
