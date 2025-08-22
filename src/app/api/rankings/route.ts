@@ -62,6 +62,8 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    const { rankingService } = await import('@/lib/rankings')
+    
     // Endpoint para atualizar rankings manualmente (admin)
     const { action, category, seasonId } = await req.json()
 
