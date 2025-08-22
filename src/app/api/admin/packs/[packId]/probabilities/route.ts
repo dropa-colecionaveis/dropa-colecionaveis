@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
 import { Rarity } from '@prisma/client'
 
 export async function PUT(req: Request, { params }: { params: { packId: string } }) {
   try {
+    const { authOptions } = await import('@/lib/auth')
+    const { prisma } = await import('@/lib/prisma')
+    
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.email || session.user.email !== 'admin@admin.com') {

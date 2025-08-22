@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server'
 import { userStatsService } from '@/lib/user-stats'
 import { rankingService } from '@/lib/rankings'
-import { prisma } from '@/lib/prisma'
 
 export async function GET(
   req: Request,
   { params }: { params: { userId: string } }
 ) {
   try {
+    const { prisma } = await import('@/lib/prisma')
+    
     const userId = params.userId
     
     // Verificar se usuário existe

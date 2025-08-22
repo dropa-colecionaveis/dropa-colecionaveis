@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { rankingService } from '@/lib/rankings'
 import { RankingCategory } from '@prisma/client'
 
@@ -68,6 +67,7 @@ export async function GET(
 
     // Se usuário está logado, incluir sua posição
     let userPosition = null
+    const { authOptions } = await import('@/lib/auth')
     const session = await getServerSession(authOptions)
     
     if (session?.user?.id) {

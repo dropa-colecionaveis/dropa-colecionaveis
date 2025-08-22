@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
 import { ListingStatus, TransactionStatus, TransactionType } from '@prisma/client'
 import { antiFraudService } from '@/lib/anti-fraud'
 import { marketplaceRulesEngine } from '@/lib/marketplace-rules'
@@ -12,6 +10,9 @@ export async function POST(
   { params }: { params: { listingId: string } }
 ) {
   try {
+    const { authOptions } = await import('@/lib/auth')
+    const { prisma } = await import('@/lib/prisma')
+    
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.id) {
