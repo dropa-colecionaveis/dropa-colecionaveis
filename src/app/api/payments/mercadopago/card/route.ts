@@ -660,7 +660,9 @@ export async function POST(req: NextRequest) {
     })
     
     // Log API error
-    await securityLogger.log({
+    try {
+      const { securityLogger } = await import('@/lib/security-logger')
+      await securityLogger.log({
       type: 'API_ERROR',
       severity: 'HIGH',
       userId: undefined,
@@ -676,6 +678,9 @@ export async function POST(req: NextRequest) {
         stack: error instanceof Error ? error.stack : undefined
       }
     })
+    } catch (logError) {
+      console.error('Failed to log security error:', logError)
+    }
     
     return NextResponse.json(
       { 
