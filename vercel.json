@@ -1,0 +1,11 @@
+{
+  "buildCommand": "bash vercel-build.sh",
+  "env": {
+    "PRISMA_GENERATE_DATAPROXY": "true"
+  },
+  "functions": {
+    "app/api/**": {
+      "maxDuration": 30
+    }
+  }
+}

@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npx prisma generate && next build",
+    "postinstall": "npx prisma generate",
+    "migrate": "node scripts/migrate.js",
     "start": "next start",
     "lint": "next lint",
     "validate-env": "node scripts/validate-env.js",
