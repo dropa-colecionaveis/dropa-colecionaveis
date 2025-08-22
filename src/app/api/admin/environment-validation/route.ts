@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { withAdminAuth } from '@/middleware/admin-auth'
+import { getServerSession } from 'next-auth'
 
 interface EnvironmentVariable {
   key: string
@@ -242,8 +242,19 @@ function validateEnvironmentVariables(): {
   return { variables, securityIssues }
 }
 
-export const GET = withAdminAuth(async (req: NextRequest) => {
+export async function GET(req: NextRequest) {
   try {
+    const { authOptions } = await import('@/lib/auth')
+    const session = await getServerSession(authOptions)
+    
+    // Only allow admin users to view environment validation
+    if (!session?.user?.email || session.user.email !== 'admin@admin.com') {
+      return NextResponse.json(
+        { error: 'Unauthorized - Admin access required' },
+        { status: 403 }
+      )
+    }
+
     const { variables, securityIssues } = validateEnvironmentVariables()
     const databaseStatus = await checkDatabaseConnection()
 
@@ -273,4 +284,4 @@ export const GET = withAdminAuth(async (req: NextRequest) => {
       { status: 500 }
     )
   }
-})
+}

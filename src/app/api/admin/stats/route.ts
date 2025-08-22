@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { withAdminAuth } from '@/middleware/admin-auth'
+import { getServerSession } from 'next-auth'
 
-export const GET = withAdminAuth(async (req: NextRequest) => {
+export async function GET(req: NextRequest) {
   try {
+    const { authOptions } = await import('@/lib/auth')
+    const session = await getServerSession(authOptions)
+    
+    // Only allow admin users to view stats
+    if (!session?.user?.email || session.user.email !== 'admin@admin.com') {
+      return NextResponse.json(
+        { error: 'Unauthorized - Admin access required' },
+        { status: 403 }
+      )
+    }
+
     const { getSystemStats } = await import('@/lib/admin-actions')
     const stats = await getSystemStats()
     return NextResponse.json(stats)
@@ -13,4 +24,4 @@ export const GET = withAdminAuth(async (req: NextRequest) => {
       { status: 500 }
     )
   }
-})
+}
