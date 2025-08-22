@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { marketplaceRulesEngine } from '@/lib/marketplace-rules'
 
 export async function GET(req: Request) {
   try {
+    const { authOptions } = await import('@/lib/auth')
+    const { marketplaceRulesEngine } = await import('@/lib/marketplace-rules')
+    
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.id) {
@@ -55,6 +56,9 @@ export async function GET(req: Request) {
 
 export async function PATCH(req: Request) {
   try {
+    const { authOptions } = await import('@/lib/auth')
+    const { marketplaceRulesEngine } = await import('@/lib/marketplace-rules')
+    
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.id) {
