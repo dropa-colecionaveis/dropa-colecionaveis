@@ -193,6 +193,9 @@ async function processPaymentUpdate(
   ipAddress?: string
 ): Promise<void> {
   try {
+    const { prisma } = await import('@/lib/prisma')
+    const { userStatsService } = await import('@/lib/user-stats')
+    
     console.log(`🔄 Processing payment update: ${paymentId} -> ${status}`)
 
     // Find payment in database
