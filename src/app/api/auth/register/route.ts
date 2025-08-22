@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
-import { prisma } from '@/lib/prisma'
-import { userStatsService } from '@/lib/user-stats'
 
 export async function POST(req: Request) {
   try {
+    const { prisma } = await import('@/lib/prisma')
+    const { userStatsService } = await import('@/lib/user-stats')
+    
     const { name, email, password } = await req.json()
 
     if (!name || !email || !password) {

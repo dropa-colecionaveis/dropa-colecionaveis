@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import { autoSellService } from '@/lib/auto-sell'
 
 export async function POST(req: Request) {
   // ENDPOINT DESABILITADO - Auto-sell agora funciona apenas manualmente

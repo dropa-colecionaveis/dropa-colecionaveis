@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
-import AppInitializer from '@/lib/app-initializer'
 
 export async function GET() {
   try {
+    const AppInitializer = (await import('@/lib/app-initializer')).default
+    
     if (!AppInitializer.isInitialized()) {
       await AppInitializer.initialize()
     }
@@ -22,6 +23,8 @@ export async function GET() {
 
 export async function POST() {
   try {
+    const AppInitializer = (await import('@/lib/app-initializer')).default
+    
     // Force re-initialization
     AppInitializer.reset()
     await AppInitializer.initialize()

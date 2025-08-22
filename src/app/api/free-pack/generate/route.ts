@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
 import { PackType } from '@prisma/client'
 
 // Free pack generation probabilities based on pack price/rarity
@@ -32,6 +30,9 @@ function selectRandomPack(): string {
 
 export async function POST(req: NextRequest) {
   try {
+    const { authOptions } = await import('@/lib/auth')
+    const { prisma } = await import('@/lib/prisma')
+    
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.id) {

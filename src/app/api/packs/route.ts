@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 
 export async function GET(req: Request) {
   try {
+    const { prisma } = await import('@/lib/prisma')
+
     const packs = await prisma.pack.findMany({
       where: {
         isActive: true

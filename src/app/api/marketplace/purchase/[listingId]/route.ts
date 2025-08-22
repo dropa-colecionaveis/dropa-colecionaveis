@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { ListingStatus, TransactionStatus, TransactionType } from '@prisma/client'
-import { antiFraudService } from '@/lib/anti-fraud'
-import { marketplaceRulesEngine } from '@/lib/marketplace-rules'
-import { userStatsService } from '@/lib/user-stats'
 
 export async function POST(
   req: Request,
@@ -12,6 +9,9 @@ export async function POST(
   try {
     const { authOptions } = await import('@/lib/auth')
     const { prisma } = await import('@/lib/prisma')
+    const { antiFraudService } = await import('@/lib/anti-fraud')
+    const { marketplaceRulesEngine } = await import('@/lib/marketplace-rules')
+    const { userStatsService } = await import('@/lib/user-stats')
     
     const session = await getServerSession(authOptions)
     

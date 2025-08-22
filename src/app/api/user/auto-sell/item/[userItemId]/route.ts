@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { autoSellService } from '@/lib/auto-sell'
 
 export async function POST(
   req: Request,
@@ -8,6 +7,7 @@ export async function POST(
 ) {
   try {
     const { authOptions } = await import('@/lib/auth')
+    const { autoSellService } = await import('@/lib/auto-sell')
     
     const session = await getServerSession(authOptions)
     

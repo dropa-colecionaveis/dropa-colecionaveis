@@ -1,14 +1,10 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
 import { ListingStatus, TransactionType } from '@prisma/client'
-import { antiFraudService } from '@/lib/anti-fraud'
-import { marketplaceRulesEngine } from '@/lib/marketplace-rules'
-import { userStatsService } from '@/lib/user-stats'
 
 export async function GET(req: Request) {
   try {
+    const { prisma } = await import('@/lib/prisma')
     const { searchParams } = new URL(req.url)
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '20')
@@ -146,6 +142,12 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    const { authOptions } = await import('@/lib/auth')
+    const { prisma } = await import('@/lib/prisma')
+    const { antiFraudService } = await import('@/lib/anti-fraud')
+    const { marketplaceRulesEngine } = await import('@/lib/marketplace-rules')
+    const { userStatsService } = await import('@/lib/user-stats')
+    
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.id) {

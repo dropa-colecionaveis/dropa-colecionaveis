@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
 
 // Direct Mercado Pago integration to avoid import issues
 const { MercadoPagoConfig, Payment } = require('mercadopago')
@@ -26,6 +24,9 @@ const CREDIT_PACKAGES = [
 
 export async function POST(req: Request) {
   try {
+    const { authOptions } = await import('@/lib/auth')
+    const { prisma } = await import('@/lib/prisma')
+    
     console.log('🔥 PIX API called')
     
     const session = await getServerSession(authOptions)

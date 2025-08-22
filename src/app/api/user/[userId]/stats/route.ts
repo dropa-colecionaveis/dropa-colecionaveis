@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server'
-import { userStatsService } from '@/lib/user-stats'
-import { rankingService } from '@/lib/rankings'
 
 export async function GET(
   req: Request,
@@ -8,6 +6,8 @@ export async function GET(
 ) {
   try {
     const { prisma } = await import('@/lib/prisma')
+    const { userStatsService } = await import('@/lib/user-stats')
+    const { rankingService } = await import('@/lib/rankings')
     
     const userId = params.userId
     

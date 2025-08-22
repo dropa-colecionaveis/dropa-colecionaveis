@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { userStatsService } from '@/lib/user-stats'
 
 export async function GET(req: Request) {
   try {
+    const { authOptions } = await import('@/lib/auth')
+    const { userStatsService } = await import('@/lib/user-stats')
+    
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.id) {

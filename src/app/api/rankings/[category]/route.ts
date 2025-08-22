@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { rankingService } from '@/lib/rankings'
 import { RankingCategory } from '@prisma/client'
 
 export async function GET(
@@ -8,6 +7,7 @@ export async function GET(
   { params }: { params: { category: string } }
 ) {
   try {
+    const { rankingService } = await import('@/lib/rankings')
     const { searchParams } = new URL(req.url)
     const category = params.category.toUpperCase() as RankingCategory
     const limit = parseInt(searchParams.get('limit') || '100')

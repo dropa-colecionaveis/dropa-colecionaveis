@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { ListingStatus } from '@prisma/client'
-import { antiFraudService } from '@/lib/anti-fraud'
 
 export async function PUT(
   req: Request,
@@ -10,6 +9,7 @@ export async function PUT(
   try {
     const { authOptions } = await import('@/lib/auth')
     const { prisma } = await import('@/lib/prisma')
+    const { antiFraudService } = await import('@/lib/anti-fraud')
     
     const session = await getServerSession(authOptions)
     

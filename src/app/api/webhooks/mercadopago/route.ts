@@ -1,8 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { webhookVerifier } from '@/lib/webhook-verifier'
-import { securityLogger } from '@/lib/security-logger'
-import { prisma } from '@/lib/prisma'
-import { userStatsService } from '@/lib/user-stats'
 
 // Mercado Pago payment statuses
 const MP_STATUS_MAPPING = {
@@ -20,6 +16,10 @@ export async function POST(req: NextRequest) {
   let userAgent: string | undefined
 
   try {
+    const { webhookVerifier } = await import('@/lib/webhook-verifier')
+    const { securityLogger } = await import('@/lib/security-logger')
+    const { prisma } = await import('@/lib/prisma')
+    const { userStatsService } = await import('@/lib/user-stats')
     // Extract request info
     ipAddress = req.headers.get('x-forwarded-for')?.split(',')[0] || 
                 req.headers.get('x-real-ip') || 

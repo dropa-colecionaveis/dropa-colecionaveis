@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { getPaymentStatus, mapMercadoPagoStatus } from '@/lib/mercadopago'
-import { userStatsService } from '@/lib/user-stats'
 import type { WebhookNotification, PaymentStatusUpdate } from '@/types/payments'
 
 export async function POST(req: Request) {
   try {
+    const { prisma } = await import('@/lib/prisma')
+    const { getPaymentStatus, mapMercadoPagoStatus } = await import('@/lib/mercadopago')
+    const { userStatsService } = await import('@/lib/user-stats')
+
     const body = await req.text()
     const notification: WebhookNotification = JSON.parse(body)
 

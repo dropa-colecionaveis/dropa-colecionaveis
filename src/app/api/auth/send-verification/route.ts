@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { emailVerificationService } from '@/lib/email-verification'
-import { applyRateLimit, RATE_LIMITS } from '@/lib/rate-limiter'
 
 export async function POST(req: NextRequest) {
   try {
+    const { emailVerificationService } = await import('@/lib/email-verification')
+    const { applyRateLimit, RATE_LIMITS } = await import('@/lib/rate-limiter')
+    
     // Apply rate limiting
     const rateLimitResponse = applyRateLimit(req, RATE_LIMITS.STRICT)
     if (rateLimitResponse) {
       return rateLimitResponse
     }
 
+    const { authOptions } = await import('@/lib/auth')
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.id) {

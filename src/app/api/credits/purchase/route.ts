@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
-import { userStatsService } from '@/lib/user-stats'
 
 export async function POST(req: Request) {
   try {
+    const { authOptions } = await import('@/lib/auth')
+    const { prisma } = await import('@/lib/prisma')
+    const { userStatsService } = await import('@/lib/user-stats')
+    
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.id) {

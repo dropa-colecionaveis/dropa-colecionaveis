@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
-import { rankingService } from '@/lib/rankings'
 import { RankingCategory } from '@prisma/client'
 
 export async function GET(req: Request) {
   try {
+    const { rankingService } = await import('@/lib/rankings')
+
     const { searchParams } = new URL(req.url)
     const category = searchParams.get('category') as RankingCategory || 'TOTAL_XP'
     const page = parseInt(searchParams.get('page') || '1')

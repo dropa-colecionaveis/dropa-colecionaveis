@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   const startTime = Date.now()
   
   try {
+    const { prisma } = await import('@/lib/prisma')
     // Basic application info
     const appInfo = {
       name: 'Colecionáveis Platform',

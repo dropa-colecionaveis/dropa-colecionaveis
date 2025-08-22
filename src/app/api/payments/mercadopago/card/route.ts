@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
-import { userStatsService } from '@/lib/user-stats'
-import { securityLogger } from '@/lib/security-logger'
-import { inputValidator } from '@/lib/input-validator'
 
 // Direct Mercado Pago integration - try different approach
 const { MercadoPagoConfig, Payment } = require('mercadopago')
@@ -140,6 +135,12 @@ export async function POST(req: NextRequest) {
   let userAgent: string | undefined
   
   try {
+    const { authOptions } = await import('@/lib/auth')
+    const { prisma } = await import('@/lib/prisma')
+    const { userStatsService } = await import('@/lib/user-stats')
+    const { securityLogger } = await import('@/lib/security-logger')
+    const { inputValidator } = await import('@/lib/input-validator')
+    
     console.log('💳 Card API called')
     
     // Extract IP and user agent for security logging

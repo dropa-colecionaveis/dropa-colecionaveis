@@ -1,9 +1,5 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
-import { selectRandomRarity } from '@/lib/rarity-system'
-import { userStatsService } from '@/lib/user-stats'
 import { Rarity, TransactionType } from '@prisma/client'
 
 interface OpenedItem {
@@ -22,6 +18,11 @@ interface OpenedItem {
 
 export async function POST(req: Request) {
   try {
+    const { authOptions } = await import('@/lib/auth')
+    const { prisma } = await import('@/lib/prisma')
+    const { selectRandomRarity } = await import('@/lib/rarity-system')
+    const { userStatsService } = await import('@/lib/user-stats')
+    
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.id) {
