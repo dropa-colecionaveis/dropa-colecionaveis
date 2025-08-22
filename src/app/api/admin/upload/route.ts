@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { writeFile } from 'fs/promises'
 import { join } from 'path'
 import { mkdir } from 'fs/promises'
@@ -8,6 +7,8 @@ import { existsSync } from 'fs'
 
 export async function POST(req: Request) {
   try {
+    const { authOptions } = await import('@/lib/auth')
+    
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.email || session.user.email !== 'admin@admin.com') {

@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { getRateLimiterStats } from '@/lib/rate-limiter'
 
 export async function GET(req: Request) {
   try {
+    const { authOptions } = await import('@/lib/auth')
+    const { getRateLimiterStats } = await import('@/lib/rate-limiter')
+    
     const session = await getServerSession(authOptions)
     
     // Only allow admin users to view rate limit stats

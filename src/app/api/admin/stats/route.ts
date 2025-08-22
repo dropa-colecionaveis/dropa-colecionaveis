@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdminAuth } from '@/middleware/admin-auth'
-import { getSystemStats } from '@/lib/admin-actions'
 
 export const GET = withAdminAuth(async (req: NextRequest) => {
   try {
+    const { getSystemStats } = await import('@/lib/admin-actions')
     const stats = await getSystemStats()
     return NextResponse.json(stats)
   } catch (error) {

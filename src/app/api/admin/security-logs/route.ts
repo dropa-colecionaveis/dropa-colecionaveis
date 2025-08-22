@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { securityLogger } from '@/lib/security-logger'
 
 export async function GET(req: NextRequest) {
   try {
+    const { authOptions } = await import('@/lib/auth')
+    const { securityLogger } = await import('@/lib/security-logger')
+    
     const session = await getServerSession(authOptions)
     
     // Only allow admin users to view security logs
@@ -97,6 +98,9 @@ export async function GET(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+    const { authOptions } = await import('@/lib/auth')
+    const { securityLogger } = await import('@/lib/security-logger')
+    
     const session = await getServerSession(authOptions)
     
     // Only allow admin users to cleanup logs

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdminAuth } from '@/middleware/admin-auth'
-import { prisma } from '@/lib/prisma'
 
 interface EnvironmentVariable {
   key: string
@@ -180,6 +179,7 @@ const REQUIRED_ENV_VARS: Omit<EnvironmentVariable, 'isSet' | 'value'>[] = [
 
 async function checkDatabaseConnection(): Promise<string> {
   try {
+    const { prisma } = await import('@/lib/prisma')
     await prisma.$queryRaw`SELECT 1`
     return 'connected'
   } catch (error) {

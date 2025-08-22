@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { rankingScheduler } from '@/lib/ranking-scheduler'
 
 export async function GET(req: Request) {
   try {
+    const { authOptions } = await import('@/lib/auth')
+    const { rankingScheduler } = await import('@/lib/ranking-scheduler')
+    
     const session = await getServerSession(authOptions)
     
     // Verificar se é admin (você pode ajustar essa verificação)
@@ -35,6 +36,9 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    const { authOptions } = await import('@/lib/auth')
+    const { rankingScheduler } = await import('@/lib/ranking-scheduler')
+    
     const session = await getServerSession(authOptions)
     
     // Verificar se é admin

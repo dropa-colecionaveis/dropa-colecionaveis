@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createInitialAdmin } from '@/lib/admin-auth'
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,6 +19,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    const { createInitialAdmin } = await import('@/lib/admin-auth')
     const admin = await createInitialAdmin(email, password, name)
 
     return NextResponse.json({

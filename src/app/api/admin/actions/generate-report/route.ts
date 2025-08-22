@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdminAuthAndAudit } from '@/middleware/admin-auth'
-import { generateSystemReport } from '@/lib/admin-actions'
 
 export const POST = withAdminAuthAndAudit(
   async (req: NextRequest, authResult) => {
     try {
+      const { generateSystemReport } = await import('@/lib/admin-actions')
       const result = await generateSystemReport(authResult.user!)
       return NextResponse.json(result)
     } catch (error) {

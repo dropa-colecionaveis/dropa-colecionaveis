@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdminAuthAndAudit } from '@/middleware/admin-auth'
-import { createSystemBackup } from '@/lib/admin-actions'
-import { AUDIT_ACTIONS } from '@/lib/audit-log'
 
 export const POST = withAdminAuthAndAudit(
   async (req: NextRequest, authResult) => {
     try {
+      const { createSystemBackup } = await import('@/lib/admin-actions')
       const result = await createSystemBackup(authResult.user!)
       return NextResponse.json(result)
     } catch (error) {
@@ -16,6 +15,6 @@ export const POST = withAdminAuthAndAudit(
       )
     }
   },
-  AUDIT_ACTIONS.SYSTEM_BACKUP,
+  (await import('@/lib/audit-log')).AUDIT_ACTIONS.SYSTEM_BACKUP,
   (req) => 'Criou backup do sistema'
 )
