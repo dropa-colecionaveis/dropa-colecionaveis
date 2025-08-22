@@ -195,6 +195,7 @@ async function processPaymentUpdate(
   try {
     const { prisma } = await import('@/lib/prisma')
     const { userStatsService } = await import('@/lib/user-stats')
+    const { securityLogger } = await import('@/lib/security-logger')
     
     console.log(`🔄 Processing payment update: ${paymentId} -> ${status}`)
 
