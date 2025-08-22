@@ -1,7 +1,6 @@
 import NextAuth, { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
-import { prisma } from './prisma'
 import bcrypt from 'bcryptjs'
 
 export const authOptions: NextAuthOptions = {
@@ -19,6 +18,8 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         try {
+          const { prisma } = await import('./prisma')
+          
           if (!credentials?.email || !credentials?.password) {
             console.log('Credentials missing email or password')
             return null
@@ -76,6 +77,8 @@ export const authOptions: NextAuthOptions = {
       
       if (account?.provider === 'google') {
         try {
+          const { prisma } = await import('./prisma')
+          
           if (!user.email) {
             console.error('No email provided by Google')
             return false
@@ -123,6 +126,8 @@ export const authOptions: NextAuthOptions = {
     },
     async jwt({ token, user }) {
       if (user) {
+        const { prisma } = await import('./prisma')
+        
         // Get user from database to ensure we have the correct ID
         const dbUser = await prisma.user.findUnique({
           where: { email: user.email! }
