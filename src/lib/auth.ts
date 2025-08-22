@@ -96,7 +96,7 @@ export const authOptions: NextAuthOptions = {
               data: {
                 email: user.email,
                 name: user.name || user.email,
-                password: '', // Google users don't have passwords
+                // password: null for OAuth users (field is now optional)
                 credits: 0, // Starting credits for new users
                 providerAccountId: account.providerAccountId,
                 provider: account.provider
