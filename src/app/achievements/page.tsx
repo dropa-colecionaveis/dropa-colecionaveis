@@ -101,10 +101,25 @@ export default function Achievements() {
       // Incluir conquistas secretas
       params.append('includeSecret', 'true')
       
-      const response = await fetch(`/api/achievements?${params}`)
+      const response = await fetch(`/api/user/achievements?${params}`)
       if (response.ok) {
         const data = await response.json()
-        setAchievements(data.achievements)
+        setAchievements(data.achievements.map((ua: any) => ({
+          id: ua.achievement.id,
+          name: ua.achievement.name,
+          description: ua.achievement.description,
+          icon: ua.achievement.icon,
+          category: ua.achievement.category,
+          type: ua.achievement.type,
+          points: ua.achievement.points,
+          isSecret: ua.achievement.isSecret,
+          completionRate: Math.round(Math.random() * 100), // Placeholder para taxa de conclusão global
+          userProgress: {
+            progress: ua.progress,
+            isCompleted: ua.isCompleted,
+            unlockedAt: ua.unlockedAt
+          }
+        })))
       }
     } catch (error) {
       console.error('Error fetching achievements:', error)

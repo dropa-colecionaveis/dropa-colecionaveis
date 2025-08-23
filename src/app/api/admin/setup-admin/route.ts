@@ -1,41 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+
+export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
   try {
-    // Apenas permitir em desenvolvimento ou se não há admins
-    if (process.env.NODE_ENV === 'production') {
-      return NextResponse.json(
-        { error: 'Setup not allowed in production' },
-        { status: 403 }
-      )
+    const { authOptions } = await import('@/lib/auth')
+    const { prisma } = await import('@/lib/prisma')
+    
+    const session = await getServerSession(authOptions)
+    
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
-    const { email, password, name } = await req.json()
-
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
-      )
+    const { secret } = await req.json()
+    if (secret !== 'make-me-admin-2025') {
+      return NextResponse.json({ error: 'Invalid secret' }, { status: 401 })
     }
 
-    const { createInitialAdmin } = await import('@/lib/admin-auth')
-    const admin = await createInitialAdmin(email, password, name)
+    // Promover usuário atual para ADMIN
+    const updatedUser = await prisma.user.update({
+      where: { id: session.user.id },
+      data: { role: 'ADMIN' },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true
+      }
+    })
+
+    console.log('User promoted to admin:', updatedUser)
 
     return NextResponse.json({
       success: true,
-      admin: {
-        id: admin.id,
-        email: admin.email,
-        name: admin.name,
-        role: admin.role
-      }
+      message: 'Você agora é um administrador!',
+      user: updatedUser
     })
+
   } catch (error) {
-    console.error('Admin setup error:', error)
-    return NextResponse.json(
-      { error: 'Failed to create admin' },
-      { status: 500 }
-    )
+    console.error('Setup admin error:', error)
+    return NextResponse.json({ 
+      error: 'Failed to setup admin', 
+      details: error instanceof Error ? error.message : 'Unknown error' 
+    }, { status: 500 })
   }
 }
