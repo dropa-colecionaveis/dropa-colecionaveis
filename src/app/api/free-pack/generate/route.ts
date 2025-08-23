@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { PackType } from '@prisma/client'
 
-// Free pack generation probabilities based on pack price/rarity
+export const dynamic = 'force-dynamic'
+
+// Free pack generation probabilities based on pack price/rarity - v2
 const FREE_PACK_PROBABILITIES = {
   BRONZE: 60,    // 60% chance - cheapest pack
   SILVER: 25,    // 25% chance - medium pack  
@@ -36,7 +38,7 @@ export async function POST(req: NextRequest) {
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.id) {
-      console.log('No session or user ID found')
+      console.log('Free pack generate: No session or user ID found')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
