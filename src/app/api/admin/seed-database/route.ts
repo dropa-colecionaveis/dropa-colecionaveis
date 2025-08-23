@@ -70,71 +70,73 @@ export async function POST(req: NextRequest) {
 
     console.log('Creating items...')
     for (const itemData of items) {
-      await prisma.item.upsert({
-        where: { name: itemData.name },
-        update: itemData,
-        create: itemData,
+      // Check if item already exists by name
+      const existingItem = await prisma.item.findFirst({
+        where: { name: itemData.name }
       })
+      
+      if (!existingItem) {
+        await prisma.item.create({
+          data: itemData
+        })
+      } else {
+        // Update existing item
+        await prisma.item.update({
+          where: { id: existingItem.id },
+          data: itemData
+        })
+      }
     }
 
     // Create packs
     console.log('Creating packs...')
     
-    await prisma.pack.upsert({
-      where: { type: PackType.BRONZE },
-      update: {
-        name: 'Pacote Bronze',
-        description: 'Um pacote básico com boa chance de itens comuns e incomuns',
-        price: 25,
-        isActive: true
-      },
-      create: {
-        type: PackType.BRONZE,
-        name: 'Pacote Bronze',
-        description: 'Um pacote básico com boa chance de itens comuns e incomuns',
-        price: 25,
-        isActive: true
-      },
-    })
+    // Check if Bronze pack exists
+    const bronzePack = await prisma.pack.findFirst({ where: { type: PackType.BRONZE } })
+    if (!bronzePack) {
+      await prisma.pack.create({
+        data: {
+          type: PackType.BRONZE,
+          name: 'Pacote Bronze',
+          description: 'Um pacote básico com boa chance de itens comuns e incomuns',
+          price: 25,
+          isActive: true
+        }
+      })
+    }
 
-    await prisma.pack.upsert({
-      where: { type: PackType.SILVER },
-      update: {
-        name: 'Pacote Prata',
-        description: 'Um pacote intermediário com boas chances de itens',
-        price: 40,
-        isActive: true
-      },
-      create: {
-        type: PackType.SILVER,
-        name: 'Pacote Prata',
-        description: 'Um pacote intermediário com boas chances de itens',
-        price: 40,
-        isActive: true
-      },
-    })
+    // Check if Silver pack exists
+    const silverPack = await prisma.pack.findFirst({ where: { type: PackType.SILVER } })
+    if (!silverPack) {
+      await prisma.pack.create({
+        data: {
+          type: PackType.SILVER,
+          name: 'Pacote Prata',
+          description: 'Um pacote intermediário com boas chances de itens',
+          price: 40,
+          isActive: true
+        }
+      })
+    }
 
-    await prisma.pack.upsert({
-      where: { type: PackType.GOLD },
-      update: {
-        name: 'Pacote Ouro',
-        description: 'Um pacote premium com maiores chances de itens raros',
-        price: 75,
-        isActive: true
-      },
-      create: {
-        type: PackType.GOLD,
-        name: 'Pacote Ouro',
-        description: 'Um pacote premium com maiores chances de itens raros',
-        price: 75,
-        isActive: true
-      },
-    })
+    // Check if Gold pack exists
+    const goldPack = await prisma.pack.findFirst({ where: { type: PackType.GOLD } })
+    if (!goldPack) {
+      await prisma.pack.create({
+        data: {
+          type: PackType.GOLD,
+          name: 'Pacote Ouro',
+          description: 'Um pacote premium com maiores chances de itens raros',
+          price: 75,
+          isActive: true
+        }
+      })
+    }
 
-    // Create pack probabilities
+    // Create pack probabilities  
     console.log('Creating pack probabilities...')
     const packs = await prisma.pack.findMany()
-    const allItems = await prisma.item.findMany()
+    const rarities = [Rarity.COMUM, Rarity.INCOMUM, Rarity.RARO, Rarity.EPICO, Rarity.LENDARIO]
 
     for (const pack of packs) {
       // Clear existing probabilities for this pack
@@ -143,41 +145,50 @@ export async function POST(req: NextRequest) {
       })
 
       // Set probabilities based on pack type
-      for (const item of allItems) {
-        let probability = 0
+      for (const rarity of rarities) {
+        let percentage = 0
 
         if (pack.type === PackType.BRONZE) {
-          switch (item.rarity) {
-            case Rarity.COMUM: probability = 60; break
-            case Rarity.INCOMUM: probability = 25; break
-            case Rarity.RARO: probability = 10; break
-            case Rarity.EPICO: probability = 4; break
-            case Rarity.LENDARIO: probability = 1; break
+          switch (rarity) {
+            case Rarity.COMUM: percentage = 60; break
+            case Rarity.INCOMUM: percentage = 25; break
+            case Rarity.RARO: percentage = 10; break
+            case Rarity.EPICO: percentage = 4; break
+            case Rarity.LENDARIO: percentage = 1; break
           }
         } else if (pack.type === PackType.SILVER) {
-          switch (item.rarity) {
-            case Rarity.COMUM: probability = 50; break
-            case Rarity.INCOMUM: probability = 30; break
-            case Rarity.RARO: probability = 15; break
-            case Rarity.EPICO: probability = 4; break
-            case Rarity.LENDARIO: probability = 1; break
+          switch (rarity) {
+            case Rarity.COMUM: percentage = 50; break
+            case Rarity.INCOMUM: percentage = 30; break
+            case Rarity.RARO: percentage = 15; break
+            case Rarity.EPICO: percentage = 4; break
+            case Rarity.LENDARIO: percentage = 1; break
           }
         } else if (pack.type === PackType.GOLD) {
-          switch (item.rarity) {
-            case Rarity.COMUM: probability = 40; break
-            case Rarity.INCOMUM: probability = 30; break
-            case Rarity.RARO: probability = 20; break
-            case Rarity.EPICO: probability = 8; break
-            case Rarity.LENDARIO: probability = 2; break
+          switch (rarity) {
+            case Rarity.COMUM: percentage = 40; break
+            case Rarity.INCOMUM: percentage = 30; break
+            case Rarity.RARO: percentage = 20; break
+            case Rarity.EPICO: percentage = 8; break
+            case Rarity.LENDARIO: percentage = 2; break
           }
         }
 
-        if (probability > 0) {
-          await prisma.packProbability.create({
-            data: {
+        if (percentage > 0) {
+          await prisma.packProbability.upsert({
+            where: {
+              packId_rarity: {
+                packId: pack.id,
+                rarity: rarity
+              }
+            },
+            update: {
+              percentage: percentage
+            },
+            create: {
               packId: pack.id,
-              itemId: item.id,
-              probability: probability / 100 // Convert to decimal
+              rarity: rarity,
+              percentage: percentage
             }
           })
         }
