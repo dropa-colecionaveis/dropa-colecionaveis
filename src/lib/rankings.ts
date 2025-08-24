@@ -86,17 +86,12 @@ export class RankingService {
     
     switch (category) {
       case 'TOTAL_XP':
-        query = {
-          select: {
-            userId: true,
-            totalXP: true
-          },
-          where: {
-            totalXP: { gt: 0 }
-          },
-          orderBy: { totalXP: 'desc' }
-        }
-        break
+        // Para TOTAL_XP, precisamos calcular o XP correto das conquistas
+        // em vez de usar o campo totalXP que pode estar desatualizado
+        const usersWithAchievements = await this.calculateCorrectTotalXP()
+        return usersWithAchievements
+          .filter(user => user.value > 0)
+          .sort((a, b) => b.value - a.value)
 
       case 'PACK_OPENER':
         query = {
@@ -185,6 +180,37 @@ export class RankingService {
     return results.map(result => ({
       userId: result.userId,
       value: this.extractValueFromResult(result, category)
+    }))
+  }
+
+  // Calcular XP correto baseado apenas nas conquistas completadas
+  private async calculateCorrectTotalXP(): Promise<Array<{ userId: string, value: number }>> {
+    // Buscar todos os usuários com conquistas completadas
+    const userAchievements = await prisma.userAchievement.findMany({
+      where: {
+        isCompleted: true
+      },
+      include: {
+        achievement: {
+          select: {
+            points: true
+          }
+        }
+      }
+    })
+
+    // Agrupar por userId e somar os pontos
+    const userXPMap = new Map<string, number>()
+    
+    for (const ua of userAchievements) {
+      const currentXP = userXPMap.get(ua.userId) || 0
+      userXPMap.set(ua.userId, currentXP + ua.achievement.points)
+    }
+
+    // Converter para array
+    return Array.from(userXPMap.entries()).map(([userId, xp]) => ({
+      userId,
+      value: xp
     }))
   }
 
@@ -284,7 +310,12 @@ export class RankingService {
 
     switch (category) {
       case 'TOTAL_XP':
-        userValue = userStats.totalXP
+        // Calcular XP correto das conquistas
+        const { achievementEngine } = await import('@/lib/achievements')
+        const userAchievements = await achievementEngine.getUserAchievements(userId)
+        userValue = userAchievements
+          .filter(ua => ua.isCompleted)
+          .reduce((sum, ua) => sum + ua.achievement.points, 0)
         break
       case 'PACK_OPENER':
         userValue = userStats.totalPacksOpened || 0
