@@ -63,13 +63,10 @@ export async function GET(req: Request) {
     const totalAchievements = allAchievements.length // Total real de conquistas no sistema
     const completedAchievements = combinedAchievements.filter(ua => ua.isCompleted).length
     
-    // Buscar XP real do usuário para ser consistente com o header
-    const { prisma } = await import('@/lib/prisma')
-    const userStats = await prisma.userStats.findUnique({
-      where: { userId: session.user.id },
-      select: { totalXP: true }
-    })
-    const totalPoints = userStats?.totalXP || 0
+    // Calcular XP apenas das conquistas (método correto)
+    const totalPoints = combinedAchievements
+      .filter(ua => ua.isCompleted)
+      .reduce((sum, ua) => sum + ua.achievement.points, 0)
     
     // Debug: Log para verificar os números
     console.log(`[DEBUG] Total achievements in system: ${totalAchievements}`)

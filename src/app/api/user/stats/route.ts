@@ -24,8 +24,15 @@ export async function GET(req: Request) {
       )
     }
 
-    // Calcular informações de nível
-    const levelProgress = userStatsService.getLevelProgress(userStats.totalXP)
+    // Calcular XP correto apenas das conquistas
+    const { achievementEngine } = await import('@/lib/achievements')
+    const userAchievements = await achievementEngine.getUserAchievements(session.user.id)
+    const correctTotalXP = userAchievements
+      .filter(ua => ua.isCompleted)
+      .reduce((sum, ua) => sum + ua.achievement.points, 0)
+
+    // Calcular informações de nível baseado no XP correto
+    const levelProgress = userStatsService.getLevelProgress(correctTotalXP)
     
     // Calcular tempo desde última atividade
     const timeSinceLastActivity = userStats.lastActivityAt 
@@ -34,10 +41,12 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       ...userStats,
+      totalXP: correctTotalXP, // Substitui o totalXP incorreto pelo correto
+      level: levelProgress.currentLevel,
       levelProgress,
       timeSinceLastActivity,
       isActive: timeSinceLastActivity ? timeSinceLastActivity < 24 * 60 * 60 * 1000 : false, // ativo nas últimas 24h
-      badges: await getUserBadges(session.user.id, userStats)
+      badges: await getUserBadges(session.user.id, { ...userStats, totalXP: correctTotalXP })
     })
   } catch (error) {
     console.error('Error fetching user stats:', error)
