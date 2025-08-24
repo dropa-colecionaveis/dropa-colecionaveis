@@ -498,7 +498,12 @@ export default function Dashboard() {
           setHasUnclaimedFreePack(false)
           // Refresh user profile after claiming free pack
           fetchUserProfile()
-        }} 
+        }}
+        onItemReceived={() => {
+          // Refresh data immediately when item is received
+          fetchUserProfile()
+          fetchRecentActivities()
+        }}
       />
     </div>
   )

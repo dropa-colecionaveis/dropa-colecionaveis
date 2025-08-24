@@ -103,66 +103,64 @@ export async function POST(req: NextRequest) {
       })
     ])
 
-    // Track user stats properly (async - não bloquear resposta)
-    setImmediate(async () => {
-      try {
-        await userStatsService.trackPackOpening(
-          session.user.id,
-          freePackGrant.packId,
-          randomItem.id,
-          randomItem.rarity as any
-        )
+    // Track user stats BEFORE returning response for consistency
+    try {
+      await userStatsService.trackPackOpening(
+        session.user.id,
+        freePackGrant.packId,
+        randomItem.id,
+        randomItem.rarity as any
+      )
 
-        await userStatsService.trackItemObtained(
-          session.user.id,
-          randomItem.id,
-          randomItem.rarity as any,
-          true
-        )
-      } catch (statsError) {
-        console.error('Error tracking user stats:', statsError)
-      }
-    })
+      await userStatsService.trackItemObtained(
+        session.user.id,
+        randomItem.id,
+        randomItem.rarity as any,
+        true
+      )
+    } catch (statsError) {
+      console.error('Error tracking user stats:', statsError)
+      // Don't fail the request if stats tracking fails
+    }
 
-    // Trigger achievement events (async - não bloquear resposta)
-    setImmediate(async () => {
-      try {
-        console.log(`🎯 Checking achievements for user ${session.user.id}:`, {
+    // Trigger achievement events BEFORE returning response for consistency
+    try {
+      console.log(`🎯 Checking achievements for user ${session.user.id}:`, {
+        isFirstPack,
+        isFirstItem,
+        itemRarity: randomItem.rarity,
+        packType: freePackGrant.pack.type
+      })
+
+      // Pack opened event
+      const packAchievements = await achievementEngine.checkAchievements({
+        type: 'PACK_OPENED',
+        userId: session.user.id,
+        data: {
+          packId: freePackGrant.packId,
+          packType: freePackGrant.pack.type,
           isFirstPack,
-          isFirstItem,
-          itemRarity: randomItem.rarity,
-          packType: freePackGrant.pack.type
-        })
+          items: [randomItem]
+        }
+      })
+      console.log(`🏆 Pack achievements unlocked:`, packAchievements)
 
-        // Pack opened event
-        const packAchievements = await achievementEngine.checkAchievements({
-          type: 'PACK_OPENED',
-          userId: session.user.id,
-          data: {
-            packId: freePackGrant.packId,
-            packType: freePackGrant.pack.type,
-            isFirstPack,
-            items: [randomItem]
-          }
-        })
-        console.log(`🏆 Pack achievements unlocked:`, packAchievements)
+      // Item obtained event
+      const itemAchievements = await achievementEngine.checkAchievements({
+        type: 'ITEM_OBTAINED',
+        userId: session.user.id,
+        data: {
+          itemId: randomItem.id,
+          rarity: randomItem.rarity,
+          isFirstItem
+        }
+      })
+      console.log(`🏆 Item achievements unlocked:`, itemAchievements)
 
-        // Item obtained event
-        const itemAchievements = await achievementEngine.checkAchievements({
-          type: 'ITEM_OBTAINED',
-          userId: session.user.id,
-          data: {
-            itemId: randomItem.id,
-            rarity: randomItem.rarity,
-            isFirstItem
-          }
-        })
-        console.log(`🏆 Item achievements unlocked:`, itemAchievements)
-
-      } catch (achievementError) {
-        console.error('Error processing achievements:', achievementError)
-      }
-    })
+    } catch (achievementError) {
+      console.error('Error processing achievements:', achievementError)
+      // Don't fail the request if achievements fail
+    }
 
     return NextResponse.json({
       success: true,
