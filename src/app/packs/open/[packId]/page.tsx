@@ -292,22 +292,22 @@ export default function OpenPack() {
         </div>
       </header>
 
-      <main className="relative z-10 container mx-auto px-4 py-8 min-h-[80vh] flex items-center justify-center">
-        <div className="max-w-4xl mx-auto text-center">
+      <main className="relative z-10 container mx-auto px-2 sm:px-4 py-4 sm:py-8 min-h-[80vh] flex items-center justify-center">
+        <div className="max-w-xs sm:max-w-2xl lg:max-w-4xl mx-auto text-center w-full">
           
           {/* Pack Opening Animation */}
           {isOpening && (
-            <div className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl rounded-3xl p-12 border border-white/20 shadow-2xl">
+            <div className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl rounded-3xl p-4 sm:p-8 lg:p-12 border border-white/20 shadow-2xl max-h-[90vh] overflow-y-auto">
               {quantity === 1 ? (
                 <>
-                  <div className="relative mb-12">
-                    <div className="text-9xl mb-8 animate-pulse transform hover:scale-110 transition-transform duration-500">
+                  <div className="relative mb-8 sm:mb-12">
+                    <div className="text-5xl sm:text-7xl lg:text-9xl mb-6 sm:mb-8 animate-pulse transform hover:scale-110 transition-transform duration-500">
                       {getPackTypeEmoji(pack.type)}
                     </div>
                     <div className="absolute -inset-4 bg-gradient-to-r from-purple-500/20 via-blue-500/20 to-indigo-500/20 rounded-full blur-xl animate-pulse"></div>
                   </div>
                   
-                  <h2 className="text-4xl font-bold text-white mb-8 bg-gradient-to-r from-purple-300 to-blue-300 bg-clip-text text-transparent">
+                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-6 sm:mb-8 bg-gradient-to-r from-purple-300 to-blue-300 bg-clip-text text-transparent"
                     ✨ Abrindo {pack.name}... ✨
                   </h2>
                   
@@ -387,30 +387,30 @@ export default function OpenPack() {
           {showResult && openResult && (
             <div ref={resultSectionRef} className="animate-bounce-in">
               {/* Celebration Header */}
-              <div className="mb-8 relative">
-                <div className="text-8xl mb-4 animate-bounce">
+              <div className="mb-6 sm:mb-8 relative">
+                <div className="text-4xl sm:text-6xl lg:text-8xl mb-3 sm:mb-4 animate-bounce">
                   🎉
                 </div>
-                <div className="absolute -inset-8 bg-gradient-to-r from-yellow-500/20 via-orange-500/20 to-red-500/20 rounded-full blur-2xl animate-pulse"></div>
-                <div className="flex justify-center space-x-2 text-4xl animate-pulse">
+                <div className="absolute -inset-4 sm:-inset-8 bg-gradient-to-r from-yellow-500/20 via-orange-500/20 to-red-500/20 rounded-full blur-2xl animate-pulse"></div>
+                <div className="flex justify-center space-x-1 sm:space-x-2 text-2xl sm:text-3xl lg:text-4xl animate-pulse">
                   <span>✨</span><span>🎊</span><span>🎁</span><span>🎊</span><span>✨</span>
                 </div>
               </div>
               
-              <div className={`bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl rounded-3xl p-10 border-2 shadow-2xl transform hover:scale-[1.02] transition-all duration-500 ${getRarityColor(openResult.item.rarity).split(' ')[1]} relative overflow-hidden`}>
+              <div className={`bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl rounded-3xl p-4 sm:p-8 lg:p-10 border-2 shadow-2xl transform hover:scale-[1.02] transition-all duration-500 ${getRarityColor(openResult.item.rarity).split(' ')[1]} relative overflow-hidden`}>
                 {/* Animated background effects */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-pulse"></div>
                 <div className={`absolute -inset-4 ${getRarityColor(openResult.item.rarity).split(' ')[1]} rounded-3xl blur-xl opacity-30 animate-pulse`}></div>
                 
                 <div className="relative z-10">
-                  <h2 className="text-4xl font-bold text-white mb-8 bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">
+                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-6 sm:mb-8 bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">
                     🏆 PARABÉNS! VOCÊ GANHOU: 🏆
                   </h2>
                   
-                  <div className="mb-8">
+                  <div className="mb-6 sm:mb-8">
                     {/* Item Display with Enhanced Visuals */}
-                    <div className="relative mb-6">
-                      <div className={`w-40 h-40 mx-auto rounded-2xl mb-6 flex items-center justify-center text-6xl transform hover:scale-110 transition-transform duration-500 shadow-2xl ${getRarityColor(openResult.item.rarity).split(' ')[1]} relative overflow-hidden`}>
+                    <div className="relative mb-4 sm:mb-6">
+                      <div className={`w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 mx-auto rounded-2xl mb-4 sm:mb-6 flex items-center justify-center text-3xl sm:text-5xl lg:text-6xl transform hover:scale-110 transition-transform duration-500 shadow-2xl ${getRarityColor(openResult.item.rarity).split(' ')[1]} relative overflow-hidden`}>
                         <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
                         <div className="relative z-10">🏆</div>
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
@@ -418,27 +418,27 @@ export default function OpenPack() {
                       <div className={`absolute -inset-4 ${getRarityColor(openResult.item.rarity).split(' ')[1]} rounded-3xl blur-2xl opacity-40 animate-pulse`}></div>
                     </div>
                     
-                    <h3 className={`text-3xl font-bold mb-4 ${getRarityColor(openResult.item.rarity).split(' ')[0]} drop-shadow-lg`}>
+                    <h3 className={`text-xl sm:text-2xl lg:text-3xl font-bold mb-3 sm:mb-4 ${getRarityColor(openResult.item.rarity).split(' ')[0]} drop-shadow-lg`}>
                       {openResult.item.name}
                     </h3>
                     
-                    <p className="text-gray-200 mb-6 text-lg font-medium bg-white/10 rounded-2xl p-4 backdrop-blur-sm">
+                    <p className="text-gray-200 mb-4 sm:mb-6 text-sm sm:text-base lg:text-lg font-medium bg-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-sm">
                       {openResult.item.description}
                     </p>
                     
                     {/* Rarity Badge with Enhanced Style */}
-                    <div className="mb-6">
-                      <div className={`inline-block px-6 py-3 rounded-2xl text-lg font-bold shadow-xl transform hover:scale-105 transition-all duration-300 ${getRarityColor(openResult.item.rarity)} border-2 border-white/30 backdrop-blur-sm`}>
+                    <div className="mb-4 sm:mb-6">
+                      <div className={`inline-block px-4 sm:px-6 py-2 sm:py-3 rounded-2xl text-base sm:text-lg font-bold shadow-xl transform hover:scale-105 transition-all duration-300 ${getRarityColor(openResult.item.rarity)} border-2 border-white/30 backdrop-blur-sm`}>
                         ⭐ {getRarityName(openResult.item.rarity)} ⭐
                       </div>
                     </div>
                     
                     {/* Value Display */}
-                    <div className="bg-gradient-to-r from-green-600/30 to-emerald-600/30 backdrop-blur-sm rounded-2xl p-4 border border-green-400/30 mb-8">
-                      <div className="text-2xl text-green-300 font-bold flex items-center justify-center space-x-2">
-                        <span className="text-3xl animate-pulse">💰</span>
+                    <div className="bg-gradient-to-r from-green-600/30 to-emerald-600/30 backdrop-blur-sm rounded-2xl p-3 sm:p-4 border border-green-400/30 mb-6 sm:mb-8">
+                      <div className="text-lg sm:text-xl lg:text-2xl text-green-300 font-bold flex items-center justify-center space-x-2">
+                        <span className="text-xl sm:text-2xl lg:text-3xl animate-pulse">💰</span>
                         <span>Valor: {openResult.item.value} créditos</span>
-                        <span className="text-3xl animate-pulse">💰</span>
+                        <span className="text-xl sm:text-2xl lg:text-3xl animate-pulse">💰</span>
                       </div>
                     </div>
                   </div>
@@ -447,7 +447,7 @@ export default function OpenPack() {
                   <div className="space-y-4">
                     <Link
                       href="/packs"
-                      className="group block w-full px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl relative overflow-hidden"
+                      className="group block w-full px-4 sm:px-6 lg:px-8 py-3 sm:py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl relative overflow-hidden"
                     >
                       <div className="flex items-center justify-center space-x-3">
                         <span className="text-xl group-hover:animate-pulse">🎲</span>
@@ -459,7 +459,7 @@ export default function OpenPack() {
                     
                     <Link
                       href="/inventory"
-                      className="group block w-full px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl relative overflow-hidden"
+                      className="group block w-full px-4 sm:px-6 lg:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl relative overflow-hidden"
                     >
                       <div className="flex items-center justify-center space-x-3">
                         <span className="text-xl group-hover:animate-pulse">🎒</span>
@@ -569,7 +569,7 @@ export default function OpenPack() {
                   <div className="space-y-4">
                     <Link
                       href="/packs"
-                      className="group block w-full px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl relative overflow-hidden"
+                      className="group block w-full px-4 sm:px-6 lg:px-8 py-3 sm:py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl relative overflow-hidden"
                     >
                       <div className="flex items-center justify-center space-x-3">
                         <span className="text-xl group-hover:animate-pulse">🎲</span>
@@ -581,7 +581,7 @@ export default function OpenPack() {
                     
                     <Link
                       href="/inventory"
-                      className="group block w-full px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl relative overflow-hidden"
+                      className="group block w-full px-4 sm:px-6 lg:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl relative overflow-hidden"
                     >
                       <div className="flex items-center justify-center space-x-3">
                         <span className="text-xl group-hover:animate-pulse">🎒</span>
@@ -684,7 +684,7 @@ export default function OpenPack() {
                       <>
                         <button
                           onClick={showNextItem}
-                          className="group px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl relative overflow-hidden"
+                          className="group px-4 sm:px-6 lg:px-8 py-3 sm:py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl relative overflow-hidden"
                         >
                           <div className="flex items-center justify-center space-x-3">
                             <span className="text-xl group-hover:animate-bounce">🎲</span>
@@ -695,7 +695,7 @@ export default function OpenPack() {
                         </button>
                         <button
                           onClick={showAllItems}
-                          className="group px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl relative overflow-hidden"
+                          className="group px-4 sm:px-6 lg:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl relative overflow-hidden"
                         >
                           <div className="flex items-center justify-center space-x-3">
                             <span className="text-xl group-hover:animate-pulse">⚡</span>
@@ -708,7 +708,7 @@ export default function OpenPack() {
                     ) : (
                       <button
                         onClick={showAllItems}
-                        className="group px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl relative overflow-hidden"
+                        className="group px-4 sm:px-6 lg:px-8 py-3 sm:py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl relative overflow-hidden"
                       >
                         <div className="flex items-center justify-center space-x-3">
                           <span className="text-xl group-hover:animate-pulse">📊</span>
@@ -742,7 +742,7 @@ export default function OpenPack() {
                   <div className="space-y-4">
                     <Link
                       href="/packs"
-                      className="group block w-full px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl relative overflow-hidden"
+                      className="group block w-full px-4 sm:px-6 lg:px-8 py-3 sm:py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl relative overflow-hidden"
                     >
                       <div className="flex items-center justify-center space-x-3">
                         <span className="text-xl group-hover:animate-pulse">🎲</span>
@@ -754,7 +754,7 @@ export default function OpenPack() {
                     
                     <Link
                       href="/inventory"
-                      className="group block w-full px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl relative overflow-hidden"
+                      className="group block w-full px-4 sm:px-6 lg:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl relative overflow-hidden"
                     >
                       <div className="flex items-center justify-center space-x-3">
                         <span className="text-xl group-hover:animate-pulse">🎒</span>
@@ -924,7 +924,7 @@ export default function OpenPack() {
                     </button>
                     <Link
                       href="/credits/purchase"
-                      className="group block w-full px-8 py-4 bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl relative overflow-hidden"
+                      className="group block w-full px-4 sm:px-6 lg:px-8 py-3 sm:py-4 bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl relative overflow-hidden"
                     >
                       <div className="flex items-center justify-center space-x-3">
                         <span className="text-xl group-hover:animate-pulse">💰</span>

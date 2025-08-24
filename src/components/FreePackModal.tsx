@@ -171,8 +171,8 @@ export default function FreePackModal({ isOpen, onClose, onItemReceived }: FreeP
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl rounded-3xl p-8 max-w-2xl w-full border border-white/20 shadow-2xl relative overflow-hidden">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
+      <div className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl rounded-3xl p-4 sm:p-6 lg:p-8 max-w-xs sm:max-w-lg lg:max-w-2xl w-full border border-white/20 shadow-2xl relative overflow-hidden my-4 min-h-0 max-h-[95vh] overflow-y-auto">
         {/* Background Effects */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-pulse"></div>
         <div className="absolute -inset-4 bg-gradient-to-r from-purple-500/10 via-blue-500/10 to-green-500/10 rounded-3xl blur-xl opacity-30 animate-pulse"></div>
@@ -181,19 +181,19 @@ export default function FreePackModal({ isOpen, onClose, onItemReceived }: FreeP
           {/* Step 1: Generate Free Pack */}
           {step === 'generate' && (
             <div className="text-center">
-              <div className="text-8xl mb-6 animate-bounce">🎁</div>
-              <h2 className="text-4xl font-bold text-white mb-4 bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">
+              <div className="text-4xl sm:text-6xl lg:text-8xl mb-4 sm:mb-6 animate-bounce">🎁</div>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3 sm:mb-4 bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">
                 🎉 Bem-vindo! 🎉
               </h2>
-              <p className="text-xl text-gray-200 mb-8 leading-relaxed">
+              <p className="text-sm sm:text-lg lg:text-xl text-gray-200 mb-6 sm:mb-8 leading-relaxed">
                 Como novo membro da nossa comunidade, você tem direito a um <span className="text-green-400 font-bold">pacote grátis</span>!
                 <br />
                 Clique no botão abaixo para descobrir qual pacote épico você ganhou!
               </p>
               
               <div className="bg-gradient-to-r from-yellow-600/20 to-orange-600/20 rounded-2xl p-6 mb-8 border border-yellow-400/30">
-                <h3 className="text-lg font-bold text-yellow-300 mb-3">🎲 Como funciona?</h3>
-                <div className="text-sm text-yellow-200 space-y-2">
+                <h3 className="text-base sm:text-lg font-bold text-yellow-300 mb-2 sm:mb-3">🎲 Como funciona?</h3>
+                <div className="text-xs sm:text-sm text-yellow-200 space-y-1 sm:space-y-2">
                   <p>• <span className="font-semibold">60%</span> de chance de ganhar Pacote Bronze 🥉</p>
                   <p>• <span className="font-semibold">25%</span> de chance de ganhar Pacote Silver 🥈</p>
                   <p>• <span className="font-semibold">12%</span> de chance de ganhar Pacote Gold 🥇</p>
@@ -205,7 +205,7 @@ export default function FreePackModal({ isOpen, onClose, onItemReceived }: FreeP
               <button
                 onClick={generateFreePack}
                 disabled={loading}
-                className="group relative w-full overflow-hidden px-10 py-5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-gray-600 disabled:to-gray-700 text-white text-2xl font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 disabled:scale-100 shadow-xl hover:shadow-2xl"
+                className="group relative w-full overflow-hidden px-4 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-gray-600 disabled:to-gray-700 text-white text-lg sm:text-xl lg:text-2xl font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 disabled:scale-100 shadow-xl hover:shadow-2xl"
               >
                 <div className="flex items-center justify-center space-x-3">
                   {loading ? (
@@ -229,29 +229,29 @@ export default function FreePackModal({ isOpen, onClose, onItemReceived }: FreeP
           {/* Step 2: Show Pack Won */}
           {step === 'show-pack' && freePackGrant && (
             <div className="text-center">
-              <div className="text-8xl mb-6 animate-bounce">🎊</div>
-              <h2 className="text-4xl font-bold text-white mb-6 bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">
+              <div className="text-4xl sm:text-6xl lg:text-8xl mb-4 sm:mb-6 animate-bounce">🎊</div>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4 sm:mb-6 bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">
                 🏆 PARABÉNS! 🏆
               </h2>
               
-              <div className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl rounded-2xl p-8 mb-8 border border-white/20 transform hover:scale-[1.02] transition-all duration-300">
-                <div className="text-9xl mb-6 animate-pulse">
+              <div className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl rounded-2xl p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8 border border-white/20 transform hover:scale-[1.02] transition-all duration-300">
+                <div className="text-5xl sm:text-7xl lg:text-9xl mb-4 sm:mb-6 animate-pulse">
                   {getPackTypeEmoji(freePackGrant.pack.type)}
                 </div>
                 
-                <h3 className="text-3xl font-bold text-white mb-4">
+                <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-3 sm:mb-4">
                   Você ganhou um {freePackGrant.pack.name}!
                 </h3>
                 
-                <p className="text-lg text-gray-200 mb-6">
+                <p className="text-sm sm:text-base lg:text-lg text-gray-200 mb-4 sm:mb-6">
                   {freePackGrant.pack.description}
                 </p>
                 
-                <div className="bg-gradient-to-r from-green-600/20 to-emerald-600/20 rounded-xl p-4 border border-green-400/30">
-                  <div className="text-2xl text-green-300 font-bold">
+                <div className="bg-gradient-to-r from-green-600/20 to-emerald-600/20 rounded-xl p-3 sm:p-4 border border-green-400/30">
+                  <div className="text-lg sm:text-xl lg:text-2xl text-green-300 font-bold">
                     💰 Valor: {freePackGrant.pack.price} créditos
                   </div>
-                  <div className="text-sm text-green-200">
+                  <div className="text-xs sm:text-sm text-green-200">
                     (Você ganhou este pacote gratuitamente!)
                   </div>
                 </div>
@@ -259,7 +259,7 @@ export default function FreePackModal({ isOpen, onClose, onItemReceived }: FreeP
 
               <button
                 onClick={claimFreePack}
-                className="group relative w-full overflow-hidden px-10 py-5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-2xl font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl"
+                className="group relative w-full overflow-hidden px-4 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-lg sm:text-xl lg:text-2xl font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl"
               >
                 <div className="flex items-center justify-center space-x-3">
                   <span className="text-3xl group-hover:animate-pulse">⚡</span>
@@ -274,11 +274,11 @@ export default function FreePackModal({ isOpen, onClose, onItemReceived }: FreeP
           {/* Step 3: Opening Animation */}
           {step === 'opening' && freePackGrant && (
             <div className="text-center">
-              <div className="text-9xl mb-8 animate-pulse transform hover:scale-110 transition-transform duration-500">
+              <div className="text-5xl sm:text-7xl lg:text-9xl mb-6 sm:mb-8 animate-pulse transform hover:scale-110 transition-transform duration-500">
                 {getPackTypeEmoji(freePackGrant.pack.type)}
               </div>
               
-              <h2 className="text-4xl font-bold text-white mb-8 bg-gradient-to-r from-purple-300 to-blue-300 bg-clip-text text-transparent">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-6 sm:mb-8 bg-gradient-to-r from-purple-300 to-blue-300 bg-clip-text text-transparent">
                 ✨ Abrindo {freePackGrant.pack.name}... ✨
               </h2>
               
@@ -290,7 +290,7 @@ export default function FreePackModal({ isOpen, onClose, onItemReceived }: FreeP
               </div>
               
               <div className="space-y-3">
-                <p className="text-xl text-purple-300 font-semibold animate-pulse">
+                <p className="text-lg sm:text-xl text-purple-300 font-semibold animate-pulse">
                   🎯 Preparando sua surpresa épica...
                 </p>
                 <div className="flex justify-center space-x-1">
@@ -307,40 +307,40 @@ export default function FreePackModal({ isOpen, onClose, onItemReceived }: FreeP
           {/* Step 4: Result */}
           {step === 'result' && wonItem && (
             <div className="text-center">
-              <div className="text-8xl mb-6 animate-bounce">🎉</div>
+              <div className="text-4xl sm:text-6xl lg:text-8xl mb-4 sm:mb-6 animate-bounce">🎉</div>
               
-              <h2 className="text-4xl font-bold text-white mb-8 bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-6 sm:mb-8 bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">
                 🏆 ITEM ÉPICO OBTIDO! 🏆
               </h2>
               
-              <div className={`bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl rounded-3xl p-8 border-2 shadow-2xl transform hover:scale-[1.02] transition-all duration-500 ${getRarityColor(wonItem.rarity)} relative overflow-hidden mb-8`}>
+              <div className={`bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl rounded-3xl p-4 sm:p-6 lg:p-8 border-2 shadow-2xl transform hover:scale-[1.02] transition-all duration-500 ${getRarityColor(wonItem.rarity)} relative overflow-hidden mb-6 sm:mb-8`}>
                 {/* Item glow effect */}
                 <div className={`absolute -inset-4 ${getRarityColor(wonItem.rarity)} rounded-3xl blur-2xl opacity-40 animate-pulse`}></div>
                 
                 <div className="relative z-10">
-                  <div className={`w-32 h-32 mx-auto rounded-2xl mb-6 flex items-center justify-center text-5xl shadow-2xl ${getRarityColor(wonItem.rarity)} relative overflow-hidden`}>
+                  <div className={`w-20 h-20 sm:w-28 sm:h-28 lg:w-32 lg:h-32 mx-auto rounded-2xl mb-4 sm:mb-6 flex items-center justify-center text-3xl sm:text-4xl lg:text-5xl shadow-2xl ${getRarityColor(wonItem.rarity)} relative overflow-hidden`}>
                     <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
                     <div className="relative z-10">🏆</div>
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
                   </div>
                   
-                  <h3 className={`text-3xl font-bold mb-4 ${getRarityColor(wonItem.rarity).split(' ')[0]} drop-shadow-lg`}>
+                  <h3 className={`text-xl sm:text-2xl lg:text-3xl font-bold mb-3 sm:mb-4 ${getRarityColor(wonItem.rarity).split(' ')[0]} drop-shadow-lg`}>
                     {wonItem.name}
                   </h3>
                   
-                  <p className="text-gray-200 mb-6 text-lg font-medium bg-white/10 rounded-2xl p-4 backdrop-blur-sm border border-white/20">
+                  <p className="text-gray-200 mb-4 sm:mb-6 text-sm sm:text-base lg:text-lg font-medium bg-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-sm border border-white/20">
                     {wonItem.description}
                   </p>
                   
-                  <div className={`inline-block px-6 py-3 rounded-2xl text-lg font-bold shadow-xl transform hover:scale-105 transition-all duration-300 ${getRarityColor(wonItem.rarity)} border-2 border-white/30 backdrop-blur-sm mb-6`}>
+                  <div className={`inline-block px-4 sm:px-6 py-2 sm:py-3 rounded-2xl text-base sm:text-lg font-bold shadow-xl transform hover:scale-105 transition-all duration-300 ${getRarityColor(wonItem.rarity)} border-2 border-white/30 backdrop-blur-sm mb-4 sm:mb-6`}>
                     ⭐ {getRarityName(wonItem.rarity)} ⭐
                   </div>
                   
-                  <div className="bg-gradient-to-r from-green-600/30 to-emerald-600/30 backdrop-blur-sm rounded-2xl p-4 border border-green-400/30">
-                    <div className="text-2xl text-green-300 font-bold flex items-center justify-center space-x-2">
-                      <span className="text-3xl animate-pulse">💰</span>
+                  <div className="bg-gradient-to-r from-green-600/30 to-emerald-600/30 backdrop-blur-sm rounded-2xl p-3 sm:p-4 border border-green-400/30">
+                    <div className="text-lg sm:text-xl lg:text-2xl text-green-300 font-bold flex items-center justify-center space-x-2">
+                      <span className="text-xl sm:text-2xl lg:text-3xl animate-pulse">💰</span>
                       <span>Valor: {wonItem.value} créditos</span>
-                      <span className="text-3xl animate-pulse">💰</span>
+                      <span className="text-xl sm:text-2xl lg:text-3xl animate-pulse">💰</span>
                     </div>
                   </div>
                 </div>
@@ -349,7 +349,7 @@ export default function FreePackModal({ isOpen, onClose, onItemReceived }: FreeP
               <div className="space-y-4">
                 <button
                   onClick={goToInventory}
-                  className="group block w-full px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl relative overflow-hidden"
+                  className="group block w-full px-4 sm:px-6 lg:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl relative overflow-hidden"
                 >
                   <div className="flex items-center justify-center space-x-3">
                     <span className="text-xl group-hover:animate-pulse">🎒</span>
@@ -361,7 +361,7 @@ export default function FreePackModal({ isOpen, onClose, onItemReceived }: FreeP
                 
                 <button
                   onClick={handleClose}
-                  className="block w-full text-gray-300 hover:text-white transition duration-300 text-lg font-medium bg-white/10 rounded-2xl py-3 px-6 backdrop-blur-sm hover:bg-white/20"
+                  className="block w-full text-gray-300 hover:text-white transition duration-300 text-base sm:text-lg font-medium bg-white/10 rounded-2xl py-2 sm:py-3 px-4 sm:px-6 backdrop-blur-sm hover:bg-white/20"
                 >
                   Continuar Explorando
                 </button>
