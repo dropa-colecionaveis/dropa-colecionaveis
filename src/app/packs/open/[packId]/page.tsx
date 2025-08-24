@@ -91,7 +91,7 @@ export default function OpenPack() {
       fetchPackDetails()
       fetchUserProfile()
     }
-  }, [status, router, packId])
+  }, [status, router, packId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchPackDetails = async () => {
     try {
@@ -183,6 +183,7 @@ export default function OpenPack() {
         }
       }
     } catch (error) {
+      console.error('Error opening pack:', error)
       alert('Something went wrong')
       setIsOpening(false)
     }
@@ -307,7 +308,7 @@ export default function OpenPack() {
                     <div className="absolute -inset-4 bg-gradient-to-r from-purple-500/20 via-blue-500/20 to-indigo-500/20 rounded-full blur-xl animate-pulse"></div>
                   </div>
                   
-                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-6 sm:mb-8 bg-gradient-to-r from-purple-300 to-blue-300 bg-clip-text text-transparent"
+                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-6 sm:mb-8 bg-gradient-to-r from-purple-300 to-blue-300 bg-clip-text text-transparent">
                     ✨ Abrindo {pack.name}... ✨
                   </h2>
                   
