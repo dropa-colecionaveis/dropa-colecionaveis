@@ -116,3 +116,69 @@ export function UserRankingStatsSkeleton() {
     </div>
   )
 }
+
+export function PacksSkeleton() {
+  return (
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="group bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl">
+          <div className="text-center mb-6">
+            <SkeletonLoader width="w-16" height="h-16" className="mx-auto mb-4 rounded-full" />
+            <SkeletonLoader width="w-32" height="h-8" className="mx-auto mb-2" />
+            <SkeletonLoader width="w-48" height="h-4" className="mx-auto mb-4" />
+            <SkeletonLoader width="w-24" height="h-8" className="mx-auto" />
+          </div>
+
+          {/* Probabilities skeleton */}
+          <div className="mb-6">
+            <SkeletonLoader width="w-28" height="h-6" className="mb-3" />
+            <div className="space-y-2">
+              {[1, 2, 3, 4, 5].map((j) => (
+                <div key={j} className="flex justify-between items-center p-2 bg-white/5 rounded-lg">
+                  <SkeletonLoader width="w-16" height="h-4" />
+                  <SkeletonLoader width="w-8" height="h-4" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Action button skeleton */}
+          <SkeletonLoader width="w-full" height="h-12" className="rounded-xl" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export function HeaderStatsSkeleton() {
+  return (
+    <div className="flex items-center space-x-4">
+      {/* Level and XP skeleton */}
+      <div className="bg-gradient-to-r from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-400/30">
+        <div className="text-center">
+          <SkeletonLoader width="w-16" height="h-4" className="mb-1" />
+          <SkeletonLoader width="w-12" height="h-3" />
+        </div>
+      </div>
+
+      {/* Ranking skeleton */}
+      <div className="bg-gradient-to-r from-indigo-600/30 to-cyan-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-indigo-400/30">
+        <div className="text-center">
+          <SkeletonLoader width="w-20" height="h-4" className="mb-1" />
+          <SkeletonLoader width="w-16" height="h-3" />
+        </div>
+      </div>
+
+      {/* Credits skeleton */}
+      <div className="bg-gradient-to-r from-yellow-600/30 to-orange-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-yellow-400/30">
+        <div className="flex items-center space-x-2">
+          <SkeletonLoader width="w-6" height="h-6" className="rounded-full" />
+          <div>
+            <SkeletonLoader width="w-12" height="h-4" className="mb-1" />
+            <SkeletonLoader width="w-16" height="h-3" />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

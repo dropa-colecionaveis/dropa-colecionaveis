@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useUserRankings } from '@/hooks/useUserRankings'
+import { PacksSkeleton, HeaderStatsSkeleton } from '@/components/SkeletonLoader'
 
 interface Pack {
   id: string
@@ -29,51 +30,84 @@ export default function PackStore() {
   const [packs, setPacks] = useState<Pack[]>([])
   const [userProfile, setUserProfile] = useState<UserProfile>({ credits: 0 })
   const [userStats, setUserStats] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const [packsLoading, setPacksLoading] = useState(false)
+  const [profileLoading, setProfileLoading] = useState(false)
+  const [statsLoading, setStatsLoading] = useState(false)
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const { bestRanking, loading: rankingLoading } = useUserRankings()
 
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin')
-    } else if (status === 'authenticated') {
-      fetchPacks()
-      fetchUserProfile()
+      return
     }
-  }, [status, router])
+    
+    if (status === 'authenticated' && session?.user) {
+      // Progressive loading - start immediately without waiting for all data
+      fetchDataProgressive()
+    }
+  }, [status, router, session])
+
+  // Progressive data fetching for better UX
+  const fetchDataProgressive = async () => {
+    // 1. Fetch packs first (most important for this page)
+    fetchPacks()
+    
+    // 2. Fetch user profile and stats in parallel
+    fetchUserProfile()
+    fetchUserStats()
+  }
 
   const fetchPacks = async () => {
     try {
-      const response = await fetch('/api/packs')
+      setPacksLoading(true)
+      const response = await fetch('/api/packs', {
+        headers: { 'Cache-Control': 'max-age=300' } // Cache 5min
+      })
       if (response.ok) {
         const data = await response.json()
         setPacks(data)
       }
     } catch (error) {
       console.error('Error fetching packs:', error)
+    } finally {
+      setPacksLoading(false)
     }
   }
 
   const fetchUserProfile = async () => {
     try {
-      const [profileResponse, statsResponse] = await Promise.all([
-        fetch('/api/user/profile'),
-        fetch('/api/user/stats')
-      ])
+      setProfileLoading(true)
+      const response = await fetch('/api/user/profile', {
+        headers: { 'Cache-Control': 'max-age=300' } // Cache 5min
+      })
       
-      if (profileResponse.ok) {
-        const profileData = await profileResponse.json()
+      if (response.ok) {
+        const profileData = await response.json()
         setUserProfile(profileData)
       }
+    } catch (error) {
+      console.error('Error fetching user profile:', error)
+    } finally {
+      setProfileLoading(false)
+    }
+  }
+
+  const fetchUserStats = async () => {
+    try {
+      setStatsLoading(true)
+      const response = await fetch('/api/user/stats', {
+        headers: { 'Cache-Control': 'max-age=180' } // Cache 3min
+      })
       
-      if (statsResponse.ok) {
-        const statsData = await statsResponse.json()
+      if (response.ok) {
+        const statsData = await response.json()
         setUserStats(statsData)
       }
     } catch (error) {
-      console.error('Error fetching user data:', error)
+      console.error('Error fetching user stats:', error)
     } finally {
-      setLoading(false)
+      setStatsLoading(false)
     }
   }
 
@@ -119,7 +153,26 @@ export default function PackStore() {
     signOut({ callbackUrl: '/' })
   }
 
-  if (status === 'loading' || loading) {
+  // Show loading only during authentication
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+        <div className="text-white text-xl">Carregando...</div>
+      </div>
+    )
+  }
+
+  // If not authenticated, show loading during redirect
+  if (status === 'unauthenticated') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+        <div className="text-white text-xl">Carregando...</div>
+      </div>
+    )
+  }
+
+  // If no session yet, wait a bit more
+  if (!session?.user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
         <div className="text-white text-xl">Carregando...</div>
@@ -157,46 +210,59 @@ export default function PackStore() {
 
             {/* Stats and Actions */}
             <div className="flex items-center space-x-4">
-              {/* Level and XP */}
-              {userStats && (
-                <div className="bg-gradient-to-r from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-400/30 hover:border-purple-300/50 transition-colors duration-200">
-                  <Link href="/achievements" className="flex items-center space-x-3 group">
-                    <div className="text-center">
-                      <div className="text-purple-300 font-bold text-sm group-hover:text-purple-200 transition-colors">⭐ Nível {userStats.level || 1}</div>
-                      <div className="text-xs text-gray-300 group-hover:text-purple-200 transition-colors">{userStats.totalXP || 0} XP</div>
+              {/* Show skeleton while loading or actual data when available */}
+              {(statsLoading || profileLoading || rankingLoading) && !userStats && !userProfile ? (
+                <HeaderStatsSkeleton />
+              ) : (
+                <>
+                  {/* Level and XP */}
+                  {userStats && (
+                    <div className="bg-gradient-to-r from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-400/30 hover:border-purple-300/50 transition-colors duration-200">
+                      <Link href="/achievements" className="flex items-center space-x-3 group">
+                        <div className="text-center">
+                          <div className="text-purple-300 font-bold text-sm group-hover:text-purple-200 transition-colors">⭐ Nível {userStats.level || 1}</div>
+                          <div className="text-xs text-gray-300 group-hover:text-purple-200 transition-colors">{userStats.totalXP || 0} XP</div>
+                        </div>
+                      </Link>
                     </div>
-                  </Link>
-                </div>
-              )}
+                  )}
 
-              {/* User Ranking */}
-              {!rankingLoading && bestRanking.position > 0 && (
-                <div className="bg-gradient-to-r from-indigo-600/30 to-cyan-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-indigo-400/30 hover:border-indigo-300/50 transition-colors duration-200">
-                  <Link href="/rankings" className="flex items-center space-x-3 group">
-                    <div className="text-center">
-                      <div className="text-indigo-300 font-bold text-sm flex items-center">
-                        <span className="mr-1">📊</span>
-                        <span>#{bestRanking.position}</span>
-                        <span className="ml-1 text-xs opacity-75">({Math.round(bestRanking.percentage)}%)</span>
-                      </div>
-                      <div className="text-xs text-gray-300 group-hover:text-indigo-200 transition-colors">
-                        Ranking Global
-                      </div>
+                  {/* User Ranking - Show immediately if available or loading with placeholder */}
+                  {(bestRanking.position > 0 || (rankingLoading && userStats && userStats.totalXP > 0)) && (
+                    <div className="bg-gradient-to-r from-indigo-600/30 to-cyan-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-indigo-400/30 hover:border-indigo-300/50 transition-colors duration-200">
+                      <Link href="/rankings" className="flex items-center space-x-3 group">
+                        <div className="text-center">
+                          <div className="text-indigo-300 font-bold text-sm flex items-center">
+                            <span className="mr-1">📊</span>
+                            {bestRanking.position > 0 ? (
+                              <>
+                                <span>#{bestRanking.position}</span>
+                                <span className="ml-1 text-xs opacity-75">({Math.round(bestRanking.percentage)}%)</span>
+                              </>
+                            ) : (
+                              <span className="animate-pulse">Carregando...</span>
+                            )}
+                          </div>
+                          <div className="text-xs text-gray-300 group-hover:text-indigo-200 transition-colors">
+                            Ranking Global
+                          </div>
+                        </div>
+                      </Link>
                     </div>
-                  </Link>
-                </div>
-              )}
-              
-              {/* Credits */}
-              <div className="bg-gradient-to-r from-yellow-600/30 to-orange-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-yellow-400/30 hover:border-yellow-300/50 transition-colors duration-200">
-                <Link href="/credits/purchase" className="flex items-center space-x-2 group">
-                  <span className="text-yellow-300 text-lg group-hover:scale-110 transition-transform duration-200">💰</span>
-                  <div>
-                    <div className="text-yellow-300 font-bold group-hover:text-yellow-200 transition-colors">{userProfile?.credits || 0}</div>
-                    <div className="text-xs text-yellow-200 group-hover:text-yellow-100 transition-colors">créditos</div>
+                  )}
+                  
+                  {/* Credits */}
+                  <div className="bg-gradient-to-r from-yellow-600/30 to-orange-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-yellow-400/30 hover:border-yellow-300/50 transition-colors duration-200">
+                    <Link href="/credits/purchase" className="flex items-center space-x-2 group">
+                      <span className="text-yellow-300 text-lg group-hover:scale-110 transition-transform duration-200">💰</span>
+                      <div>
+                        <div className="text-yellow-300 font-bold group-hover:text-yellow-200 transition-colors">{userProfile?.credits || 0}</div>
+                        <div className="text-xs text-yellow-200 group-hover:text-yellow-100 transition-colors">créditos</div>
+                      </div>
+                    </Link>
                   </div>
-                </Link>
-              </div>
+                </>
+              )}
               
               {/* Quick Actions */}
               <div className="flex items-center space-x-2">
@@ -233,8 +299,12 @@ export default function PackStore() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {packs.map((pack) => (
+          {/* Packs Grid with Skeleton */}
+          {packsLoading && packs.length === 0 ? (
+            <PacksSkeleton />
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {packs.map((pack) => (
               <div key={pack.id} className="group bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:border-purple-400/50 transition-all duration-300 hover:transform hover:scale-105 shadow-xl hover:shadow-2xl">
                 <div className="text-center mb-6">
                   <div className="text-6xl mb-4 group-hover:animate-bounce transition-all duration-300">
@@ -299,8 +369,9 @@ export default function PackStore() {
                   )}
                 </div>
               </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* Info Section */}
           <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-8 text-center border border-white/20 shadow-xl">
