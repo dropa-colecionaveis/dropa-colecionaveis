@@ -88,18 +88,17 @@ export async function POST(req: Request) {
       const userItemRecords = []
       const transactionRecords = []
 
+      // Cache all items by rarity ONCE outside the loop
+      const { getCachedItemsByRarity } = await import('@/lib/rarity-system')
+      const itemsByRarity = await getCachedItemsByRarity()
+
       // Process each pack opening
       for (let i = 0; i < quantity; i++) {
         // Select random rarity based on pack probabilities
         const selectedRarity = selectRandomRarity(pack.probabilities)
 
-        // Get random item of selected rarity
-        const allItems = await tx.item.findMany({
-          where: {
-            rarity: selectedRarity,
-            isActive: true
-          }
-        })
+        // Get random item of selected rarity (usando cache)
+        const allItems = itemsByRarity[selectedRarity]
 
         // Filter items that are available (not sold out for limited editions)
         const availableItems = allItems.filter(item => {
