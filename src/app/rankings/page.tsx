@@ -784,7 +784,7 @@ export default function Rankings() {
               )}
             </div>
 
-            {(showGlobalRanking ? globalRankings.length === 0 : rankings.length === 0) && !loading && !globalRankingLoading && (
+            {(showGlobalRanking ? globalRankings.length === 0 : rankings.length === 0) && !rankingsLoading && !globalRankingLoading && (
               <div className="p-12 text-center">
                 <div className="text-8xl mb-6 animate-bounce">🏆</div>
                 <h3 className="text-3xl font-bold text-white mb-4">Nenhum ranking encontrado</h3>
