@@ -465,17 +465,11 @@ export default function Dashboard() {
 
         {/* Recent Activity Section */}
         <div className="bg-gradient-to-br from-gray-800/40 to-slate-800/40 backdrop-blur-lg rounded-2xl p-8 border border-gray-500/30">
-          <div className="flex items-center justify-between mb-6">
+          <div className="mb-6">
             <h2 className="text-2xl font-bold text-white flex items-center">
               <span className="mr-3">⚡</span>
               Atividade Recente
             </h2>
-            <button
-              onClick={fetchRecentActivities}
-              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg transition-all duration-200 text-sm font-medium"
-            >
-              🔄 Atualizar
-            </button>
           </div>
 
           {activitiesLoading && recentActivities.length === 0 ? (
