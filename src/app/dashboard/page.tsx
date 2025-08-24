@@ -8,6 +8,7 @@ import Image from 'next/image'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import { useUserRankings } from '@/hooks/useUserRankings'
 import FreePackModal from '@/components/FreePackModal'
+import { ProfileSkeleton, StatsSkeleton, ActivitiesSkeleton } from '@/components/SkeletonLoader'
 
 export default function Dashboard() {
   const { data: session, status } = useSession()
@@ -15,58 +16,89 @@ export default function Dashboard() {
   const [userProfile, setUserProfile] = useState<any>(null)
   const [userStats, setUserStats] = useState<any>(null)
   const [recentActivities, setRecentActivities] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [activitiesLoading, setActivitiesLoading] = useState(true)
+  const [profileLoading, setProfileLoading] = useState(false)
+  const [statsLoading, setStatsLoading] = useState(false)
+  const [activitiesLoading, setActivitiesLoading] = useState(false)
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [showFreePackModal, setShowFreePackModal] = useState(false)
   const [hasUnclaimedFreePack, setHasUnclaimedFreePack] = useState(false)
   const { bestRanking, loading: rankingLoading } = useUserRankings()
 
   useEffect(() => {
-    console.log('Dashboard status:', status, 'session:', session)
-    
     if (status === 'unauthenticated') {
-      console.log('Unauthenticated - redirecting to signin')
       router.push('/auth/signin')
-    } else if (status === 'authenticated' && session?.user) {
-      console.log('Authenticated - fetching profile')
-      fetchUserProfile()
+      return
+    } 
+    
+    if (status === 'authenticated' && session?.user) {
+      // Carregamento progressivo - começar imediatamente sem aguardar todos os dados
+      fetchUserDataProgressive()
     }
   }, [status, router, session])
 
+  // Carregamento progressivo para melhor UX
+  const fetchUserDataProgressive = async () => {
+    // 1. Buscar perfil primeiro (mais crítico)
+    fetchUserProfile()
+    
+    // 2. Buscar stats em paralelo
+    fetchUserStats()
+    
+    // 3. Buscar dados menos críticos depois
+    setTimeout(() => {
+      fetchRecentActivities()
+      checkFreePack()
+    }, 100) // Pequeno delay para não sobrecarregar
+  }
+
   const fetchUserProfile = async () => {
     try {
-      const [profileResponse, statsResponse, freePackResponse] = await Promise.all([
-        fetch('/api/user/profile'),
-        fetch('/api/user/stats'),
-        fetch('/api/free-pack/check')
-      ])
+      setProfileLoading(true)
+      const response = await fetch('/api/user/profile', {
+        headers: { 'Cache-Control': 'max-age=300' } // Cache 5min
+      })
       
-      if (profileResponse.ok) {
-        const profileData = await profileResponse.json()
+      if (response.ok) {
+        const profileData = await response.json()
         setUserProfile(profileData)
       }
+    } catch (error) {
+      console.error('Error fetching user profile:', error)
+    } finally {
+      setProfileLoading(false)
+    }
+  }
+
+  const fetchUserStats = async () => {
+    try {
+      setStatsLoading(true)
+      const response = await fetch('/api/user/stats', {
+        headers: { 'Cache-Control': 'max-age=180' } // Cache 3min
+      })
       
-      if (statsResponse.ok) {
-        const statsData = await statsResponse.json()
+      if (response.ok) {
+        const statsData = await response.json()
         setUserStats(statsData)
       }
+    } catch (error) {
+      console.error('Error fetching user stats:', error)
+    } finally {
+      setStatsLoading(false)
+    }
+  }
 
-      // Check if user should see free pack modal
-      if (freePackResponse.ok) {
-        const freePackData = await freePackResponse.json()
+  const checkFreePack = async () => {
+    try {
+      const response = await fetch('/api/free-pack/check')
+      if (response.ok) {
+        const freePackData = await response.json()
         if (!freePackData.hasReceivedFreePack || freePackData.unclaimedFreePack) {
           setHasUnclaimedFreePack(true)
           setShowFreePackModal(true)
         }
       }
-      
-      // Buscar atividades recentes
-      fetchRecentActivities()
     } catch (error) {
-      console.error('Error fetching user data:', error)
-    } finally {
-      setLoading(false)
+      console.error('Error checking free pack:', error)
     }
   }
 
@@ -138,7 +170,18 @@ export default function Dashboard() {
     signOut({ callbackUrl: '/' })
   }
 
-  if (status === 'loading' || loading) {
+  // Mostrar loading apenas durante autenticação inicial
+  if (status === 'loading') {
+    return <LoadingSpinner />
+  }
+
+  // Se não autenticado, mostrar loading durante redirecionamento
+  if (status === 'unauthenticated') {
+    return <LoadingSpinner />
+  }
+
+  // Se não tem session ainda, aguardar um pouco mais
+  if (!session?.user) {
     return <LoadingSpinner />
   }
 
@@ -270,23 +313,29 @@ export default function Dashboard() {
             </p>
             
             {/* Quick Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12 max-w-3xl mx-auto">
-              <div className="bg-gradient-to-br from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl p-4 border border-purple-400/30">
-                <div className="text-2xl font-bold text-purple-300">{userStats?.totalPacksOpened || 0}</div>
-                <div className="text-sm text-gray-300">Pacotes Abertos</div>
-              </div>
-              <div className="bg-gradient-to-br from-blue-600/30 to-indigo-600/30 backdrop-blur-sm rounded-xl p-4 border border-blue-400/30">
-                <div className="text-2xl font-bold text-blue-300">{userStats?.totalItemsCollected || 0}</div>
-                <div className="text-sm text-gray-300">Itens Coletados</div>
-              </div>
-              <div className="bg-gradient-to-br from-yellow-600/30 to-orange-600/30 backdrop-blur-sm rounded-xl p-4 border border-yellow-400/30">
-                <div className="text-2xl font-bold text-yellow-300">{userStats?.legendaryItemsFound || 0}</div>
-                <div className="text-sm text-gray-300">Itens Lendários</div>
-              </div>
-              <div className="bg-gradient-to-br from-green-600/30 to-emerald-600/30 backdrop-blur-sm rounded-xl p-4 border border-green-400/30">
-                <div className="text-2xl font-bold text-green-300">{userProfile?.credits || 0}</div>
-                <div className="text-sm text-gray-300">Créditos</div>
-              </div>
+            <div className="mb-12 max-w-3xl mx-auto">
+              {statsLoading && !userStats ? (
+                <StatsSkeleton />
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-gradient-to-br from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl p-4 border border-purple-400/30">
+                    <div className="text-2xl font-bold text-purple-300">{userStats?.totalPacksOpened || 0}</div>
+                    <div className="text-sm text-gray-300">Pacotes Abertos</div>
+                  </div>
+                  <div className="bg-gradient-to-br from-blue-600/30 to-indigo-600/30 backdrop-blur-sm rounded-xl p-4 border border-blue-400/30">
+                    <div className="text-2xl font-bold text-blue-300">{userStats?.totalItemsCollected || 0}</div>
+                    <div className="text-sm text-gray-300">Itens Coletados</div>
+                  </div>
+                  <div className="bg-gradient-to-br from-yellow-600/30 to-orange-600/30 backdrop-blur-sm rounded-xl p-4 border border-yellow-400/30">
+                    <div className="text-2xl font-bold text-yellow-300">{userStats?.legendaryItemsFound || 0}</div>
+                    <div className="text-sm text-gray-300">Itens Lendários</div>
+                  </div>
+                  <div className="bg-gradient-to-br from-green-600/30 to-emerald-600/30 backdrop-blur-sm rounded-xl p-4 border border-green-400/30">
+                    <div className="text-2xl font-bold text-green-300">{userProfile?.credits || 0}</div>
+                    <div className="text-sm text-gray-300">Créditos</div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -423,11 +472,8 @@ export default function Dashboard() {
             </button>
           </div>
 
-          {activitiesLoading ? (
-            <div className="text-center py-8">
-              <LoadingSpinner />
-              <p className="text-gray-400 mt-4">Carregando atividades...</p>
-            </div>
+          {activitiesLoading && recentActivities.length === 0 ? (
+            <ActivitiesSkeleton />
           ) : recentActivities.length > 0 ? (
             <div className="space-y-4">
               {recentActivities.slice(0, 5).map((activity, index) => (
