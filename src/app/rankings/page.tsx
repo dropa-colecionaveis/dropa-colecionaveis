@@ -6,6 +6,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useUserRankings } from '@/hooks/useUserRankings'
+import LoadingSpinner from '@/components/LoadingSpinner'
+import { RankingsSkeleton, RankingCategoriesSkeleton, UserRankingStatsSkeleton } from '@/components/SkeletonLoader'
 
 interface RankingEntry {
   userId: string
@@ -59,7 +61,9 @@ export default function Rankings() {
   const router = useRouter()
   const [rankings, setRankings] = useState<RankingEntry[]>([])
   const [userStats, setUserStats] = useState<UserStats | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [rankingsLoading, setRankingsLoading] = useState(false)
+  const [userStatsLoading, setUserStatsLoading] = useState(false)
+  const [profileLoading, setProfileLoading] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string>('GLOBAL')
   const [userPosition, setUserPosition] = useState<number>(0)
   const [updateLoading, setUpdateLoading] = useState(false)
@@ -125,22 +129,48 @@ export default function Rankings() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin')
-    } else if (status === 'authenticated') {
-      fetchRankings()
-      fetchUserStats()
-      fetchUserProfile()
+      return
+    } 
+    
+    if (status === 'authenticated' && session?.user) {
+      // Carregamento progressivo para melhor UX
+      fetchRankingsProgressive()
     }
-  }, [status, router, selectedCategory])
+  }, [status, router, session])
+
+  useEffect(() => {
+    // Atualizar rankings quando categoria muda
+    if (status === 'authenticated' && session?.user) {
+      fetchRankings()
+    }
+  }, [selectedCategory])
+
+  // Carregamento progressivo para rankings
+  const fetchRankingsProgressive = async () => {
+    // 1. Buscar dados do usuário primeiro (mais rápido)
+    fetchUserProfile()
+    fetchUserStats()
+    
+    // 2. Buscar rankings depois
+    setTimeout(() => {
+      fetchRankings()
+    }, 100)
+  }
 
   const fetchUserProfile = async () => {
     try {
-      const response = await fetch('/api/user/profile')
+      setProfileLoading(true)
+      const response = await fetch('/api/user/profile', {
+        headers: { 'Cache-Control': 'max-age=300' } // Cache 5min
+      })
       if (response.ok) {
         const profileData = await response.json()
         setUserProfile(profileData)
       }
     } catch (error) {
       console.error('Error fetching user profile:', error)
+    } finally {
+      setProfileLoading(false)
     }
   }
 
@@ -151,14 +181,16 @@ export default function Rankings() {
 
   const fetchRankings = async () => {
     try {
-      setLoading(true)
+      setRankingsLoading(true)
       
       if (selectedCategory === 'GLOBAL') {
         await fetchGlobalRankings()
         setShowGlobalRanking(true)
       } else {
         setShowGlobalRanking(false)
-        const response = await fetch(`/api/rankings/${selectedCategory}?limit=100`)
+        const response = await fetch(`/api/rankings/${selectedCategory}?limit=100`, {
+          headers: { 'Cache-Control': 'max-age=120' } // Cache 2min
+        })
         if (response.ok) {
           const data = await response.json()
           console.log('Rankings data:', data)
@@ -173,19 +205,24 @@ export default function Rankings() {
     } catch (error) {
       console.error('Error fetching rankings:', error)
     } finally {
-      setLoading(false)
+      setRankingsLoading(false)
     }
   }
 
   const fetchUserStats = async () => {
     try {
-      const response = await fetch('/api/user/stats')
+      setUserStatsLoading(true)
+      const response = await fetch('/api/user/stats', {
+        headers: { 'Cache-Control': 'max-age=180' } // Cache 3min
+      })
       if (response.ok) {
         const data = await response.json()
         setUserStats(data)
       }
     } catch (error) {
       console.error('Error fetching user stats:', error)
+    } finally {
+      setUserStatsLoading(false)
     }
   }
 
@@ -273,12 +310,19 @@ export default function Rankings() {
     return categories.find(cat => cat.key === selectedCategory) || categories[0]
   }
 
-  if (status === 'loading' || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
-        <div className="text-white text-xl">Carregando...</div>
-      </div>
-    )
+  // Mostrar loading apenas durante autenticação inicial
+  if (status === 'loading') {
+    return <LoadingSpinner />
+  }
+
+  // Se não autenticado, mostrar loading durante redirecionamento
+  if (status === 'unauthenticated') {
+    return <LoadingSpinner />
+  }
+
+  // Se não tem session ainda, aguardar um pouco mais
+  if (!session?.user) {
+    return <LoadingSpinner />
   }
 
   const currentCategory = getCurrentCategory()
@@ -393,7 +437,9 @@ export default function Rankings() {
           </div>
 
           {/* User Stats Cards */}
-          {userStats && (
+          {userStatsLoading && !userStats ? (
+            <UserRankingStatsSkeleton />
+          ) : userStats && (
             <div className="grid md:grid-cols-4 gap-6 mb-8">
               <div className="group bg-gradient-to-br from-blue-600/20 to-cyan-600/20 backdrop-blur-lg rounded-2xl p-6 text-center text-white border border-blue-500/30 hover:border-blue-400/50 transition-all duration-300 hover:transform hover:scale-105 shadow-lg hover:shadow-xl">
                 <div className="text-3xl mb-2 group-hover:animate-pulse">⭐</div>
@@ -585,7 +631,11 @@ export default function Rankings() {
             </div>
             
             <div className="divide-y divide-white/10">
-              {showGlobalRanking ? (
+              {rankingsLoading && (!rankings.length && !globalRankings.length) ? (
+                <div className="p-6">
+                  <RankingsSkeleton />
+                </div>
+              ) : showGlobalRanking ? (
                 /* Global Rankings List */
                 globalRankings.map((entry) => (
                   <div

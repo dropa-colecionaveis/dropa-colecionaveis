@@ -59,3 +59,60 @@ export function ActivitiesSkeleton() {
     </div>
   )
 }
+
+export function RankingsSkeleton() {
+  return (
+    <div className="space-y-4">
+      {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+        <div key={i} className="bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:border-white/30 transition-all duration-300">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-6">
+              <SkeletonLoader width="w-12" height="h-12" className="rounded-full" />
+              <div>
+                <SkeletonLoader width="w-32" height="h-6" className="mb-2" />
+                <SkeletonLoader width="w-24" height="h-4" />
+              </div>
+            </div>
+            <div className="text-right">
+              <SkeletonLoader width="w-16" height="h-8" className="mb-1 ml-auto" />
+              <SkeletonLoader width="w-12" height="h-4" className="ml-auto" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export function RankingCategoriesSkeleton() {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+      {[1, 2, 3, 4, 5, 6].map((i) => (
+        <div key={i} className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/20">
+          <div className="text-center">
+            <SkeletonLoader width="w-12" height="h-12" className="mx-auto mb-3 rounded-full" />
+            <SkeletonLoader width="w-24" height="h-6" className="mx-auto mb-2" />
+            <SkeletonLoader width="w-32" height="h-4" className="mx-auto" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export function UserRankingStatsSkeleton() {
+  return (
+    <div className="bg-gradient-to-r from-purple-600/30 to-indigo-600/30 backdrop-blur-sm rounded-2xl p-6 border border-purple-400/30 mb-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <SkeletonLoader width="w-32" height="h-6" className="mb-2" />
+          <SkeletonLoader width="w-24" height="h-4" />
+        </div>
+        <div className="text-right">
+          <SkeletonLoader width="w-16" height="h-8" className="mb-2" />
+          <SkeletonLoader width="w-20" height="h-4" />
+        </div>
+      </div>
+    </div>
+  )
+}
