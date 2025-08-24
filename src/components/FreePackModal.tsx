@@ -30,9 +30,10 @@ interface Item {
 interface FreePackModalProps {
   isOpen: boolean
   onClose: () => void
+  onItemReceived?: () => void // Callback para refresh do dashboard
 }
 
-export default function FreePackModal({ isOpen, onClose }: FreePackModalProps) {
+export default function FreePackModal({ isOpen, onClose, onItemReceived }: FreePackModalProps) {
   const [step, setStep] = useState<'generate' | 'show-pack' | 'opening' | 'result'>('generate')
   const [loading, setLoading] = useState(false)
   const [freePackGrant, setFreePackGrant] = useState<FreePackGrant | null>(null)
@@ -139,6 +140,10 @@ export default function FreePackModal({ isOpen, onClose }: FreePackModalProps) {
           const data = await response.json()
           setWonItem(data.item)
           setStep('result')
+          // Notificar o dashboard para atualizar
+          if (onItemReceived) {
+            onItemReceived()
+          }
         } else {
           const error = await response.json()
           alert(error.error || 'Erro ao abrir pacote')
