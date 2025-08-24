@@ -57,13 +57,10 @@ export async function POST(req: Request) {
     // Select random rarity based on pack probabilities
     const selectedRarity = selectRandomRarity(pack.probabilities)
 
-    // Get random item of selected rarity
-    const allItems = await prisma.item.findMany({
-      where: {
-        rarity: selectedRarity,
-        isActive: true
-      }
-    })
+    // Get random item of selected rarity (usando cache)
+    const { getCachedItemsByRarity } = await import('@/lib/rarity-system')
+    const itemsByRarity = await getCachedItemsByRarity()
+    const allItems = itemsByRarity[selectedRarity]
 
     // Filter items that are available (not sold out for limited editions)
     const availableItems = allItems.filter(item => {

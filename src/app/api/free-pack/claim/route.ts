@@ -54,15 +54,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Get random item of selected rarity
-    const items = await prisma.item.findMany({
-      where: { 
-        rarity: selectedRarity as any,
-        isActive: true 
-      }
-    })
+    // Get random item of selected rarity (usando cache)
+    const { getCachedItemsByRarity } = await import('@/lib/rarity-system')
+    const itemsByRarity = await getCachedItemsByRarity()
+    const items = itemsByRarity[selectedRarity as keyof typeof itemsByRarity]
 
-    if (items.length === 0) {
+    if (!items || items.length === 0) {
       return NextResponse.json({ error: 'No items available for this rarity' }, { status: 404 })
     }
 
@@ -106,64 +103,66 @@ export async function POST(req: NextRequest) {
       })
     ])
 
-    // Track user stats properly (this will update rankings)
-    try {
-      await userStatsService.trackPackOpening(
-        session.user.id,
-        freePackGrant.packId,
-        randomItem.id,
-        randomItem.rarity as any
-      )
+    // Track user stats properly (async - não bloquear resposta)
+    setImmediate(async () => {
+      try {
+        await userStatsService.trackPackOpening(
+          session.user.id,
+          freePackGrant.packId,
+          randomItem.id,
+          randomItem.rarity as any
+        )
 
-      await userStatsService.trackItemObtained(
-        session.user.id,
-        randomItem.id,
-        randomItem.rarity as any,
-        true
-      )
-    } catch (statsError) {
-      console.error('Error tracking user stats:', statsError)
-      // Don't fail the request if stats tracking fails
-    }
+        await userStatsService.trackItemObtained(
+          session.user.id,
+          randomItem.id,
+          randomItem.rarity as any,
+          true
+        )
+      } catch (statsError) {
+        console.error('Error tracking user stats:', statsError)
+      }
+    })
 
-    // Trigger achievement events
-    try {
-      console.log(`🎯 Checking achievements for user ${session.user.id}:`, {
-        isFirstPack,
-        isFirstItem,
-        itemRarity: randomItem.rarity,
-        packType: freePackGrant.pack.type
-      })
-
-      // Pack opened event
-      const packAchievements = await achievementEngine.checkAchievements({
-        type: 'PACK_OPENED',
-        userId: session.user.id,
-        data: {
-          packId: freePackGrant.packId,
-          packType: freePackGrant.pack.type,
+    // Trigger achievement events (async - não bloquear resposta)
+    setImmediate(async () => {
+      try {
+        console.log(`🎯 Checking achievements for user ${session.user.id}:`, {
           isFirstPack,
-          items: [randomItem]
-        }
-      })
-      console.log(`🏆 Pack achievements unlocked:`, packAchievements)
+          isFirstItem,
+          itemRarity: randomItem.rarity,
+          packType: freePackGrant.pack.type
+        })
 
-      // Item obtained event
-      const itemAchievements = await achievementEngine.checkAchievements({
-        type: 'ITEM_OBTAINED',
-        userId: session.user.id,
-        data: {
-          itemId: randomItem.id,
-          rarity: randomItem.rarity,
-          isFirstItem
-        }
-      })
-      console.log(`🏆 Item achievements unlocked:`, itemAchievements)
+        // Pack opened event
+        const packAchievements = await achievementEngine.checkAchievements({
+          type: 'PACK_OPENED',
+          userId: session.user.id,
+          data: {
+            packId: freePackGrant.packId,
+            packType: freePackGrant.pack.type,
+            isFirstPack,
+            items: [randomItem]
+          }
+        })
+        console.log(`🏆 Pack achievements unlocked:`, packAchievements)
 
-    } catch (achievementError) {
-      console.error('Error processing achievements:', achievementError)
-      // Don't fail the request if achievements fail
-    }
+        // Item obtained event
+        const itemAchievements = await achievementEngine.checkAchievements({
+          type: 'ITEM_OBTAINED',
+          userId: session.user.id,
+          data: {
+            itemId: randomItem.id,
+            rarity: randomItem.rarity,
+            isFirstItem
+          }
+        })
+        console.log(`🏆 Item achievements unlocked:`, itemAchievements)
+
+      } catch (achievementError) {
+        console.error('Error processing achievements:', achievementError)
+      }
+    })
 
     return NextResponse.json({
       success: true,

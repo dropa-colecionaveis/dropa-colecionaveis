@@ -123,7 +123,7 @@ export default function FreePackModal({ isOpen, onClose }: FreePackModalProps) {
     setLoading(true)
 
     try {
-      // Simular animação de abertura por 3 segundos
+      // Animação mais rápida - apenas 800ms para UX melhor
       setTimeout(async () => {
         const response = await fetch('/api/free-pack/claim', {
           method: 'POST',
@@ -144,7 +144,7 @@ export default function FreePackModal({ isOpen, onClose }: FreePackModalProps) {
           alert(error.error || 'Erro ao abrir pacote')
         }
         setLoading(false)
-      }, 3000)
+      }, 800)
     } catch (error) {
       alert('Erro inesperado')
       setLoading(false)

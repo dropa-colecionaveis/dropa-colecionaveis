@@ -1,8 +1,54 @@
 import { Rarity } from '@prisma/client'
+import { prisma } from './prisma'
 
 interface PackProbability {
   rarity: Rarity
   percentage: number
+}
+
+// Cache simples para itens por raridade
+let itemsCache: Record<Rarity, any[]> | null = null
+let cacheTimestamp: number = 0
+const CACHE_TTL = 5 * 60 * 1000 // 5 minutos
+
+export async function getCachedItemsByRarity(): Promise<Record<Rarity, any[]>> {
+  const now = Date.now()
+  
+  // Se cache válido, retornar
+  if (itemsCache && (now - cacheTimestamp) < CACHE_TTL) {
+    return itemsCache
+  }
+  
+  // Buscar todos os itens ativos
+  const allItems = await prisma.item.findMany({
+    where: { isActive: true }
+  })
+  
+  // Organizar por raridade
+  const itemsByRarity: Record<Rarity, any[]> = {
+    COMUM: [],
+    INCOMUM: [],
+    RARO: [],
+    EPICO: [],
+    LENDARIO: []
+  }
+  
+  allItems.forEach(item => {
+    if (itemsByRarity[item.rarity]) {
+      itemsByRarity[item.rarity].push(item)
+    }
+  })
+  
+  // Atualizar cache
+  itemsCache = itemsByRarity
+  cacheTimestamp = now
+  
+  return itemsByRarity
+}
+
+export function clearItemsCache(): void {
+  itemsCache = null
+  cacheTimestamp = 0
 }
 
 export function selectRandomRarity(probabilities: PackProbability[]): Rarity {
