@@ -37,153 +37,144 @@ export async function GET(req: Request) {
     const userId = session.user.id
     const activities: RecentActivity[] = []
 
-    // 1. Pack Openings (últimas aberturas de pacotes)
-    let packOpenings: any[] = []
-    try {
-      packOpenings = await prisma.packOpening.findMany({
+    // Fetch all activities in parallel using Promise.allSettled for better performance
+    const [
+      packOpeningsResult,
+      marketplaceTransactionsResult, 
+      achievementsResult,
+      completedCollectionsResult,
+      creditPurchasesResult
+    ] = await Promise.allSettled([
+      // 1. Pack Openings
+      prisma.packOpening.findMany({
         where: { userId },
         take: Math.min(limit, 10),
         orderBy: { createdAt: 'desc' },
         include: {
           pack: true
         }
-      })
-    } catch (error) {
-      console.error('Error fetching pack openings:', error)
-    }
-
-    // Buscar itens relacionados às aberturas de pacotes
-    if (packOpenings.length > 0) {
-      try {
-        const packOpeningItemIds = packOpenings.map(opening => opening.itemId)
-        const packOpeningItems = await prisma.item.findMany({
-          where: { id: { in: packOpeningItemIds } },
-          include: {
-            collection: true
-          }
-        })
-
-        // Criar um mapa para acesso rápido aos itens
-        const itemsMap = new Map(packOpeningItems.map(item => [item.id, item]))
-
-        packOpenings.forEach(opening => {
-          const item = itemsMap.get(opening.itemId)
-          if (item) {
-            activities.push({
-              id: `pack_${opening.id}`,
-              type: 'PACK_OPENED',
-              timestamp: opening.createdAt,
-              description: `Abriu um pacote ${opening.pack.name} e recebeu ${item.name}`,
-              data: {
-                pack: {
-                  name: opening.pack.name,
-                  type: opening.pack.type
-                },
-                item: {
-                  name: item.name,
-                  rarity: item.rarity,
-                  imageUrl: item.imageUrl,
-                  collectionName: item.collection?.name
-                }
-              }
-            })
-          }
-        })
-      } catch (error) {
-        console.error('Error fetching pack opening items:', error)
-      }
-    }
-
-    // 2. Itens Obtidos Recentemente (excluindo os já capturados por pack opening)
-    try {
-      const recentItems = await prisma.userItem.findMany({
-        where: { 
-          userId
-          // Removido filtro obtainedAt para evitar problemas
+      }),
+      
+      // 2. Marketplace Transactions  
+      prisma.marketplaceTransaction.findMany({
+        where: {
+          OR: [
+            { buyerId: userId },
+            { sellerId: userId }
+          ],
+          status: 'COMPLETED'
         },
-        take: Math.min(limit, 8),
-        orderBy: { obtainedAt: 'desc' },
+        take: Math.min(limit, 10),
+        orderBy: { completedAt: 'desc' },
         include: {
-          item: {
+          listing: {
             include: {
-              collection: true
-            }
-          },
-          limitedEdition: true
-        }
-      })
-
-      // Filtrar itens que não vieram de pack opening recente (últimas 24h)
-      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
-      const recentPackItems = new Set(
-        packOpenings
-          .filter(opening => opening.createdAt > oneDayAgo)
-          .map(opening => opening.itemId)
-      )
-
-      recentItems
-        .filter(userItem => !recentPackItems.has(userItem.itemId))
-        .forEach(userItem => {
-          let description = `Obteve o item ${userItem.item.name}`
-          if (userItem.limitedEdition) {
-            description += ` (Edição Limitada #${userItem.limitedEdition.serialNumber})`
-          }
-
-          activities.push({
-            id: `item_${userItem.id}`,
-            type: 'ITEM_OBTAINED',
-            timestamp: userItem.obtainedAt,
-            description,
-            data: {
-              item: {
-                name: userItem.item.name,
-                rarity: userItem.item.rarity,
-                imageUrl: userItem.item.imageUrl,
-                collectionName: userItem.item.collection?.name
-              }
-            }
-          })
-        })
-    } catch (error) {
-      console.error('Error fetching recent items:', error)
-    }
-
-    // 3. Transações do Marketplace
-    try {
-      const marketplaceTransactions = await prisma.marketplaceTransaction.findMany({
-      where: {
-        OR: [
-          { buyerId: userId },
-          { sellerId: userId }
-        ],
-        status: 'COMPLETED'
-      },
-      take: Math.min(limit, 10),
-      orderBy: { completedAt: 'desc' },
-      include: {
-        listing: {
-          include: {
-            userItem: {
-              include: {
-                item: {
-                  include: {
-                    collection: true
+              userItem: {
+                include: {
+                  item: {
+                    include: {
+                      collection: true
+                    }
                   }
                 }
               }
             }
+          },
+          buyer: {
+            select: { name: true, email: true }
+          },
+          seller: {
+            select: { name: true, email: true }
+          }
+        }
+      }),
+
+      // 3. Achievements
+      prisma.userAchievement.findMany({
+        where: { 
+          userId,
+          isCompleted: true
+        },
+        take: Math.min(limit, 8),
+        orderBy: { unlockedAt: 'desc' },
+        include: {
+          achievement: true
+        }
+      }),
+
+      // 4. Completed Collections
+      prisma.userCollection.findMany({
+        where: { 
+          userId,
+          NOT: {
+            completedAt: null
           }
         },
-        buyer: {
-          select: { name: true, email: true }
+        take: Math.min(limit, 5),
+        orderBy: { completedAt: 'desc' },
+        include: {
+          collection: true
+        }
+      }),
+
+      // 5. Credit Purchases
+      prisma.transaction.findMany({
+        where: { 
+          userId,
+          type: 'PURCHASE_CREDITS'
         },
-        seller: {
-          select: { name: true, email: true }
+        take: Math.min(limit, 5),
+        orderBy: { createdAt: 'desc' }
+      })
+    ])
+
+    // Process pack openings
+    if (packOpeningsResult.status === 'fulfilled') {
+      const packOpenings = packOpeningsResult.value
+      
+      // Fetch items for pack openings if needed
+      if (packOpenings.length > 0) {
+        try {
+          const itemIds = packOpenings.map(opening => opening.itemId).filter(Boolean)
+          const items = await prisma.item.findMany({
+            where: { id: { in: itemIds } },
+            include: { collection: true }
+          })
+          
+          const itemsMap = new Map(items.map(item => [item.id, item]))
+          
+          packOpenings.forEach(opening => {
+            const item = itemsMap.get(opening.itemId)
+            if (item) {
+              activities.push({
+                id: `pack_${opening.id}`,
+                type: 'PACK_OPENED',
+                timestamp: opening.createdAt,
+                description: `Abriu um pacote ${opening.pack.name} e recebeu ${item.name}`,
+                data: {
+                  pack: {
+                    name: opening.pack.name,
+                    type: opening.pack.type
+                  },
+                  item: {
+                    name: item.name,
+                    rarity: item.rarity,
+                    imageUrl: item.imageUrl,
+                    collectionName: item.collection?.name
+                  }
+                }
+              })
+            }
+          })
+        } catch (error) {
+          console.error('Error fetching pack opening items:', error)
         }
       }
-    })
+    }
 
-      marketplaceTransactions.forEach(transaction => {
+    // Process marketplace transactions
+    if (marketplaceTransactionsResult.status === 'fulfilled') {
+      marketplaceTransactionsResult.value.forEach(transaction => {
         const isSeller = transaction.sellerId === userId
         const otherUser = isSeller ? transaction.buyer : transaction.seller
         const otherUserName = otherUser?.name || otherUser?.email || 'Usuário'
@@ -207,25 +198,11 @@ export async function GET(req: Request) {
           }
         })
       })
-    } catch (error) {
-      console.error('Error fetching marketplace transactions:', error)
     }
 
-    // 4. Conquistas Desbloqueadas
-    try {
-      const achievements = await prisma.userAchievement.findMany({
-      where: { 
-        userId,
-        isCompleted: true
-      },
-      take: Math.min(limit, 8),
-      orderBy: { unlockedAt: 'desc' },
-      include: {
-        achievement: true
-      }
-    })
-
-      achievements.forEach(userAchievement => {
+    // Process achievements
+    if (achievementsResult.status === 'fulfilled') {
+      achievementsResult.value.forEach(userAchievement => {
         if (userAchievement.unlockedAt) {
           activities.push({
             id: `achievement_${userAchievement.id}`,
@@ -242,27 +219,11 @@ export async function GET(req: Request) {
           })
         }
       })
-    } catch (error) {
-      console.error('Error fetching achievements:', error)
     }
 
-    // 5. Coleções Completadas
-    try {
-      const completedCollections = await prisma.userCollection.findMany({
-      where: { 
-        userId,
-        NOT: {
-          completedAt: null
-        }
-      },
-      take: Math.min(limit, 5),
-      orderBy: { completedAt: 'desc' },
-      include: {
-        collection: true
-      }
-    })
-
-      completedCollections.forEach(userCollection => {
+    // Process completed collections
+    if (completedCollectionsResult.status === 'fulfilled') {
+      completedCollectionsResult.value.forEach(userCollection => {
         if (userCollection.completedAt) {
           activities.push({
             id: `collection_${userCollection.id}`,
@@ -277,22 +238,11 @@ export async function GET(req: Request) {
           })
         }
       })
-    } catch (error) {
-      console.error('Error fetching completed collections:', error)
     }
 
-    // 6. Compras de Créditos
-    try {
-      const creditPurchases = await prisma.transaction.findMany({
-      where: { 
-        userId,
-        type: 'PURCHASE_CREDITS'
-      },
-      take: Math.min(limit, 5),
-      orderBy: { createdAt: 'desc' }
-    })
-
-      creditPurchases.forEach(transaction => {
+    // Process credit purchases
+    if (creditPurchasesResult.status === 'fulfilled') {
+      creditPurchasesResult.value.forEach(transaction => {
         activities.push({
           id: `credits_${transaction.id}`,
           type: 'CREDITS_PURCHASED',
@@ -300,12 +250,10 @@ export async function GET(req: Request) {
           description: `Comprou ${transaction.amount} créditos`,
           data: {
             credits: transaction.amount,
-            price: transaction.amount // Assumindo 1:1 por simplicidade
+            price: transaction.amount
           }
         })
       })
-    } catch (error) {
-      console.error('Error fetching credit purchases:', error)
     }
 
     // Ordenar todas as atividades por timestamp (mais recente primeiro)

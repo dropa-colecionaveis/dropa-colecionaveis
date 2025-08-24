@@ -6,10 +6,10 @@ interface PackProbability {
   percentage: number
 }
 
-// Cache simples para itens por raridade
+// Cache otimizado para itens por raridade
 let itemsCache: Record<Rarity, any[]> | null = null
 let cacheTimestamp: number = 0
-const CACHE_TTL = 5 * 60 * 1000 // 5 minutos
+const CACHE_TTL = 10 * 60 * 1000 // 10 minutos (aumentado para reduzir consultas)
 
 export async function getCachedItemsByRarity(): Promise<Record<Rarity, any[]>> {
   const now = Date.now()

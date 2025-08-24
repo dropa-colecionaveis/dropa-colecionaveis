@@ -73,7 +73,12 @@ export default function Dashboard() {
   const fetchRecentActivities = async () => {
     try {
       setActivitiesLoading(true)
-      const response = await fetch('/api/user/recent-activity?limit=10')
+      // Add cache headers to improve performance
+      const response = await fetch('/api/user/recent-activity?limit=10', {
+        headers: {
+          'Cache-Control': 'max-age=60' // Cache por 1 minuto
+        }
+      })
       
       if (response.ok) {
         const data = await response.json()

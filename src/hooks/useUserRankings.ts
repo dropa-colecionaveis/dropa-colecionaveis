@@ -35,17 +35,17 @@ export const useUserRankings = (): UserRankingData => {
         setLoading(true)
         setError(null)
 
-        // Fetch user stats which includes ranking positions
-        const response = await fetch(`/api/user/${session.user.id}/stats`)
+        // Fetch user stats and ranking stats in parallel for better performance
+        const [userResponse, rankingResponse] = await Promise.all([
+          fetch(`/api/user/${session.user.id}/stats`),
+          fetch('/api/rankings?action=stats')
+        ])
         
-        if (!response.ok) {
+        if (!userResponse.ok) {
           throw new Error('Failed to fetch user rankings')
         }
 
-        const data = await response.json()
-        
-        // Fetch total players count for percentage calculation
-        const rankingResponse = await fetch('/api/rankings?action=stats')
+        const data = await userResponse.json()
         let totalPlayers = 1000 // fallback value
         
         if (rankingResponse.ok) {
@@ -69,32 +69,6 @@ export const useUserRankings = (): UserRankingData => {
           })
         }
 
-        // If we don't have direct ranking data, try to fetch from rankings API
-        if (Object.keys(userRankings).length === 0) {
-          try {
-            // Fetch user's actual ranking positions from all categories
-            const categories = ['TOTAL_XP', 'PACK_OPENER', 'COLLECTOR', 'TRADER', 'WEEKLY_ACTIVE', 'MONTHLY_ACTIVE']
-            
-            for (const category of categories) {
-              const rankingResp = await fetch(`/api/rankings/${category}?limit=100`)
-              if (rankingResp.ok) {
-                const rankingData = await rankingResp.json()
-                
-                if (rankingData.rankings && rankingData.userPosition) {
-                  userRankings[category] = {
-                    category,
-                    position: rankingData.userPosition,
-                    totalPlayers: rankingData.total || rankingData.rankings.length,
-                    percentage: ((rankingData.total - rankingData.userPosition + 1) / rankingData.total) * 100
-                  }
-                }
-              }
-            }
-          } catch (error) {
-            console.log('No ranking data available yet')
-          }
-        }
-
         setRankings(userRankings)
       } catch (err) {
         console.error('Error fetching user rankings:', err)
@@ -110,32 +84,32 @@ export const useUserRankings = (): UserRankingData => {
   // Use actual global ranking from API instead of calculating manually
   const [globalRankingData, setGlobalRankingData] = useState<UserRanking | null>(null)
 
-  // Fetch global ranking data
-  const fetchGlobalRanking = async () => {
+  // Fetch global ranking only when needed (optimized)
+  useEffect(() => {
     if (!session?.user?.id) return
 
-    try {
-      const response = await fetch(`/api/rankings/global?action=user-position&userId=${session.user.id}`)
-      if (response.ok) {
-        const data = await response.json()
-        setGlobalRankingData({
-          category: 'GLOBAL',
-          position: data.position || 0,
-          totalPlayers: 5, // Could be improved by fetching total from API
-          percentage: data.globalPercentage || 0
-        })
+    const fetchGlobalRanking = async () => {
+      try {
+        const response = await fetch(`/api/rankings/global?action=user-position&userId=${session.user.id}`)
+        if (response.ok) {
+          const data = await response.json()
+          setGlobalRankingData({
+            category: 'GLOBAL',
+            position: data.position || 0,
+            totalPlayers: data.totalPlayers || 1000,
+            percentage: data.globalPercentage || 0
+          })
+        }
+      } catch (error) {
+        console.error('Error fetching global ranking:', error)
       }
-    } catch (error) {
-      console.error('Error fetching global ranking:', error)
     }
-  }
 
-  // Fetch global ranking when session changes
-  useEffect(() => {
-    if (session?.user?.id) {
+    // Only fetch global ranking if we have other rankings data
+    if (Object.keys(rankings).length > 0) {
       fetchGlobalRanking()
     }
-  }, [session?.user?.id])
+  }, [session?.user?.id, rankings])
 
   const bestRanking = globalRankingData || { category: 'GLOBAL', position: 0, totalPlayers: 0, percentage: 0 }
 
