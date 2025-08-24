@@ -227,15 +227,21 @@ export default function Dashboard() {
                 </div>
               )}
 
-              {/* User Ranking */}
-              {!rankingLoading && bestRanking.position > 0 && (
+              {/* User Ranking - Show immediately if available or loading with placeholder */}
+              {(bestRanking.position > 0 || (rankingLoading && userStats && userStats.totalXP > 0)) && (
                 <div className="bg-gradient-to-r from-indigo-600/30 to-cyan-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-indigo-400/30 hover:border-indigo-300/50 transition-colors duration-200">
                   <Link href="/rankings" className="flex items-center space-x-3 group">
                     <div className="text-center">
                       <div className="text-indigo-300 font-bold text-sm flex items-center">
                         <span className="mr-1">📊</span>
-                        <span>#{bestRanking.position}</span>
-                        <span className="ml-1 text-xs opacity-75">({Math.round(bestRanking.percentage)}%)</span>
+                        {bestRanking.position > 0 ? (
+                          <>
+                            <span>#{bestRanking.position}</span>
+                            <span className="ml-1 text-xs opacity-75">({Math.round(bestRanking.percentage)}%)</span>
+                          </>
+                        ) : (
+                          <span className="animate-pulse">Carregando...</span>
+                        )}
                       </div>
                       <div className="text-xs text-gray-300 group-hover:text-indigo-200 transition-colors">
                         Ranking Global

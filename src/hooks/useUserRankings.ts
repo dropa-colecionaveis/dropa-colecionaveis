@@ -21,8 +21,54 @@ interface UserRankingData {
 export const useUserRankings = (): UserRankingData => {
   const { data: session } = useSession()
   const [rankings, setRankings] = useState<Record<string, UserRanking>>({})
-  const [loading, setLoading] = useState(true)
+  const [globalRankingData, setGlobalRankingData] = useState<UserRanking | null>(null)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Cache key for localStorage
+  const getCacheKey = (userId: string) => `userRankings_${userId}`
+  const getGlobalCacheKey = (userId: string) => `globalRanking_${userId}`
+
+  // Verificar cache antes de fazer requisições
+  const getCachedRankings = (userId: string) => {
+    try {
+      const cached = localStorage.getItem(getCacheKey(userId))
+      const globalCached = localStorage.getItem(getGlobalCacheKey(userId))
+      
+      if (cached && globalCached) {
+        const cachedData = JSON.parse(cached)
+        const globalCachedData = JSON.parse(globalCached)
+        
+        // Cache válido por 2 minutos
+        if (Date.now() - cachedData.timestamp < 2 * 60 * 1000) {
+          setRankings(cachedData.rankings)
+          setGlobalRankingData(globalCachedData.ranking)
+          return true
+        }
+      }
+    } catch (error) {
+      console.error('Error reading rankings cache:', error)
+    }
+    return false
+  }
+
+  // Salvar no cache
+  const setCachedRankings = (userId: string, rankings: Record<string, UserRanking>, globalRanking: UserRanking | null) => {
+    try {
+      localStorage.setItem(getCacheKey(userId), JSON.stringify({
+        rankings,
+        timestamp: Date.now()
+      }))
+      if (globalRanking) {
+        localStorage.setItem(getGlobalCacheKey(userId), JSON.stringify({
+          ranking: globalRanking,
+          timestamp: Date.now()
+        }))
+      }
+    } catch (error) {
+      console.error('Error caching rankings:', error)
+    }
+  }
 
   useEffect(() => {
     if (!session?.user?.id) {
@@ -30,15 +76,28 @@ export const useUserRankings = (): UserRankingData => {
       return
     }
 
-    const fetchUserRankings = async () => {
+    // Verificar cache primeiro
+    const hasCachedData = getCachedRankings(session.user.id)
+    if (hasCachedData) {
+      return // Usar dados do cache
+    }
+
+    const fetchAllRankingsData = async () => {
       try {
         setLoading(true)
         setError(null)
 
-        // Fetch user stats and ranking stats in parallel for better performance
-        const [userResponse, rankingResponse] = await Promise.all([
-          fetch(`/api/user/${session.user.id}/stats`),
-          fetch('/api/rankings?action=stats')
+        // Buscar todos os dados em paralelo para melhor performance
+        const [userResponse, rankingResponse, globalResponse] = await Promise.all([
+          fetch(`/api/user/${session.user.id}/stats`, {
+            headers: { 'Cache-Control': 'max-age=120' } // Cache 2min
+          }),
+          fetch('/api/rankings?action=stats', {
+            headers: { 'Cache-Control': 'max-age=300' } // Cache 5min
+          }),
+          fetch(`/api/rankings/global?action=user-position&userId=${session.user.id}`, {
+            headers: { 'Cache-Control': 'max-age=180' } // Cache 3min
+          })
         ])
         
         if (!userResponse.ok) {
@@ -70,6 +129,23 @@ export const useUserRankings = (): UserRankingData => {
         }
 
         setRankings(userRankings)
+
+        // Processar global ranking
+        let globalRanking: UserRanking | null = null
+        if (globalResponse.ok) {
+          const globalData = await globalResponse.json()
+          globalRanking = {
+            category: 'GLOBAL',
+            position: globalData.position || 0,
+            totalPlayers: globalData.totalPlayers || 1000,
+            percentage: globalData.globalPercentage || 0
+          }
+          setGlobalRankingData(globalRanking)
+        }
+
+        // Salvar no cache
+        setCachedRankings(session.user.id, userRankings, globalRanking)
+
       } catch (err) {
         console.error('Error fetching user rankings:', err)
         setError(err instanceof Error ? err.message : 'Unknown error')
@@ -78,38 +154,8 @@ export const useUserRankings = (): UserRankingData => {
       }
     }
 
-    fetchUserRankings()
+    fetchAllRankingsData()
   }, [session?.user?.id])
-
-  // Use actual global ranking from API instead of calculating manually
-  const [globalRankingData, setGlobalRankingData] = useState<UserRanking | null>(null)
-
-  // Fetch global ranking only when needed (optimized)
-  useEffect(() => {
-    if (!session?.user?.id) return
-
-    const fetchGlobalRanking = async () => {
-      try {
-        const response = await fetch(`/api/rankings/global?action=user-position&userId=${session.user.id}`)
-        if (response.ok) {
-          const data = await response.json()
-          setGlobalRankingData({
-            category: 'GLOBAL',
-            position: data.position || 0,
-            totalPlayers: data.totalPlayers || 1000,
-            percentage: data.globalPercentage || 0
-          })
-        }
-      } catch (error) {
-        console.error('Error fetching global ranking:', error)
-      }
-    }
-
-    // Only fetch global ranking if we have other rankings data
-    if (Object.keys(rankings).length > 0) {
-      fetchGlobalRanking()
-    }
-  }, [session?.user?.id, rankings])
 
   const bestRanking = globalRankingData || { category: 'GLOBAL', position: 0, totalPlayers: 0, percentage: 0 }
 

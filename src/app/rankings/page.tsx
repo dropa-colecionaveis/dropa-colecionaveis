@@ -370,7 +370,7 @@ export default function Rankings() {
               )}
 
               {/* User Ranking */}
-              {!rankingLoading && bestRanking.position > 0 && (
+              {bestRanking.position > 0 && (
                 <div className="bg-gradient-to-r from-indigo-600/30 to-cyan-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-indigo-400/30 hover:border-indigo-300/50 transition-colors duration-200">
                   <Link href="/rankings" className="flex items-center space-x-3 group">
                     <div className="text-center">
