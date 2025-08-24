@@ -579,11 +579,18 @@ export class UserStatsService {
       }
     }) + 1
 
-    const traderRank = await prisma.userStats.count({
-      where: {
-        marketplaceSales: { gt: userStats.marketplaceSales }
-      }
-    }) + 1
+    // Calcular trader rank baseado em sales + purchases (como no ranking service)
+    const userTraderValue = (userStats.marketplaceSales || 0) + (userStats.marketplacePurchases || 0)
+    let traderRank = 0
+    
+    if (userTraderValue > 0) {
+      // Só calcular posição se o usuário tem atividade de trader
+      traderRank = await prisma.$queryRaw`
+        SELECT COUNT(*) as count 
+        FROM "UserStats" 
+        WHERE (COALESCE("marketplaceSales", 0) + COALESCE("marketplacePurchases", 0)) > ${userTraderValue}
+      `.then((result: any) => Number(result[0]?.count || 0) + 1)
+    }
 
     return {
       ...userStats,

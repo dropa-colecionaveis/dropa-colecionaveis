@@ -458,7 +458,29 @@ export default function Rankings() {
                 <div className="text-3xl font-bold text-purple-400 mb-1">
                   {selectedCategory === 'GLOBAL' 
                     ? (userGlobalPosition?.position ? `#${userGlobalPosition.position}` : 'Não rankeado')
-                    : (userPosition > 0 ? `#${userPosition}` : (userStats?.rankings?.[selectedCategory] > 0 ? `#${userStats.rankings[selectedCategory]}` : 'Não rankeado'))
+                    : (() => {
+                        // Lógica mais robusta para determinar posição
+                        const apiPosition = userPosition > 0 ? userPosition : 0
+                        const statsPosition = userStats?.rankings?.[selectedCategory] > 0 ? userStats.rankings[selectedCategory] : 0
+                        
+                        // Se temos posição da API, usar ela
+                        if (apiPosition > 0) {
+                          return `#${apiPosition}`
+                        }
+                        
+                        // Se não, verificar se temos dados nas stats e há rankings válidos na lista
+                        if (statsPosition > 0 && rankings.length > 0) {
+                          return `#${statsPosition}`
+                        }
+                        
+                        // Se não há rankings na lista, não pode estar rankeado
+                        if (rankings.length === 0) {
+                          return 'Não rankeado'
+                        }
+                        
+                        // Default
+                        return 'Não rankeado'
+                      })()
                   }
                 </div>
                 <div className="text-sm text-gray-300">
