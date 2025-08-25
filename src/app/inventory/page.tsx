@@ -8,6 +8,12 @@ import Image from 'next/image'
 import { getRarityName } from '@/lib/rarity-system'
 import AutoSellPanel from '@/components/AutoSellPanel'
 import { useUserRankings } from '@/hooks/useUserRankings'
+import { 
+  InventoryStatsSkeleton, 
+  InventoryFilterSkeleton, 
+  InventoryGridSkeleton,
+  HeaderStatsSkeleton
+} from '@/components/SkeletonLoader'
 
 // Fixed selling percentages by rarity (same as auto-sell system)
 const FIXED_SELLING_PERCENTAGES = {
@@ -75,6 +81,8 @@ export default function Inventory() {
   const [userProfile, setUserProfile] = useState<any>(null)
   const [userStats, setUserStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [inventoryLoading, setInventoryLoading] = useState(true)
+  const [profileLoading, setProfileLoading] = useState(true)
   const [selectedRarity, setSelectedRarity] = useState<string>('ALL')
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [selectedItem, setSelectedItem] = useState<UserItem['item'] | null>(null)
@@ -93,6 +101,7 @@ export default function Inventory() {
     if (status === 'unauthenticated') {
       router.push('/auth/signin')
     } else if (status === 'authenticated') {
+      setLoading(false) // Auth is complete, start showing skeleton
       fetchInventory()
       fetchUserProfile()
     }
@@ -109,7 +118,7 @@ export default function Inventory() {
     } catch (error) {
       console.error('Error fetching inventory:', error)
     } finally {
-      setLoading(false)
+      setInventoryLoading(false)
     }
   }
 
@@ -131,6 +140,8 @@ export default function Inventory() {
       }
     } catch (error) {
       console.error('Error fetching user data:', error)
+    } finally {
+      setProfileLoading(false)
     }
   }
 
@@ -228,7 +239,13 @@ export default function Inventory() {
         setListingDescription('')
         setPriceWarning('')
         setPriceRange(null)
-        fetchInventory() // Refresh inventory to show listing status
+        // Don't show loading state for refresh, just update data
+        const response = await fetch('/api/user/inventory')
+        if (response.ok) {
+          const data = await response.json()
+          setUserItems(data.items)
+          calculateStats(data.items)
+        }
       } else {
         let errorMessage = data.error || 'Erro ao listar item'
         
@@ -287,7 +304,13 @@ export default function Inventory() {
       if (response.ok) {
         alert(`✅ ${data.message}\n\nVocê recebeu ${data.creditsReceived} créditos.`)
         setListingItem(null)
-        fetchInventory() // Refresh inventory
+        // Don't show loading state for refresh, just update data
+        const response = await fetch('/api/user/inventory')
+        if (response.ok) {
+          const refreshData = await response.json()
+          setUserItems(refreshData.items)
+          calculateStats(refreshData.items)
+        }
       } else {
         alert(`❌ Erro: ${data.error}`)
       }
@@ -344,46 +367,52 @@ export default function Inventory() {
 
             {/* Stats and Actions */}
             <div className="flex items-center space-x-4">
-              {/* Level and XP */}
-              {userStats && (
-                <div className="bg-gradient-to-r from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-400/30 hover:border-purple-300/50 transition-colors duration-200">
-                  <Link href="/achievements" className="flex items-center space-x-3 group">
-                    <div className="text-center">
-                      <div className="text-purple-300 font-bold text-sm group-hover:text-purple-200 transition-colors">⭐ Nível {userStats.level || 1}</div>
-                      <div className="text-xs text-gray-300 group-hover:text-purple-200 transition-colors">{userStats.totalXP || 0} XP</div>
+              {profileLoading ? (
+                <HeaderStatsSkeleton />
+              ) : (
+                <>
+                  {/* Level and XP */}
+                  {userStats && (
+                    <div className="bg-gradient-to-r from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-400/30 hover:border-purple-300/50 transition-colors duration-200">
+                      <Link href="/achievements" className="flex items-center space-x-3 group">
+                        <div className="text-center">
+                          <div className="text-purple-300 font-bold text-sm group-hover:text-purple-200 transition-colors">⭐ Nível {userStats.level || 1}</div>
+                          <div className="text-xs text-gray-300 group-hover:text-purple-200 transition-colors">{userStats.totalXP || 0} XP</div>
+                        </div>
+                      </Link>
                     </div>
-                  </Link>
-                </div>
-              )}
+                  )}
 
-              {/* User Ranking */}
-              {!rankingLoading && bestRanking.position > 0 && (
-                <div className="bg-gradient-to-r from-indigo-600/30 to-cyan-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-indigo-400/30 hover:border-indigo-300/50 transition-colors duration-200">
-                  <Link href="/rankings" className="flex items-center space-x-3 group">
-                    <div className="text-center">
-                      <div className="text-indigo-300 font-bold text-sm flex items-center">
-                        <span className="mr-1">📊</span>
-                        <span>#{bestRanking.position}</span>
-                        <span className="ml-1 text-xs opacity-75">({Math.round(bestRanking.percentage)}%)</span>
-                      </div>
-                      <div className="text-xs text-gray-300 group-hover:text-indigo-200 transition-colors">
-                        Ranking Global
-                      </div>
+                  {/* User Ranking */}
+                  {!rankingLoading && bestRanking.position > 0 && (
+                    <div className="bg-gradient-to-r from-indigo-600/30 to-cyan-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-indigo-400/30 hover:border-indigo-300/50 transition-colors duration-200">
+                      <Link href="/rankings" className="flex items-center space-x-3 group">
+                        <div className="text-center">
+                          <div className="text-indigo-300 font-bold text-sm flex items-center">
+                            <span className="mr-1">📊</span>
+                            <span>#{bestRanking.position}</span>
+                            <span className="ml-1 text-xs opacity-75">({Math.round(bestRanking.percentage)}%)</span>
+                          </div>
+                          <div className="text-xs text-gray-300 group-hover:text-indigo-200 transition-colors">
+                            Ranking Global
+                          </div>
+                        </div>
+                      </Link>
                     </div>
-                  </Link>
-                </div>
-              )}
-              
-              {/* Credits */}
-              <div className="bg-gradient-to-r from-yellow-600/30 to-orange-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-yellow-400/30 hover:border-yellow-300/50 transition-colors duration-200">
-                <Link href="/credits/purchase" className="flex items-center space-x-2 group">
-                  <span className="text-yellow-300 text-lg group-hover:scale-110 transition-transform duration-200">💰</span>
-                  <div>
-                    <div className="text-yellow-300 font-bold group-hover:text-yellow-200 transition-colors">{userProfile?.credits || 0}</div>
-                    <div className="text-xs text-yellow-200 group-hover:text-yellow-100 transition-colors">créditos</div>
+                  )}
+                  
+                  {/* Credits */}
+                  <div className="bg-gradient-to-r from-yellow-600/30 to-orange-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-yellow-400/30 hover:border-yellow-300/50 transition-colors duration-200">
+                    <Link href="/credits/purchase" className="flex items-center space-x-2 group">
+                      <span className="text-yellow-300 text-lg group-hover:scale-110 transition-transform duration-200">💰</span>
+                      <div>
+                        <div className="text-yellow-300 font-bold group-hover:text-yellow-200 transition-colors">{userProfile?.credits || 0}</div>
+                        <div className="text-xs text-yellow-200 group-hover:text-yellow-100 transition-colors">créditos</div>
+                      </div>
+                    </Link>
                   </div>
-                </Link>
-              </div>
+                </>
+              )}
               
               {/* Quick Actions */}
               <div className="flex items-center space-x-2">
@@ -442,75 +471,85 @@ export default function Inventory() {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid md:grid-cols-4 gap-6 mb-8">
-            <div className="group bg-gradient-to-br from-blue-600/20 to-indigo-600/20 backdrop-blur-lg rounded-2xl p-6 text-center text-white border border-blue-500/30 hover:border-blue-400/50 transition-all duration-300 hover:transform hover:scale-105 shadow-lg hover:shadow-xl">
-              <div className="text-3xl mb-2 group-hover:animate-bounce">📊</div>
-              <div className="text-3xl font-bold text-blue-400 mb-1">{stats.totalItems}</div>
-              <div className="text-sm text-gray-300">Total de Itens</div>
-            </div>
-            
-            <div className="group bg-gradient-to-br from-green-600/20 to-emerald-600/20 backdrop-blur-lg rounded-2xl p-6 text-center text-white border border-green-500/30 hover:border-green-400/50 transition-all duration-300 hover:transform hover:scale-105 shadow-lg hover:shadow-xl">
-              <div className="text-3xl mb-2 group-hover:animate-pulse">💰</div>
-              <div className="text-3xl font-bold text-green-400 mb-1">{stats.totalValue}</div>
-              <div className="text-sm text-gray-300">Valor Total</div>
-            </div>
-            
-            <div className="group bg-gradient-to-br from-purple-600/20 to-pink-600/20 backdrop-blur-lg rounded-2xl p-6 text-center text-white border border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 hover:transform hover:scale-105 shadow-lg hover:shadow-xl">
-              <div className="text-3xl mb-2 group-hover:animate-spin">🌈</div>
-              <div className="text-3xl font-bold text-purple-400 mb-1">
-                {Object.keys(stats.rarityBreakdown).length}
+          {inventoryLoading ? (
+            <InventoryStatsSkeleton />
+          ) : (
+            <div className="grid md:grid-cols-4 gap-6 mb-8 animate-fadeIn">
+              <div className="group bg-gradient-to-br from-blue-600/20 to-indigo-600/20 backdrop-blur-lg rounded-2xl p-6 text-center text-white border border-blue-500/30 hover:border-blue-400/50 transition-all duration-300 hover:transform hover:scale-105 shadow-lg hover:shadow-xl">
+                <div className="text-3xl mb-2 group-hover:animate-bounce">📊</div>
+                <div className="text-3xl font-bold text-blue-400 mb-1">{stats.totalItems}</div>
+                <div className="text-sm text-gray-300">Total de Itens</div>
               </div>
-              <div className="text-sm text-gray-300">Tipos de Raridade</div>
-            </div>
-            
-            <div className="group bg-gradient-to-br from-yellow-600/20 to-orange-600/20 backdrop-blur-lg rounded-2xl p-6 text-center text-white border border-yellow-500/30 hover:border-yellow-400/50 transition-all duration-300 hover:transform hover:scale-105 shadow-lg hover:shadow-xl">
-              <div className="text-3xl mb-2 group-hover:animate-pulse group-hover:scale-110 transition-transform duration-300">⭐</div>
-              <div className="text-3xl font-bold text-yellow-400 mb-1">
-                {(stats.rarityBreakdown['LENDARIO'] || 0) + 
-                 (stats.rarityBreakdown['EPICO'] || 0) + 
-                 (stats.rarityBreakdown['RARO'] || 0)}
+              
+              <div className="group bg-gradient-to-br from-green-600/20 to-emerald-600/20 backdrop-blur-lg rounded-2xl p-6 text-center text-white border border-green-500/30 hover:border-green-400/50 transition-all duration-300 hover:transform hover:scale-105 shadow-lg hover:shadow-xl">
+                <div className="text-3xl mb-2 group-hover:animate-pulse">💰</div>
+                <div className="text-3xl font-bold text-green-400 mb-1">{stats.totalValue}</div>
+                <div className="text-sm text-gray-300">Valor Total</div>
               </div>
-              <div className="text-sm text-gray-300">Itens Raros+</div>
+              
+              <div className="group bg-gradient-to-br from-purple-600/20 to-pink-600/20 backdrop-blur-lg rounded-2xl p-6 text-center text-white border border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 hover:transform hover:scale-105 shadow-lg hover:shadow-xl">
+                <div className="text-3xl mb-2 group-hover:animate-spin">🌈</div>
+                <div className="text-3xl font-bold text-purple-400 mb-1">
+                  {Object.keys(stats.rarityBreakdown).length}
+                </div>
+                <div className="text-sm text-gray-300">Tipos de Raridade</div>
+              </div>
+              
+              <div className="group bg-gradient-to-br from-yellow-600/20 to-orange-600/20 backdrop-blur-lg rounded-2xl p-6 text-center text-white border border-yellow-500/30 hover:border-yellow-400/50 transition-all duration-300 hover:transform hover:scale-105 shadow-lg hover:shadow-xl">
+                <div className="text-3xl mb-2 group-hover:animate-pulse group-hover:scale-110 transition-transform duration-300">⭐</div>
+                <div className="text-3xl font-bold text-yellow-400 mb-1">
+                  {(stats.rarityBreakdown['LENDARIO'] || 0) + 
+                   (stats.rarityBreakdown['EPICO'] || 0) + 
+                   (stats.rarityBreakdown['RARO'] || 0)}
+                </div>
+                <div className="text-sm text-gray-300">Itens Raros+</div>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Rarity Filter */}
-          <div className="mb-8">
-            <h3 className="text-xl font-bold text-white mb-4 text-center flex items-center justify-center">
-              <span className="mr-2">🔍</span>
-              Filtrar por Raridade
-            </h3>
-            <div className="flex flex-wrap gap-3 justify-center">
-              <button
-                onClick={() => setSelectedRarity('ALL')}
-                className={`px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold ${
-                  selectedRarity === 'ALL' 
-                    ? 'bg-gradient-to-r from-white/30 to-gray-300/30 text-white border-2 border-white/50' 
-                    : 'bg-white/10 text-gray-300 hover:bg-white/20 border-2 border-transparent'
-                }`}
-              >
-                🌟 Todos ({stats.totalItems})
-              </button>
-              
-              {Object.entries(stats.rarityBreakdown).map(([rarity, count]) => (
+          {inventoryLoading ? (
+            <InventoryFilterSkeleton />
+          ) : (
+            <div className="mb-8 animate-fadeIn">
+              <h3 className="text-xl font-bold text-white mb-4 text-center flex items-center justify-center">
+                <span className="mr-2">🔍</span>
+                Filtrar por Raridade
+              </h3>
+              <div className="flex flex-wrap gap-3 justify-center">
                 <button
-                  key={rarity}
-                  onClick={() => setSelectedRarity(rarity)}
-                  className={`px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold border-2 ${
-                    selectedRarity === rarity
-                      ? getRarityColor(rarity) + ' border-current'
-                      : 'bg-white/10 text-gray-300 hover:bg-white/20 border-transparent'
+                  onClick={() => setSelectedRarity('ALL')}
+                  className={`px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold ${
+                    selectedRarity === 'ALL' 
+                      ? 'bg-gradient-to-r from-white/30 to-gray-300/30 text-white border-2 border-white/50' 
+                      : 'bg-white/10 text-gray-300 hover:bg-white/20 border-2 border-transparent'
                   }`}
                 >
-                  {getRarityName(rarity)} ({count})
+                  🌟 Todos ({stats.totalItems})
                 </button>
-              ))}
+                
+                {Object.entries(stats.rarityBreakdown).map(([rarity, count]) => (
+                  <button
+                    key={rarity}
+                    onClick={() => setSelectedRarity(rarity)}
+                    className={`px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold border-2 ${
+                      selectedRarity === rarity
+                        ? getRarityColor(rarity) + ' border-current'
+                        : 'bg-white/10 text-gray-300 hover:bg-white/20 border-transparent'
+                    }`}
+                  >
+                    {getRarityName(rarity)} ({count})
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Items Grid */}
-          {filteredItems.length > 0 ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {inventoryLoading ? (
+            <InventoryGridSkeleton />
+          ) : filteredItems.length > 0 ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-fadeIn">
               {filteredItems.map((userItem) => (
                 <div
                   key={userItem.id}

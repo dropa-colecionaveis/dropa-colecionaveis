@@ -6,6 +6,12 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useUserRankings } from '@/hooks/useUserRankings'
+import { 
+  CollectionStatsSkeleton, 
+  CollectionFilterSkeleton, 
+  CollectionsGridSkeleton,
+  HeaderStatsSkeleton
+} from '@/components/SkeletonLoader'
 
 interface CollectionProgress {
   itemsOwned: number
@@ -31,6 +37,8 @@ export default function Collections() {
   const router = useRouter()
   const [collections, setCollections] = useState<Collection[]>([])
   const [loading, setLoading] = useState(true)
+  const [collectionsLoading, setCollectionsLoading] = useState(true)
+  const [profileLoading, setProfileLoading] = useState(true)
   const [selectedFilter, setSelectedFilter] = useState<string>('ALL')
   const [userProfile, setUserProfile] = useState<any>(null)
   const [userStats, setUserStats] = useState<any>(null)
@@ -41,6 +49,7 @@ export default function Collections() {
     if (status === 'unauthenticated') {
       router.push('/auth/signin')
     } else if (status === 'authenticated') {
+      setLoading(false) // Auth is complete, start showing skeleton
       fetchCollections()
       fetchUserProfile()
     }
@@ -56,7 +65,7 @@ export default function Collections() {
     } catch (error) {
       console.error('Error fetching collections:', error)
     } finally {
-      setLoading(false)
+      setCollectionsLoading(false)
     }
   }
 
@@ -78,6 +87,8 @@ export default function Collections() {
       }
     } catch (error) {
       console.error('Error fetching user data:', error)
+    } finally {
+      setProfileLoading(false)
     }
   }
 
@@ -176,46 +187,52 @@ export default function Collections() {
 
             {/* Stats and Actions */}
             <div className="flex items-center space-x-4">
-              {/* Level and XP */}
-              {userStats && (
-                <div className="bg-gradient-to-r from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-400/30 hover:border-purple-300/50 transition-colors duration-200">
-                  <Link href="/achievements" className="flex items-center space-x-3 group">
-                    <div className="text-center">
-                      <div className="text-purple-300 font-bold text-sm group-hover:text-purple-200 transition-colors">⭐ Nível {userStats.level || 1}</div>
-                      <div className="text-xs text-gray-300 group-hover:text-purple-200 transition-colors">{userStats.totalXP || 0} XP</div>
+              {profileLoading ? (
+                <HeaderStatsSkeleton />
+              ) : (
+                <>
+                  {/* Level and XP */}
+                  {userStats && (
+                    <div className="bg-gradient-to-r from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-400/30 hover:border-purple-300/50 transition-colors duration-200">
+                      <Link href="/achievements" className="flex items-center space-x-3 group">
+                        <div className="text-center">
+                          <div className="text-purple-300 font-bold text-sm group-hover:text-purple-200 transition-colors">⭐ Nível {userStats.level || 1}</div>
+                          <div className="text-xs text-gray-300 group-hover:text-purple-200 transition-colors">{userStats.totalXP || 0} XP</div>
+                        </div>
+                      </Link>
                     </div>
-                  </Link>
-                </div>
-              )}
+                  )}
 
-              {/* User Ranking */}
-              {!rankingLoading && bestRanking.position > 0 && (
-                <div className="bg-gradient-to-r from-indigo-600/30 to-cyan-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-indigo-400/30 hover:border-indigo-300/50 transition-colors duration-200">
-                  <Link href="/rankings" className="flex items-center space-x-3 group">
-                    <div className="text-center">
-                      <div className="text-indigo-300 font-bold text-sm flex items-center">
-                        <span className="mr-1">📊</span>
-                        <span>#{bestRanking.position}</span>
-                        <span className="ml-1 text-xs opacity-75">({Math.round(bestRanking.percentage)}%)</span>
-                      </div>
-                      <div className="text-xs text-gray-300 group-hover:text-indigo-200 transition-colors">
-                        Ranking Global
-                      </div>
+                  {/* User Ranking */}
+                  {!rankingLoading && bestRanking.position > 0 && (
+                    <div className="bg-gradient-to-r from-indigo-600/30 to-cyan-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-indigo-400/30 hover:border-indigo-300/50 transition-colors duration-200">
+                      <Link href="/rankings" className="flex items-center space-x-3 group">
+                        <div className="text-center">
+                          <div className="text-indigo-300 font-bold text-sm flex items-center">
+                            <span className="mr-1">📊</span>
+                            <span>#{bestRanking.position}</span>
+                            <span className="ml-1 text-xs opacity-75">({Math.round(bestRanking.percentage)}%)</span>
+                          </div>
+                          <div className="text-xs text-gray-300 group-hover:text-indigo-200 transition-colors">
+                            Ranking Global
+                          </div>
+                        </div>
+                      </Link>
                     </div>
-                  </Link>
-                </div>
-              )}
-              
-              {/* Credits */}
-              <div className="bg-gradient-to-r from-yellow-600/30 to-orange-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-yellow-400/30 hover:border-yellow-300/50 transition-colors duration-200">
-                <Link href="/credits/purchase" className="flex items-center space-x-2 group">
-                  <span className="text-yellow-300 text-lg group-hover:scale-110 transition-transform duration-200">💰</span>
-                  <div>
-                    <div className="text-yellow-300 font-bold group-hover:text-yellow-200 transition-colors">{userProfile?.credits || 0}</div>
-                    <div className="text-xs text-yellow-200 group-hover:text-yellow-100 transition-colors">créditos</div>
+                  )}
+                  
+                  {/* Credits */}
+                  <div className="bg-gradient-to-r from-yellow-600/30 to-orange-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-yellow-400/30 hover:border-yellow-300/50 transition-colors duration-200">
+                    <Link href="/credits/purchase" className="flex items-center space-x-2 group">
+                      <span className="text-yellow-300 text-lg group-hover:scale-110 transition-transform duration-200">💰</span>
+                      <div>
+                        <div className="text-yellow-300 font-bold group-hover:text-yellow-200 transition-colors">{userProfile?.credits || 0}</div>
+                        <div className="text-xs text-yellow-200 group-hover:text-yellow-100 transition-colors">créditos</div>
+                      </div>
+                    </Link>
                   </div>
-                </Link>
-              </div>
+                </>
+              )}
               
               {/* Quick Actions */}
               <div className="flex items-center space-x-2">
@@ -256,101 +273,115 @@ export default function Collections() {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid md:grid-cols-4 gap-6 mb-8">
-            <div className="group bg-gradient-to-br from-green-600/20 to-emerald-600/20 backdrop-blur-lg rounded-2xl p-6 text-center text-white border border-green-500/30 hover:border-green-400/50 transition-all duration-300 hover:transform hover:scale-105 shadow-lg hover:shadow-xl">
-              <div className="text-3xl mb-2 group-hover:animate-bounce">✅</div>
-              <div className="text-3xl font-bold text-green-400 mb-1">{stats.completed}</div>
-              <div className="text-sm text-gray-300">Completas</div>
+          {collectionsLoading ? (
+            <CollectionStatsSkeleton />
+          ) : (
+            <div className="grid md:grid-cols-4 gap-6 mb-8 animate-fadeIn">
+              <div className="group bg-gradient-to-br from-green-600/20 to-emerald-600/20 backdrop-blur-lg rounded-2xl p-6 text-center text-white border border-green-500/30 hover:border-green-400/50 transition-all duration-300 hover:transform hover:scale-105 shadow-lg hover:shadow-xl">
+                <div className="text-3xl mb-2 group-hover:animate-bounce">✅</div>
+                <div className="text-3xl font-bold text-green-400 mb-1">{stats.completed}</div>
+                <div className="text-sm text-gray-300">Completas</div>
+              </div>
+              
+              <div className="group bg-gradient-to-br from-yellow-600/20 to-orange-600/20 backdrop-blur-lg rounded-2xl p-6 text-center text-white border border-yellow-500/30 hover:border-yellow-400/50 transition-all duration-300 hover:transform hover:scale-105 shadow-lg hover:shadow-xl">
+                <div className="text-3xl mb-2 group-hover:animate-pulse">⚡</div>
+                <div className="text-3xl font-bold text-yellow-400 mb-1">{stats.inProgress}</div>
+                <div className="text-sm text-gray-300">Em Progresso</div>
+              </div>
+              
+              <div className="group bg-gradient-to-br from-blue-600/20 to-indigo-600/20 backdrop-blur-lg rounded-2xl p-6 text-center text-white border border-blue-500/30 hover:border-blue-400/50 transition-all duration-300 hover:transform hover:scale-105 shadow-lg hover:shadow-xl">
+                <div className="text-3xl mb-2 group-hover:animate-pulse">🎯</div>
+                <div className="text-3xl font-bold text-blue-400 mb-1">{stats.notStarted}</div>
+                <div className="text-sm text-gray-300">Não Iniciadas</div>
+              </div>
+              
+              <div className="group bg-gradient-to-br from-purple-600/20 to-pink-600/20 backdrop-blur-lg rounded-2xl p-6 text-center text-white border border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 hover:transform hover:scale-105 shadow-lg hover:shadow-xl">
+                <div className="text-3xl mb-2 group-hover:animate-spin">⭐</div>
+                <div className="text-3xl font-bold text-purple-400 mb-1">{collections.filter(c => c.isLimited).length}</div>
+                <div className="text-sm text-gray-300">Limitadas</div>
+              </div>
             </div>
-            
-            <div className="group bg-gradient-to-br from-yellow-600/20 to-orange-600/20 backdrop-blur-lg rounded-2xl p-6 text-center text-white border border-yellow-500/30 hover:border-yellow-400/50 transition-all duration-300 hover:transform hover:scale-105 shadow-lg hover:shadow-xl">
-              <div className="text-3xl mb-2 group-hover:animate-pulse">⚡</div>
-              <div className="text-3xl font-bold text-yellow-400 mb-1">{stats.inProgress}</div>
-              <div className="text-sm text-gray-300">Em Progresso</div>
-            </div>
-            
-            <div className="group bg-gradient-to-br from-blue-600/20 to-indigo-600/20 backdrop-blur-lg rounded-2xl p-6 text-center text-white border border-blue-500/30 hover:border-blue-400/50 transition-all duration-300 hover:transform hover:scale-105 shadow-lg hover:shadow-xl">
-              <div className="text-3xl mb-2 group-hover:animate-pulse">🎯</div>
-              <div className="text-3xl font-bold text-blue-400 mb-1">{stats.notStarted}</div>
-              <div className="text-sm text-gray-300">Não Iniciadas</div>
-            </div>
-            
-            <div className="group bg-gradient-to-br from-purple-600/20 to-pink-600/20 backdrop-blur-lg rounded-2xl p-6 text-center text-white border border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 hover:transform hover:scale-105 shadow-lg hover:shadow-xl">
-              <div className="text-3xl mb-2 group-hover:animate-spin">⭐</div>
-              <div className="text-3xl font-bold text-purple-400 mb-1">{collections.filter(c => c.isLimited).length}</div>
-              <div className="text-sm text-gray-300">Limitadas</div>
-            </div>
-          </div>
+          )}
 
           {/* Filter Buttons */}
-          <div className="mb-8">
-            <h3 className="text-xl font-bold text-white mb-4 text-center flex items-center justify-center">
-              <span className="mr-2">🔍</span>
-              Filtrar Coleções
-            </h3>
-            <div className="flex flex-wrap gap-3 justify-center">
-              <button
-                onClick={() => setSelectedFilter('ALL')}
-                className={`px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold border-2 ${
-                  selectedFilter === 'ALL' 
-                    ? 'bg-gradient-to-r from-white/30 to-gray-300/30 text-white border-white/50' 
-                    : 'bg-white/10 text-gray-300 hover:bg-white/20 border-transparent'
-                }`}
-              >
-                🌟 Todas ({collections.length})
-              </button>
-              
-              <button
-                onClick={() => setSelectedFilter('COMPLETED')}
-                className={`px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold border-2 ${
-                  selectedFilter === 'COMPLETED' 
-                    ? 'bg-green-500/20 text-green-400 border-green-500/50' 
-                    : 'bg-white/10 text-gray-300 hover:bg-white/20 border-transparent'
-                }`}
-              >
-                ✅ Completas ({stats.completed})
-              </button>
-              
-              <button
-                onClick={() => setSelectedFilter('IN_PROGRESS')}
-                className={`px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold border-2 ${
-                  selectedFilter === 'IN_PROGRESS' 
-                    ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50' 
-                    : 'bg-white/10 text-gray-300 hover:bg-white/20 border-transparent'
-                }`}
-              >
-                ⚡ Em Progresso ({stats.inProgress})
-              </button>
-              
-              <button
-                onClick={() => setSelectedFilter('NOT_STARTED')}
-                className={`px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold border-2 ${
-                  selectedFilter === 'NOT_STARTED' 
-                    ? 'bg-blue-500/20 text-blue-400 border-blue-500/50' 
-                    : 'bg-white/10 text-gray-300 hover:bg-white/20 border-transparent'
-                }`}
-              >
-                🎯 Não Iniciadas ({stats.notStarted})
-              </button>
-              
-              <button
-                onClick={() => setSelectedFilter('LIMITED')}
-                className={`px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold border-2 ${
-                  selectedFilter === 'LIMITED' 
-                    ? 'bg-purple-500/20 text-purple-400 border-purple-500/50' 
-                    : 'bg-white/10 text-gray-300 hover:bg-white/20 border-transparent'
-                }`}
-              >
-                ⭐ Limitadas ({collections.filter(c => c.isLimited).length})
-              </button>
+          {collectionsLoading ? (
+            <CollectionFilterSkeleton />
+          ) : (
+            <div className="mb-8 animate-fadeIn">
+              <h3 className="text-xl font-bold text-white mb-4 text-center flex items-center justify-center">
+                <span className="mr-2">🔍</span>
+                Filtrar Coleções
+              </h3>
+              <div className="flex flex-wrap gap-3 justify-center">
+                <button
+                  onClick={() => setSelectedFilter('ALL')}
+                  className={`px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold border-2 ${
+                    selectedFilter === 'ALL' 
+                      ? 'bg-gradient-to-r from-white/30 to-gray-300/30 text-white border-white/50' 
+                      : 'bg-white/10 text-gray-300 hover:bg-white/20 border-transparent'
+                  }`}
+                >
+                  🌟 Todas ({collections.length})
+                </button>
+                
+                <button
+                  onClick={() => setSelectedFilter('COMPLETED')}
+                  className={`px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold border-2 ${
+                    selectedFilter === 'COMPLETED' 
+                      ? 'bg-green-500/20 text-green-400 border-green-500/50' 
+                      : 'bg-white/10 text-gray-300 hover:bg-white/20 border-transparent'
+                  }`}
+                >
+                  ✅ Completas ({stats.completed})
+                </button>
+                
+                <button
+                  onClick={() => setSelectedFilter('IN_PROGRESS')}
+                  className={`px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold border-2 ${
+                    selectedFilter === 'IN_PROGRESS' 
+                      ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50' 
+                      : 'bg-white/10 text-gray-300 hover:bg-white/20 border-transparent'
+                  }`}
+                >
+                  ⚡ Em Progresso ({stats.inProgress})
+                </button>
+                
+                <button
+                  onClick={() => setSelectedFilter('NOT_STARTED')}
+                  className={`px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold border-2 ${
+                    selectedFilter === 'NOT_STARTED' 
+                      ? 'bg-blue-500/20 text-blue-400 border-blue-500/50' 
+                      : 'bg-white/10 text-gray-300 hover:bg-white/20 border-transparent'
+                  }`}
+                >
+                  🎯 Não Iniciadas ({stats.notStarted})
+                </button>
+                
+                <button
+                  onClick={() => setSelectedFilter('LIMITED')}
+                  className={`px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold border-2 ${
+                    selectedFilter === 'LIMITED' 
+                      ? 'bg-purple-500/20 text-purple-400 border-purple-500/50' 
+                      : 'bg-white/10 text-gray-300 hover:bg-white/20 border-transparent'
+                  }`}
+                >
+                  ⭐ Limitadas ({collections.filter(c => c.isLimited).length})
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Collections Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCollections.map((collection) => (
+          {collectionsLoading ? (
+            <CollectionsGridSkeleton />
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredCollections.map((collection, index) => (
               <Link key={collection.id} href={`/collections/${collection.id}`}>
-                <div className={`bg-gradient-to-br ${getThemeColor(collection.theme)} backdrop-blur-lg rounded-lg p-6 border hover:scale-105 transition-transform duration-200 cursor-pointer`}>
+                <div 
+                  className={`bg-gradient-to-br ${getThemeColor(collection.theme)} backdrop-blur-lg rounded-lg p-6 border hover:scale-105 transition-transform duration-200 cursor-pointer animate-staggered-fade`}
+                  style={{ animationDelay: `${index * 0.1}s`, opacity: 0 }}
+                >
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center space-x-2">
                       <span className="text-2xl">{getThemeEmoji(collection.theme)}</span>
@@ -411,10 +442,11 @@ export default function Collections() {
                   </div>
                 </div>
               </Link>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
-          {filteredCollections.length === 0 && (
+          {!collectionsLoading && filteredCollections.length === 0 && (
             <div className="text-center py-16">
               <div className="text-6xl mb-4">📚</div>
               <h2 className="text-2xl font-bold text-white mb-4">

@@ -6,6 +6,13 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useUserRankings } from '@/hooks/useUserRankings'
+import { 
+  AchievementStatsSkeleton,
+  RecentUnlocksSkeleton,
+  AchievementFiltersSkeleton,
+  AchievementsGridSkeleton,
+  HeaderStatsSkeleton
+} from '@/components/SkeletonLoader'
 
 interface Achievement {
   id: string
@@ -43,6 +50,8 @@ export default function Achievements() {
   const [userProfile, setUserProfile] = useState<any>(null)
   const [userStats, setUserStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [achievementsLoading, setAchievementsLoading] = useState(true)
+  const [profileLoading, setProfileLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL')
   const [filter, setFilter] = useState<'ALL' | 'COMPLETED' | 'INCOMPLETE'>('ALL')
   const [showLogoutModal, setShowLogoutModal] = useState(false)
@@ -61,6 +70,7 @@ export default function Achievements() {
     if (status === 'unauthenticated') {
       router.push('/auth/signin')
     } else if (status === 'authenticated') {
+      setLoading(false) // Auth is complete, start showing skeleton
       fetchAchievements(true) // Mostrar loading apenas no carregamento inicial
       fetchUserStats()
       fetchUserProfile()
@@ -85,13 +95,15 @@ export default function Achievements() {
       }
     } catch (error) {
       console.error('Error fetching user data:', error)
+    } finally {
+      setProfileLoading(false)
     }
   }
 
   const fetchAchievements = async (showLoading = false) => {
     try {
       if (showLoading) {
-        setLoading(true)
+        setAchievementsLoading(true)
       }
       
       const params = new URLSearchParams()
@@ -125,7 +137,7 @@ export default function Achievements() {
       console.error('Error fetching achievements:', error)
     } finally {
       if (showLoading) {
-        setLoading(false)
+        setAchievementsLoading(false)
       }
     }
   }
@@ -228,46 +240,52 @@ export default function Achievements() {
 
             {/* Stats and Actions */}
             <div className="flex items-center space-x-4">
-              {/* Level and XP */}
-              {userStats && (
-                <div className="bg-gradient-to-r from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-400/30 hover:border-purple-300/50 transition-colors duration-200">
-                  <Link href="/achievements" className="flex items-center space-x-3 group">
-                    <div className="text-center">
-                      <div className="text-purple-300 font-bold text-sm group-hover:text-purple-200 transition-colors">⭐ Nível {userStats.level || 1}</div>
-                      <div className="text-xs text-gray-300 group-hover:text-purple-200 transition-colors">{userStats.totalXP || 0} XP</div>
+              {profileLoading ? (
+                <HeaderStatsSkeleton />
+              ) : (
+                <>
+                  {/* Level and XP */}
+                  {userStats && (
+                    <div className="bg-gradient-to-r from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-400/30 hover:border-purple-300/50 transition-colors duration-200">
+                      <Link href="/achievements" className="flex items-center space-x-3 group">
+                        <div className="text-center">
+                          <div className="text-purple-300 font-bold text-sm group-hover:text-purple-200 transition-colors">⭐ Nível {userStats.level || 1}</div>
+                          <div className="text-xs text-gray-300 group-hover:text-purple-200 transition-colors">{userStats.totalXP || 0} XP</div>
+                        </div>
+                      </Link>
                     </div>
-                  </Link>
-                </div>
-              )}
+                  )}
 
-              {/* User Ranking */}
-              {!rankingLoading && bestRanking.position > 0 && (
-                <div className="bg-gradient-to-r from-indigo-600/30 to-cyan-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-indigo-400/30 hover:border-indigo-300/50 transition-colors duration-200">
-                  <Link href="/rankings" className="flex items-center space-x-3 group">
-                    <div className="text-center">
-                      <div className="text-indigo-300 font-bold text-sm flex items-center">
-                        <span className="mr-1">📊</span>
-                        <span>#{bestRanking.position}</span>
-                        <span className="ml-1 text-xs opacity-75">({Math.round(bestRanking.percentage)}%)</span>
-                      </div>
-                      <div className="text-xs text-gray-300 group-hover:text-indigo-200 transition-colors">
-                        Ranking Global
-                      </div>
+                  {/* User Ranking */}
+                  {!rankingLoading && bestRanking.position > 0 && (
+                    <div className="bg-gradient-to-r from-indigo-600/30 to-cyan-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-indigo-400/30 hover:border-indigo-300/50 transition-colors duration-200">
+                      <Link href="/rankings" className="flex items-center space-x-3 group">
+                        <div className="text-center">
+                          <div className="text-indigo-300 font-bold text-sm flex items-center">
+                            <span className="mr-1">📊</span>
+                            <span>#{bestRanking.position}</span>
+                            <span className="ml-1 text-xs opacity-75">({Math.round(bestRanking.percentage)}%)</span>
+                          </div>
+                          <div className="text-xs text-gray-300 group-hover:text-indigo-200 transition-colors">
+                            Ranking Global
+                          </div>
+                        </div>
+                      </Link>
                     </div>
-                  </Link>
-                </div>
-              )}
-              
-              {/* Credits */}
-              <div className="bg-gradient-to-r from-yellow-600/30 to-orange-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-yellow-400/30 hover:border-yellow-300/50 transition-colors duration-200">
-                <Link href="/credits/purchase" className="flex items-center space-x-2 group">
-                  <span className="text-yellow-300 text-lg group-hover:scale-110 transition-transform duration-200">💰</span>
-                  <div>
-                    <div className="text-yellow-300 font-bold group-hover:text-yellow-200 transition-colors">{userProfile?.credits || 0}</div>
-                    <div className="text-xs text-yellow-200 group-hover:text-yellow-100 transition-colors">créditos</div>
+                  )}
+                  
+                  {/* Credits */}
+                  <div className="bg-gradient-to-r from-yellow-600/30 to-orange-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-yellow-400/30 hover:border-yellow-300/50 transition-colors duration-200">
+                    <Link href="/credits/purchase" className="flex items-center space-x-2 group">
+                      <span className="text-yellow-300 text-lg group-hover:scale-110 transition-transform duration-200">💰</span>
+                      <div>
+                        <div className="text-yellow-300 font-bold group-hover:text-yellow-200 transition-colors">{userProfile?.credits || 0}</div>
+                        <div className="text-xs text-yellow-200 group-hover:text-yellow-100 transition-colors">créditos</div>
+                      </div>
+                    </Link>
                   </div>
-                </Link>
-              </div>
+                </>
+              )}
               
               {/* Quick Actions */}
               <div className="flex items-center space-x-2">
@@ -305,8 +323,10 @@ export default function Achievements() {
           </div>
 
           {/* Stats Cards */}
-          {stats && (
-            <div className="grid md:grid-cols-4 gap-6 mb-8">
+          {achievementsLoading ? (
+            <AchievementStatsSkeleton />
+          ) : stats && (
+            <div className="grid md:grid-cols-4 gap-6 mb-8 animate-fadeIn">
               <div className="group bg-gradient-to-br from-blue-600/20 to-cyan-600/20 backdrop-blur-lg rounded-2xl p-6 text-center text-white border border-blue-500/30 hover:border-blue-400/50 transition-all duration-300 hover:transform hover:scale-105 shadow-lg hover:shadow-xl">
                 <div className="text-3xl mb-2 group-hover:animate-bounce">🏆</div>
                 <div className="text-3xl font-bold text-blue-400 mb-1">{stats.completed}</div>
@@ -334,8 +354,10 @@ export default function Achievements() {
           )}
 
           {/* Recent Unlocks */}
-          {stats?.recentUnlocks && stats.recentUnlocks.length > 0 && (
-            <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-8 mb-8 border border-white/20 shadow-xl">
+          {achievementsLoading ? (
+            <RecentUnlocksSkeleton />
+          ) : stats?.recentUnlocks && stats.recentUnlocks.length > 0 && (
+            <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-8 mb-8 border border-white/20 shadow-xl animate-fadeIn">
               <h3 className="text-2xl font-bold text-white mb-6 text-center flex items-center justify-center">
                 <span className="mr-3">🎉</span>
                 Recém Desbloqueadas
@@ -353,140 +375,149 @@ export default function Achievements() {
           )}
 
           {/* Filters */}
-          <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-8 mb-8 border border-white/20 shadow-xl">
-            <h3 className="text-2xl font-bold text-white mb-8 text-center flex items-center justify-center">
-              <span className="mr-3">🔍</span>
-              Filtros de Conquistas
-            </h3>
-            
-            {/* Category Filter */}
-            <div className="mb-8">
-              <h4 className="text-xl font-bold text-white mb-4 flex items-center">
-                <span className="mr-2">📂</span>
-                Categorias
-              </h4>
-              <div className="flex flex-wrap gap-3">
-                {categories.map(category => (
-                  <button
-                    key={category.key}
-                    onClick={() => setSelectedCategory(category.key)}
-                    className={`px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold border-2 ${
-                      selectedCategory === category.key
-                        ? 'bg-gradient-to-r from-white/30 to-gray-300/30 text-white border-white/50'
-                        : 'bg-white/10 text-gray-300 hover:bg-white/20 border-transparent'
-                    }`}
-                  >
-                    {category.icon} {category.name}
-                  </button>
-                ))}
+          {achievementsLoading ? (
+            <AchievementFiltersSkeleton />
+          ) : (
+            <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-8 mb-8 border border-white/20 shadow-xl animate-fadeIn">
+              <h3 className="text-2xl font-bold text-white mb-8 text-center flex items-center justify-center">
+                <span className="mr-3">🔍</span>
+                Filtros de Conquistas
+              </h3>
+              
+              {/* Category Filter */}
+              <div className="mb-8">
+                <h4 className="text-xl font-bold text-white mb-4 flex items-center">
+                  <span className="mr-2">📂</span>
+                  Categorias
+                </h4>
+                <div className="flex flex-wrap gap-3">
+                  {categories.map(category => (
+                    <button
+                      key={category.key}
+                      onClick={() => setSelectedCategory(category.key)}
+                      className={`px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold border-2 ${
+                        selectedCategory === category.key
+                          ? 'bg-gradient-to-r from-white/30 to-gray-300/30 text-white border-white/50'
+                          : 'bg-white/10 text-gray-300 hover:bg-white/20 border-transparent'
+                      }`}
+                    >
+                      {category.icon} {category.name}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Status Filter */}
-            <div>
-              <h4 className="text-xl font-bold text-white mb-4 flex items-center">
-                <span className="mr-2">📊</span>
-                Status
-              </h4>
-              <div className="flex flex-wrap gap-3">
-                {[
-                  { key: 'ALL', name: 'Todas', icon: '🌏' },
-                  { key: 'COMPLETED', name: 'Completas', icon: '✅' },
-                  { key: 'INCOMPLETE', name: 'Incompletas', icon: '⏳' }
-                ].map(f => (
-                  <button
-                    key={f.key}
-                    onClick={() => setFilter(f.key as typeof filter)}
-                    className={`px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold border-2 ${
-                      filter === f.key
-                        ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-purple-400/50'
-                        : 'bg-white/10 text-gray-300 hover:bg-white/20 border-transparent'
-                    }`}
-                  >
-                    {f.icon} {f.name}
-                  </button>
-                ))}
+              {/* Status Filter */}
+              <div>
+                <h4 className="text-xl font-bold text-white mb-4 flex items-center">
+                  <span className="mr-2">📊</span>
+                  Status
+                </h4>
+                <div className="flex flex-wrap gap-3">
+                  {[
+                    { key: 'ALL', name: 'Todas', icon: '🌏' },
+                    { key: 'COMPLETED', name: 'Completas', icon: '✅' },
+                    { key: 'INCOMPLETE', name: 'Incompletas', icon: '⏳' }
+                  ].map(f => (
+                    <button
+                      key={f.key}
+                      onClick={() => setFilter(f.key as typeof filter)}
+                      className={`px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold border-2 ${
+                        filter === f.key
+                          ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-purple-400/50'
+                          : 'bg-white/10 text-gray-300 hover:bg-white/20 border-transparent'
+                      }`}
+                    >
+                      {f.icon} {f.name}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Achievements Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredAchievements.map((achievement) => (
-              <div
-                key={achievement.id}
-                className={`group bg-gradient-to-br rounded-2xl p-6 border-2 transition-all duration-300 hover:transform hover:scale-[1.02] shadow-lg hover:shadow-2xl ${
-                  achievement.userProgress?.isCompleted
-                    ? `${getCategoryColor(achievement.category)} from-white/15 to-white/5`
-                    : 'from-white/5 to-white/2 border-gray-600/30 text-gray-400'
-                } ${achievement.isSecret && !achievement.userProgress?.isCompleted ? 'opacity-50' : ''}`}
-              >
-                <div className="text-center mb-4">
-                  <div className="text-6xl mb-3 group-hover:animate-bounce transition-all duration-300">
-                    {achievement.isSecret && !achievement.userProgress?.isCompleted 
-                      ? '❓' 
-                      : achievement.icon
-                    }
-                  </div>
-                  
-                  <h3 className="text-xl font-bold mb-2">
-                    {achievement.isSecret && !achievement.userProgress?.isCompleted
-                      ? 'Conquista Secreta'
-                      : achievement.name
-                    }
-                  </h3>
-                  
-                  <p className="text-sm mb-3">
-                    {achievement.isSecret && !achievement.userProgress?.isCompleted
-                      ? 'Complete certas condições para revelar'
-                      : achievement.description
-                    }
-                  </p>
-                  
-                  <div className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getCategoryColor(achievement.category)}`}>
-                    {achievement.category}
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center text-sm">
-                    <span>XP:</span>
-                    <span className="font-bold text-yellow-400">+{achievement.points}</span>
+          {achievementsLoading ? (
+            <AchievementsGridSkeleton />
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredAchievements.map((achievement, index) => (
+                <div
+                  key={achievement.id}
+                  className={`group bg-gradient-to-br rounded-2xl p-6 border-2 transition-all duration-300 hover:transform hover:scale-[1.02] shadow-lg hover:shadow-2xl animate-staggered-fade ${
+                    achievement.userProgress?.isCompleted
+                      ? `${getCategoryColor(achievement.category)} from-white/15 to-white/5`
+                      : 'from-white/5 to-white/2 border-gray-600/30 text-gray-400'
+                  } ${achievement.isSecret && !achievement.userProgress?.isCompleted ? 'opacity-50' : ''}`}
+                  style={{ animationDelay: `${index * 0.1}s`, opacity: 0 }}
+                >
+                  <div className="text-center mb-4">
+                    <div className="text-6xl mb-3 group-hover:animate-bounce transition-all duration-300">
+                      {achievement.isSecret && !achievement.userProgress?.isCompleted 
+                        ? '❓' 
+                        : achievement.icon
+                      }
+                    </div>
+                    
+                    <h3 className="text-xl font-bold mb-2">
+                      {achievement.isSecret && !achievement.userProgress?.isCompleted
+                        ? 'Conquista Secreta'
+                        : achievement.name
+                      }
+                    </h3>
+                    
+                    <p className="text-sm mb-3">
+                      {achievement.isSecret && !achievement.userProgress?.isCompleted
+                        ? 'Complete certas condições para revelar'
+                        : achievement.description
+                      }
+                    </p>
+                    
+                    <div className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getCategoryColor(achievement.category)}`}>
+                      {achievement.category}
+                    </div>
                   </div>
 
-                  <div className="flex justify-between items-center text-sm">
-                    <span>Progresso Global:</span>
-                    <span>{achievement.completionRate}% dos jogadores</span>
-                  </div>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center text-sm">
+                      <span>XP:</span>
+                      <span className="font-bold text-yellow-400">+{achievement.points}</span>
+                    </div>
 
-                  {achievement.userProgress?.isCompleted && (
-                    <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/40 rounded-xl p-4 text-center shadow-lg">
-                      <div className="text-green-400 font-bold text-sm flex items-center justify-center">
-                        <span className="mr-2 animate-pulse">✅</span>
-                        DESBLOQUEADA!
-                      </div>
-                      {achievement.userProgress.unlockedAt && (
-                        <div className="text-green-300 text-xs mt-2 font-medium">
-                          {formatDate(achievement.userProgress.unlockedAt)}
+                    <div className="flex justify-between items-center text-sm">
+                      <span>Progresso Global:</span>
+                      <span>{achievement.completionRate}% dos jogadores</span>
+                    </div>
+
+                    {achievement.userProgress?.isCompleted && (
+                      <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/40 rounded-xl p-4 text-center shadow-lg">
+                        <div className="text-green-400 font-bold text-sm flex items-center justify-center">
+                          <span className="mr-2 animate-pulse">✅</span>
+                          DESBLOQUEADA!
                         </div>
-                      )}
-                    </div>
-                  )}
-
-                  {!achievement.userProgress?.isCompleted && (
-                    <div className="bg-gradient-to-r from-gray-500/20 to-slate-500/20 border border-gray-500/40 rounded-xl p-4 text-center">
-                      <div className="text-gray-400 text-sm font-medium flex items-center justify-center">
-                        <span className="mr-2">🔒</span>
-                        Não desbloqueada
+                        {achievement.userProgress.unlockedAt && (
+                          <div className="text-green-300 text-xs mt-2 font-medium">
+                            {formatDate(achievement.userProgress.unlockedAt)}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+                    )}
 
-          {filteredAchievements.length === 0 && (
+                    {!achievement.userProgress?.isCompleted && (
+                      <div className="bg-gradient-to-r from-gray-500/20 to-slate-500/20 border border-gray-500/40 rounded-xl p-4 text-center">
+                        <div className="text-gray-400 text-sm font-medium flex items-center justify-center">
+                          <span className="mr-2">🔒</span>
+                          Não desbloqueada
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!achievementsLoading && filteredAchievements.length === 0 && (
             <div className="text-center py-20">
               <div className="text-8xl mb-6 animate-bounce">🏆</div>
               <h2 className="text-3xl font-bold text-white mb-6">

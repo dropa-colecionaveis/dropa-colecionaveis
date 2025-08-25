@@ -1,3 +1,5 @@
+import { memo } from 'react'
+
 interface SkeletonLoaderProps {
   width?: string
   height?: string
@@ -6,7 +8,14 @@ interface SkeletonLoaderProps {
 
 export function SkeletonLoader({ width = "w-full", height = "h-4", className = "" }: SkeletonLoaderProps) {
   return (
-    <div className={`${width} ${height} bg-gradient-to-r from-gray-700/50 via-gray-600/50 to-gray-700/50 rounded animate-pulse ${className}`}></div>
+    <div className={`${width} ${height} bg-gradient-to-r from-gray-700/50 via-gray-600/50 to-gray-700/50 rounded animate-pulse ${className}`}>
+      <div className="w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer" 
+           style={{
+             backgroundSize: '200% 100%',
+             animation: 'shimmer 2s infinite linear'
+           }}
+      ></div>
+    </div>
   )
 }
 
@@ -182,3 +191,265 @@ export function HeaderStatsSkeleton() {
     </div>
   )
 }
+
+export const InventoryStatsSkeleton = memo(() => {
+  return (
+    <div className="grid md:grid-cols-4 gap-6 mb-8">
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i} className="group bg-gradient-to-br from-blue-600/20 to-indigo-600/20 backdrop-blur-lg rounded-2xl p-6 text-center text-white border border-blue-500/30">
+          <SkeletonLoader width="w-8" height="h-8" className="mx-auto mb-2 rounded-full" />
+          <SkeletonLoader width="w-16" height="h-8" className="mx-auto mb-1" />
+          <SkeletonLoader width="w-20" height="h-4" className="mx-auto" />
+        </div>
+      ))}
+    </div>
+  )
+})
+InventoryStatsSkeleton.displayName = 'InventoryStatsSkeleton'
+
+export const InventoryFilterSkeleton = memo(() => {
+  return (
+    <div className="mb-8">
+      <div className="text-center mb-4">
+        <SkeletonLoader width="w-48" height="h-6" className="mx-auto mb-4" />
+      </div>
+      <div className="flex flex-wrap gap-3 justify-center">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <SkeletonLoader key={i} width="w-24" height="h-12" className="rounded-xl" />
+        ))}
+      </div>
+    </div>
+  )
+})
+InventoryFilterSkeleton.displayName = 'InventoryFilterSkeleton'
+
+export const InventoryItemSkeleton = memo(() => {
+  return (
+    <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 border-2 border-gray-500/30">
+      <div className="text-center mb-4">
+        <SkeletonLoader width="w-32" height="h-32" className="mx-auto mb-4 rounded-xl" />
+        <SkeletonLoader width="w-24" height="h-6" className="mx-auto mb-2" />
+        <SkeletonLoader width="w-full" height="h-4" className="mb-3" />
+        <SkeletonLoader width="w-20" height="h-6" className="mx-auto rounded-full" />
+      </div>
+      
+      <div className="space-y-2 text-sm mb-4">
+        <div className="flex justify-between">
+          <SkeletonLoader width="w-12" height="h-4" />
+          <SkeletonLoader width="w-16" height="h-4" />
+        </div>
+        <div className="flex justify-between">
+          <SkeletonLoader width="w-16" height="h-4" />
+          <SkeletonLoader width="w-20" height="h-4" />
+        </div>
+        <div className="flex justify-between">
+          <SkeletonLoader width="w-14" height="h-4" />
+          <SkeletonLoader width="w-18" height="h-4" />
+        </div>
+      </div>
+      
+      <div className="flex space-x-2">
+        <SkeletonLoader width="w-1/2" height="h-8" className="rounded" />
+        <SkeletonLoader width="w-1/2" height="h-8" className="rounded" />
+      </div>
+    </div>
+  )
+})
+InventoryItemSkeleton.displayName = 'InventoryItemSkeleton'
+
+export const InventoryGridSkeleton = memo(() => {
+  return (
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <InventoryItemSkeleton key={i} />
+      ))}
+    </div>
+  )
+})
+InventoryGridSkeleton.displayName = 'InventoryGridSkeleton'
+
+export const CollectionStatsSkeleton = memo(() => {
+  return (
+    <div className="grid md:grid-cols-4 gap-6 mb-8">
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i} className="group bg-gradient-to-br from-green-600/20 to-emerald-600/20 backdrop-blur-lg rounded-2xl p-6 text-center text-white border border-green-500/30">
+          <SkeletonLoader width="w-8" height="h-8" className="mx-auto mb-2 rounded-full" />
+          <SkeletonLoader width="w-16" height="h-8" className="mx-auto mb-1" />
+          <SkeletonLoader width="w-20" height="h-4" className="mx-auto" />
+        </div>
+      ))}
+    </div>
+  )
+})
+CollectionStatsSkeleton.displayName = 'CollectionStatsSkeleton'
+
+export const CollectionFilterSkeleton = memo(() => {
+  return (
+    <div className="mb-8">
+      <div className="text-center mb-4">
+        <SkeletonLoader width="w-48" height="h-6" className="mx-auto mb-4" />
+      </div>
+      <div className="flex flex-wrap gap-3 justify-center">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <SkeletonLoader key={i} width="w-32" height="h-12" className="rounded-xl" />
+        ))}
+      </div>
+    </div>
+  )
+})
+CollectionFilterSkeleton.displayName = 'CollectionFilterSkeleton'
+
+export const CollectionCardSkeleton = memo(() => {
+  return (
+    <div className="bg-gradient-to-br from-gray-500/20 to-slate-500/20 backdrop-blur-lg rounded-lg p-6 border border-gray-500/30">
+      <div className="flex justify-between items-start mb-4">
+        <div className="flex items-center space-x-2">
+          <SkeletonLoader width="w-8" height="h-8" className="rounded-full" />
+          <div>
+            <SkeletonLoader width="w-32" height="h-6" className="mb-2" />
+            <SkeletonLoader width="w-20" height="h-4" />
+          </div>
+        </div>
+        
+        <div className="flex flex-col items-end space-y-1">
+          <SkeletonLoader width="w-20" height="h-6" className="rounded-full" />
+        </div>
+      </div>
+      
+      <SkeletonLoader width="w-full" height="h-10" className="mb-4" />
+      
+      {/* Progress section */}
+      <div className="mb-4">
+        <div className="flex justify-between text-sm mb-2">
+          <SkeletonLoader width="w-16" height="h-4" />
+          <SkeletonLoader width="w-12" height="h-4" />
+        </div>
+        <SkeletonLoader width="w-full" height="h-3" className="rounded-full mb-1" />
+        <div className="text-right">
+          <SkeletonLoader width="w-8" height="h-3" className="ml-auto" />
+        </div>
+      </div>
+      
+      <div className="text-center">
+        <SkeletonLoader width="w-24" height="h-4" className="mx-auto" />
+      </div>
+    </div>
+  )
+})
+CollectionCardSkeleton.displayName = 'CollectionCardSkeleton'
+
+export const CollectionsGridSkeleton = memo(() => {
+  return (
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <CollectionCardSkeleton key={i} />
+      ))}
+    </div>
+  )
+})
+CollectionsGridSkeleton.displayName = 'CollectionsGridSkeleton'
+
+export const AchievementStatsSkeleton = memo(() => {
+  return (
+    <div className="grid md:grid-cols-4 gap-6 mb-8">
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i} className="group bg-gradient-to-br from-blue-600/20 to-cyan-600/20 backdrop-blur-lg rounded-2xl p-6 text-center text-white border border-blue-500/30">
+          <SkeletonLoader width="w-8" height="h-8" className="mx-auto mb-2 rounded-full" />
+          <SkeletonLoader width="w-16" height="h-8" className="mx-auto mb-1" />
+          <SkeletonLoader width="w-20" height="h-4" className="mx-auto" />
+        </div>
+      ))}
+    </div>
+  )
+})
+AchievementStatsSkeleton.displayName = 'AchievementStatsSkeleton'
+
+export const RecentUnlocksSkeleton = memo(() => {
+  return (
+    <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-8 mb-8 border border-white/20 shadow-xl">
+      <div className="text-center mb-6">
+        <SkeletonLoader width="w-48" height="h-8" className="mx-auto" />
+      </div>
+      <div className="grid md:grid-cols-5 gap-6">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className="text-center p-4 rounded-xl bg-white/5 border border-white/10">
+            <SkeletonLoader width="w-16" height="w-16" className="mx-auto mb-3 rounded-full" />
+            <SkeletonLoader width="w-20" height="h-4" className="mx-auto mb-1" />
+            <SkeletonLoader width="w-16" height="h-3" className="mx-auto" />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+})
+RecentUnlocksSkeleton.displayName = 'RecentUnlocksSkeleton'
+
+export const AchievementFiltersSkeleton = memo(() => {
+  return (
+    <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-8 mb-8 border border-white/20 shadow-xl">
+      <div className="text-center mb-8">
+        <SkeletonLoader width="w-56" height="h-8" className="mx-auto" />
+      </div>
+      
+      {/* Category Filter */}
+      <div className="mb-8">
+        <SkeletonLoader width="w-32" height="h-6" className="mb-4" />
+        <div className="flex flex-wrap gap-3">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <SkeletonLoader key={i} width="w-28" height="h-12" className="rounded-xl" />
+          ))}
+        </div>
+      </div>
+
+      {/* Status Filter */}
+      <div>
+        <SkeletonLoader width="w-20" height="h-6" className="mb-4" />
+        <div className="flex flex-wrap gap-3">
+          {[1, 2, 3].map((i) => (
+            <SkeletonLoader key={i} width="w-24" height="h-12" className="rounded-xl" />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+})
+AchievementFiltersSkeleton.displayName = 'AchievementFiltersSkeleton'
+
+export const AchievementCardSkeleton = memo(() => {
+  return (
+    <div className="group bg-gradient-to-br from-white/5 to-white/2 border-2 border-gray-600/30 rounded-2xl p-6">
+      <div className="text-center mb-4">
+        <SkeletonLoader width="w-16" height="w-16" className="mx-auto mb-3 rounded-full" />
+        <SkeletonLoader width="w-32" height="h-6" className="mx-auto mb-2" />
+        <SkeletonLoader width="w-full" height="h-10" className="mb-3" />
+        <SkeletonLoader width="w-20" height="h-6" className="mx-auto rounded-full" />
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex justify-between items-center">
+          <SkeletonLoader width="w-8" height="h-4" />
+          <SkeletonLoader width="w-12" height="h-4" />
+        </div>
+
+        <div className="flex justify-between items-center">
+          <SkeletonLoader width="w-24" height="h-4" />
+          <SkeletonLoader width="w-20" height="h-4" />
+        </div>
+
+        <SkeletonLoader width="w-full" height="h-16" className="rounded-xl" />
+      </div>
+    </div>
+  )
+})
+AchievementCardSkeleton.displayName = 'AchievementCardSkeleton'
+
+export const AchievementsGridSkeleton = memo(() => {
+  return (
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {Array.from({ length: 9 }).map((_, i) => (
+        <AchievementCardSkeleton key={i} />
+      ))}
+    </div>
+  )
+})
+AchievementsGridSkeleton.displayName = 'AchievementsGridSkeleton'
