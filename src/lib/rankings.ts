@@ -100,7 +100,12 @@ export class RankingService {
             totalPacksOpened: true
           },
           where: {
-            totalPacksOpened: { gt: 0 }
+            totalPacksOpened: { gt: 0 },
+            user: {
+              role: {
+                notIn: ['ADMIN', 'SUPER_ADMIN']
+              }
+            }
           },
           orderBy: { totalPacksOpened: 'desc' }
         }
@@ -113,7 +118,12 @@ export class RankingService {
             totalItemsCollected: true
           },
           where: {
-            totalItemsCollected: { gt: 0 }
+            totalItemsCollected: { gt: 0 },
+            user: {
+              role: {
+                notIn: ['ADMIN', 'SUPER_ADMIN']
+              }
+            }
           },
           orderBy: { totalItemsCollected: 'desc' }
         }
@@ -127,9 +137,20 @@ export class RankingService {
             marketplacePurchases: true
           },
           where: {
-            OR: [
-              { marketplaceSales: { gt: 0 } },
-              { marketplacePurchases: { gt: 0 } }
+            AND: [
+              {
+                OR: [
+                  { marketplaceSales: { gt: 0 } },
+                  { marketplacePurchases: { gt: 0 } }
+                ]
+              },
+              {
+                user: {
+                  role: {
+                    notIn: ['ADMIN', 'SUPER_ADMIN']
+                  }
+                }
+              }
             ]
           },
           orderBy: [
@@ -149,7 +170,12 @@ export class RankingService {
             currentStreak: true
           },
           where: {
-            lastActivityAt: { gte: weekAgo }
+            lastActivityAt: { gte: weekAgo },
+            user: {
+              role: {
+                notIn: ['ADMIN', 'SUPER_ADMIN']
+              }
+            }
           },
           orderBy: { currentStreak: 'desc' }
         }
@@ -165,7 +191,12 @@ export class RankingService {
             longestStreak: true
           },
           where: {
-            lastActivityAt: { gte: monthAgo }
+            lastActivityAt: { gte: monthAgo },
+            user: {
+              role: {
+                notIn: ['ADMIN', 'SUPER_ADMIN']
+              }
+            }
           },
           orderBy: { longestStreak: 'desc' }
         }
@@ -185,10 +216,15 @@ export class RankingService {
 
   // Calcular XP correto baseado apenas nas conquistas completadas
   private async calculateCorrectTotalXP(): Promise<Array<{ userId: string, value: number }>> {
-    // Buscar todos os usuários com conquistas completadas
+    // Buscar todos os usuários com conquistas completadas, excluindo admins
     const userAchievements = await prisma.userAchievement.findMany({
       where: {
-        isCompleted: true
+        isCompleted: true,
+        user: {
+          role: {
+            notIn: ['ADMIN', 'SUPER_ADMIN']
+          }
+        }
       },
       include: {
         achievement: {
@@ -242,14 +278,20 @@ export class RankingService {
     const rankings = await prisma.ranking.findMany({
       where: {
         category,
-        seasonId
+        seasonId,
+        user: {
+          role: {
+            notIn: ['ADMIN', 'SUPER_ADMIN']
+          }
+        }
       },
       include: {
         user: {
           select: {
             id: true,
             name: true,
-            email: true
+            email: true,
+            role: true
           }
         }
       },
@@ -405,6 +447,11 @@ export class RankingService {
         position: {
           gte: startPosition,
           lte: endPosition
+        },
+        user: {
+          role: {
+            notIn: ['ADMIN', 'SUPER_ADMIN']
+          }
         }
       },
       include: {
@@ -412,7 +459,8 @@ export class RankingService {
           select: {
             id: true,
             name: true,
-            email: true
+            email: true,
+            role: true
           }
         }
       },
@@ -494,32 +542,59 @@ export class RankingService {
 
   // Estatísticas gerais dos rankings
   async getRankingStats(): Promise<any> {
-    const totalPlayers = await prisma.userStats.count()
+    const totalPlayers = await prisma.userStats.count({
+      where: {
+        user: {
+          role: {
+            notIn: ['ADMIN', 'SUPER_ADMIN']
+          }
+        }
+      }
+    })
     
     const activePlayers = await prisma.userStats.count({
       where: {
         lastActivityAt: {
           gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // última semana
+        },
+        user: {
+          role: {
+            notIn: ['ADMIN', 'SUPER_ADMIN']
+          }
         }
       }
     })
 
     const topXPPlayer = await prisma.userStats.findFirst({
-      where: { totalXP: { gt: 0 } },
+      where: { 
+        totalXP: { gt: 0 },
+        user: {
+          role: {
+            notIn: ['ADMIN', 'SUPER_ADMIN']
+          }
+        }
+      },
       orderBy: { totalXP: 'desc' },
       include: {
         user: {
-          select: { name: true, email: true }
+          select: { name: true, email: true, role: true }
         }
       }
     })
 
     const topCollector = await prisma.userStats.findFirst({
-      where: { totalItemsCollected: { gt: 0 } },
+      where: { 
+        totalItemsCollected: { gt: 0 },
+        user: {
+          role: {
+            notIn: ['ADMIN', 'SUPER_ADMIN']
+          }
+        }
+      },
       orderBy: { totalItemsCollected: 'desc' },
       include: {
         user: {
-          select: { name: true, email: true }
+          select: { name: true, email: true, role: true }
         }
       }
     })
@@ -558,14 +633,23 @@ export class RankingService {
 
     const [rankings, total] = await Promise.all([
       prisma.ranking.findMany({
-        where: { category, seasonId },
+        where: { 
+          category, 
+          seasonId,
+          user: {
+            role: {
+              notIn: ['ADMIN', 'SUPER_ADMIN']
+            }
+          }
+        },
         include: {
           user: {
             select: {
               id: true,
               name: true,
               email: true,
-              createdAt: true
+              createdAt: true,
+              role: true
             }
           }
         },
@@ -574,7 +658,15 @@ export class RankingService {
         take: limit
       }),
       prisma.ranking.count({
-        where: { category, seasonId }
+        where: { 
+          category, 
+          seasonId,
+          user: {
+            role: {
+              notIn: ['ADMIN', 'SUPER_ADMIN']
+            }
+          }
+        }
       })
     ])
 

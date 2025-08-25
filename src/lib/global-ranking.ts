@@ -41,10 +41,17 @@ export class GlobalRankingService {
 
   // Calcular ranking global de todos os usuários
   async calculateGlobalRanking(): Promise<GlobalRankingEntry[]> {
-    // 1. Buscar todos os usuários que têm pelo menos um ranking
+    // 1. Buscar todos os usuários que têm pelo menos um ranking, excluindo admins
     const usersWithRankings = await prisma.ranking.findMany({
       distinct: ['userId'],
-      select: { userId: true }
+      select: { userId: true },
+      where: {
+        user: {
+          role: {
+            notIn: ['ADMIN', 'SUPER_ADMIN']
+          }
+        }
+      }
     })
 
     const globalRankings: GlobalRankingEntry[] = []
@@ -53,12 +60,19 @@ export class GlobalRankingService {
     for (const userRef of usersWithRankings) {
       const userId = userRef.userId
 
-      // Buscar todos os rankings do usuário
+      // Buscar todos os rankings do usuário (já filtrados por não-admin)
       const userRankings = await prisma.ranking.findMany({
-        where: { userId },
+        where: { 
+          userId,
+          user: {
+            role: {
+              notIn: ['ADMIN', 'SUPER_ADMIN']
+            }
+          }
+        },
         include: {
           user: {
-            select: { name: true, email: true }
+            select: { name: true, email: true, role: true }
           }
         }
       })
@@ -83,7 +97,14 @@ export class GlobalRankingService {
         if (ranking) {
           // Usuário tem ranking nesta categoria
           const totalInCategory = await prisma.ranking.count({
-            where: { category: ranking.category }
+            where: { 
+              category: ranking.category,
+              user: {
+                role: {
+                  notIn: ['ADMIN', 'SUPER_ADMIN']
+                }
+              }
+            }
           })
 
           // Calcular pontos normalizados (0-1)
