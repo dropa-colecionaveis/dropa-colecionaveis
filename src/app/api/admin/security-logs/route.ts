@@ -63,8 +63,8 @@ export async function GET(req: NextRequest) {
     await securityLogger.log({
       type: 'ADMIN_ACTION',
       severity: 'LOW',
-      userId: session.user.id,
-      userEmail: session.user.email,
+      userId: authResult.user?.id,
+      userEmail: authResult.user?.email,
       ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || req.ip || undefined,
       userAgent: req.headers.get('user-agent') || undefined,
       endpoint: '/api/admin/security-logs',
