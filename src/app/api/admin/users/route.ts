@@ -1,19 +1,18 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
+import { verifyAdminAuth } from '@/lib/admin-auth'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: Request) {
   try {
-    const { authOptions } = await import('@/lib/auth')
     const { prisma } = await import('@/lib/prisma')
     
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user?.email || session.user.email !== 'admin@admin.com') {
+    const authResult = await verifyAdminAuth(req)
+
+    if (!authResult.success) {
       return NextResponse.json(
-        { error: 'Unauthorized - Admin access required' },
-        { status: 401 }
+        { error: authResult.error || 'Unauthorized - Admin access required' },
+        { status: authResult.statusCode || 403 }
       )
     }
 

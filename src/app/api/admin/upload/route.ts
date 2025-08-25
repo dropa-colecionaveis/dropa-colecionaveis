@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
+import { verifyAdminAuth } from '@/lib/admin-auth'
 import { writeFile } from 'fs/promises'
 import { join } from 'path'
 import { mkdir } from 'fs/promises'
@@ -7,14 +7,12 @@ import { existsSync } from 'fs'
 
 export async function POST(req: Request) {
   try {
-    const { authOptions } = await import('@/lib/auth')
-    
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user?.email || session.user.email !== 'admin@admin.com') {
+    const authResult = await verifyAdminAuth(req)
+
+    if (!authResult.success) {
       return NextResponse.json(
-        { error: 'Unauthorized - Admin access required' },
-        { status: 401 }
+        { error: authResult.error || 'Unauthorized - Admin access required' },
+        { status: authResult.statusCode || 403 }
       )
     }
 

@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useUserRankings } from '@/hooks/useUserRankings'
+import { useAdmin } from '@/hooks/useAdmin'
 import { 
   AchievementStatsSkeleton,
   RecentUnlocksSkeleton,
@@ -56,6 +57,7 @@ export default function Achievements() {
   const [filter, setFilter] = useState<'ALL' | 'COMPLETED' | 'INCOMPLETE'>('ALL')
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const { bestRanking, loading: rankingLoading } = useUserRankings()
+  const { isAdmin, isSuperAdmin } = useAdmin()
 
   const categories = [
     { key: 'ALL', name: 'Todas', icon: '🎯' },
@@ -290,13 +292,13 @@ export default function Achievements() {
               {/* Quick Actions */}
               <div className="flex items-center space-x-2">
                 {/* Admin Link */}
-                {session?.user?.email === 'admin@admin.com' && (
+                {isAdmin && (
                   <Link
                     href="/admin"
                     className="p-2 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white rounded-lg transition-all duration-200 text-sm font-medium shadow-lg hover:shadow-xl hover:scale-105"
-                    title="Admin"
+                    title={isSuperAdmin ? "Super Admin" : "Admin"}
                   >
-                    🔧
+                    {isSuperAdmin ? '👑' : '🔧'}
                   </Link>
                 )}
                 

@@ -1,25 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
+import { verifyAdminAuth } from '@/lib/admin-auth'
 
 export async function GET(req: NextRequest) {
   try {
-    const { authOptions } = await import('@/lib/auth')
     const { securityLogger } = await import('@/lib/security-logger')
     
-    const session = await getServerSession(authOptions)
-    
-    // Only allow admin users to view security logs
-    if (!session?.user?.email || session.user.email !== 'admin@admin.com') {
+    const authResult = await verifyAdminAuth(req)
+
+    if (!authResult.success) {
       await securityLogger.logUnauthorizedAccess(
         '/api/admin/security-logs',
         req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || req.ip || undefined,
         req.headers.get('user-agent') || undefined,
-        session?.user?.id
+        undefined
       )
       
       return NextResponse.json(
-        { error: 'Unauthorized - Admin access required' },
-        { status: 403 }
+        { error: authResult.error || 'Unauthorized - Admin access required' },
+        { status: authResult.statusCode || 403 }
       )
     }
 
@@ -98,16 +96,14 @@ export async function GET(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const { authOptions } = await import('@/lib/auth')
     const { securityLogger } = await import('@/lib/security-logger')
     
-    const session = await getServerSession(authOptions)
-    
-    // Only allow admin users to cleanup logs
-    if (!session?.user?.email || session.user.email !== 'admin@admin.com') {
+    const authResult = await verifyAdminAuth(req)
+
+    if (!authResult.success) {
       return NextResponse.json(
-        { error: 'Unauthorized - Admin access required' },
-        { status: 403 }
+        { error: authResult.error || 'Unauthorized - Admin access required' },
+        { status: authResult.statusCode || 403 }
       )
     }
 
@@ -121,8 +117,8 @@ export async function DELETE(req: NextRequest) {
     await securityLogger.log({
       type: 'ADMIN_ACTION',
       severity: 'MEDIUM',
-      userId: session.user.id,
-      userEmail: session.user.email,
+      userId: authResult.user?.id,
+      userEmail: authResult.user?.email,
       ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || req.ip || undefined,
       description: `Admin cleaned up security logs older than ${days} days`,
       metadata: {

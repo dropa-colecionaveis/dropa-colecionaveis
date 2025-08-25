@@ -7,6 +7,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import { useUserRankings } from '@/hooks/useUserRankings'
+import { useAdmin } from '@/hooks/useAdmin'
 import FreePackModal from '@/components/FreePackModal'
 import { ProfileSkeleton, StatsSkeleton, ActivitiesSkeleton } from '@/components/SkeletonLoader'
 
@@ -23,6 +24,7 @@ export default function Dashboard() {
   const [showFreePackModal, setShowFreePackModal] = useState(false)
   const [hasUnclaimedFreePack, setHasUnclaimedFreePack] = useState(false)
   const { bestRanking, loading: rankingLoading } = useUserRankings()
+  const { isAdmin, isSuperAdmin, role } = useAdmin()
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -276,13 +278,13 @@ export default function Dashboard() {
                 )}
                 
                 {/* Admin Link */}
-                {session?.user?.email === 'admin@admin.com' && (
+                {isAdmin && (
                   <Link
                     href="/admin"
                     className="p-2 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white rounded-lg transition-all duration-200 text-sm font-medium shadow-lg hover:shadow-xl hover:scale-105"
-                    title="Admin"
+                    title={isSuperAdmin ? "Super Admin" : "Admin"}
                   >
-                    🔧
+                    {isSuperAdmin ? '👑' : '🔧'}
                   </Link>
                 )}
                 

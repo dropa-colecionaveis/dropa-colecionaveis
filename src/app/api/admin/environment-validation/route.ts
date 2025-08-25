@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
+import { verifyAdminAuth } from '@/lib/admin-auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -246,14 +246,12 @@ function validateEnvironmentVariables(): {
 
 export async function GET(req: NextRequest) {
   try {
-    const { authOptions } = await import('@/lib/auth')
-    const session = await getServerSession(authOptions)
-    
-    // Only allow admin users to view environment validation
-    if (!session?.user?.email || session.user.email !== 'admin@admin.com') {
+    const authResult = await verifyAdminAuth(req)
+
+    if (!authResult.success) {
       return NextResponse.json(
-        { error: 'Unauthorized - Admin access required' },
-        { status: 403 }
+        { error: authResult.error || 'Unauthorized - Admin access required' },
+        { status: authResult.statusCode || 403 }
       )
     }
 
