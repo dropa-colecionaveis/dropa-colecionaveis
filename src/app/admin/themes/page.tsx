@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useAdmin } from '@/hooks/useAdmin'
 
 interface Theme {
   id: string
@@ -39,6 +40,7 @@ const EMOJI_OPTIONS = ['📚', '⚔️', '🧙‍♂️', '💎', '🚀', '🐉'
 export default function AdminThemes() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const { isAdmin, isLoading: adminLoading } = useAdmin()
   const [themes, setThemes] = useState<Theme[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -55,15 +57,15 @@ export default function AdminThemes() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin?callbackUrl=/admin/themes')
-    } else if (status === 'authenticated') {
-      if (session?.user?.email !== 'admin@admin.com') {
+    } else if (status === 'authenticated' && !adminLoading) {
+      if (!isAdmin) {
         alert('⚠️ Acesso negado! Esta área é restrita para administradores.')
         router.push('/dashboard')
       } else {
         fetchThemes()
       }
     }
-  }, [status, router, session])
+  }, [status, router, isAdmin, adminLoading])
 
   const fetchThemes = async () => {
     try {
@@ -240,7 +242,7 @@ export default function AdminThemes() {
     })
   }
 
-  if (status === 'loading' || loading) {
+  if (status === 'loading' || adminLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
         <div className="text-white text-xl">Carregando...</div>

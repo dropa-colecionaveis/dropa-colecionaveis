@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useAdmin } from '@/hooks/useAdmin'
 
 interface AdminStats {
   totalUsers: number
@@ -15,6 +16,7 @@ interface AdminStats {
 export default function AdminPanel() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const { isAdmin, isLoading: adminLoading } = useAdmin()
   const [stats, setStats] = useState<AdminStats>({
     totalUsers: 0,
     totalItems: 0,
@@ -26,10 +28,15 @@ export default function AdminPanel() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin?callbackUrl=/admin')
-    } else if (status === 'authenticated') {
-      fetchAdminStats()
+    } else if (status === 'authenticated' && !adminLoading) {
+      if (!isAdmin) {
+        alert('⚠️ Acesso negado! Esta área é restrita para administradores.')
+        router.push('/dashboard')
+      } else {
+        fetchAdminStats()
+      }
     }
-  }, [status, router, session])
+  }, [status, router, isAdmin, adminLoading])
 
   const fetchAdminStats = async () => {
     try {
@@ -127,7 +134,7 @@ export default function AdminPanel() {
     }
   }
 
-  if (status === 'loading' || loading) {
+  if (status === 'loading' || adminLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
         <div className="text-white text-xl">Carregando...</div>

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { getRarityName } from '@/lib/rarity-system'
+import { useAdmin } from '@/hooks/useAdmin'
 
 interface PackProbability {
   id: string
@@ -26,6 +27,7 @@ interface Pack {
 export default function AdminPacks() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const { isAdmin, isLoading: adminLoading } = useAdmin()
   const [packs, setPacks] = useState<Pack[]>([])
   const [loading, setLoading] = useState(true)
   const [editingPack, setEditingPack] = useState<Pack | null>(null)
@@ -48,15 +50,15 @@ export default function AdminPacks() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin?callbackUrl=/admin/packs')
-    } else if (status === 'authenticated') {
-      if (session?.user?.email !== 'admin@admin.com') {
+    } else if (status === 'authenticated' && !adminLoading) {
+      if (!isAdmin) {
         alert('⚠️ Acesso negado! Esta área é restrita para administradores.')
         router.push('/dashboard')
       } else {
         fetchPacks()
       }
     }
-  }, [status, router, session])
+  }, [status, router, isAdmin, adminLoading])
 
   const fetchPacks = async () => {
     try {
@@ -238,7 +240,7 @@ export default function AdminPacks() {
     }
   }
 
-  if (status === 'loading' || loading) {
+  if (status === 'loading' || adminLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
         <div className="text-white text-xl">Carregando...</div>

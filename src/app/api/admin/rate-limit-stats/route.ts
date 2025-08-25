@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 import { verifyAdminAuth } from '@/lib/admin-auth'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   try {
     const { getRateLimiterStats } = await import('@/lib/rate-limiter')
     

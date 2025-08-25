@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 import { verifyAdminAuth } from '@/lib/admin-auth'
 import { Rarity } from '@prisma/client'
 
-export async function PUT(req: Request, { params }: { params: { packId: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: { packId: string } }) {
   try {
     const { prisma } = await import('@/lib/prisma')
     

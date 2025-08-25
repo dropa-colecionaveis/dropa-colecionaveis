@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { getRarityName } from '@/lib/rarity-system'
+import { useAdmin } from '@/hooks/useAdmin'
 
 interface Collection {
   id: string
@@ -33,6 +34,7 @@ interface Item {
 export default function AdminItems() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const { isAdmin, isLoading: adminLoading } = useAdmin()
   const [items, setItems] = useState<Item[]>([])
   const [collections, setCollections] = useState<Collection[]>([])
   const [loading, setLoading] = useState(true)
@@ -56,8 +58,8 @@ export default function AdminItems() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin?callbackUrl=/admin/items')
-    } else if (status === 'authenticated') {
-      if (session?.user?.email !== 'admin@admin.com') {
+    } else if (status === 'authenticated' && !adminLoading) {
+      if (!isAdmin) {
         alert('⚠️ Acesso negado! Esta área é restrita para administradores.')
         router.push('/dashboard')
       } else {
@@ -65,7 +67,7 @@ export default function AdminItems() {
         fetchCollections()
       }
     }
-  }, [status, router, session])
+  }, [status, router, isAdmin, adminLoading])
 
   const fetchItems = async () => {
     try {
@@ -266,7 +268,7 @@ export default function AdminItems() {
     }
   }
 
-  if (status === 'loading' || loading) {
+  if (status === 'loading' || adminLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
         <div className="text-white text-xl">Carregando...</div>

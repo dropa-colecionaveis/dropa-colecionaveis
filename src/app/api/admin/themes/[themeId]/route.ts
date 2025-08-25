@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 import { verifyAdminAuth } from '@/lib/admin-auth'
 
 export async function PUT(
-  req: Request,
+  req: NextRequest,
   { params }: { params: { themeId: string } }
 ) {
   try {
@@ -77,7 +77,7 @@ export async function PUT(
 }
 
 export async function DELETE(
-  req: Request,
+  req: NextRequest,
   { params }: { params: { themeId: string } }
 ) {
   try {

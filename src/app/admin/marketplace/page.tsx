@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useAdmin } from '@/hooks/useAdmin'
 
 interface MarketplaceStats {
   totalActiveListings: number
@@ -56,6 +57,7 @@ interface MarketplaceRule {
 export default function AdminMarketplace() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const { isAdmin, isLoading: adminLoading } = useAdmin()
   const [marketplaceStats, setMarketplaceStats] = useState<MarketplaceStats | null>(null)
   const [antiFraudStats, setAntiFraudStats] = useState<AntiFreudStats | null>(null)
   const [rules, setRules] = useState<MarketplaceRule[]>([])
@@ -70,16 +72,15 @@ export default function AdminMarketplace() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin?callbackUrl=/admin/marketplace')
-    } else if (status === 'authenticated') {
-      // Simple admin check - in production, you'd have proper role-based access
-      if (session?.user?.email !== 'admin@admin.com') {
+    } else if (status === 'authenticated' && !adminLoading) {
+      if (!isAdmin) {
         alert('⚠️ Acesso negado! Esta área é restrita para administradores.')
         router.push('/dashboard')
       } else {
         fetchStats()
       }
     }
-  }, [status, router, session])
+  }, [status, router, isAdmin, adminLoading])
 
   const fetchStats = async () => {
     try {
@@ -282,7 +283,7 @@ export default function AdminMarketplace() {
     return colors[category] || colors['other']
   }
 
-  if (status === 'loading' || loading) {
+  if (status === 'loading' || adminLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
         <div className="text-white text-xl">Carregando...</div>

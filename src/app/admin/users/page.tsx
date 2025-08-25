@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useAdmin } from '@/hooks/useAdmin'
 
 interface User {
   id: string
@@ -20,6 +21,7 @@ interface User {
 export default function AdminUsers() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const { isAdmin, isLoading: adminLoading } = useAdmin()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
@@ -29,15 +31,15 @@ export default function AdminUsers() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin?callbackUrl=/admin/users')
-    } else if (status === 'authenticated') {
-      if (session?.user?.email !== 'admin@admin.com') {
+    } else if (status === 'authenticated' && !adminLoading) {
+      if (!isAdmin) {
         alert('⚠️ Acesso negado! Esta área é restrita para administradores.')
         router.push('/dashboard')
       } else {
         fetchUsers()
       }
     }
-  }, [status, router, session])
+  }, [status, router, isAdmin, adminLoading])
 
   const fetchUsers = async () => {
     try {
@@ -90,7 +92,7 @@ export default function AdminUsers() {
     })
   }
 
-  if (status === 'loading' || loading) {
+  if (status === 'loading' || adminLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
         <div className="text-white text-xl">Carregando...</div>
@@ -153,8 +155,10 @@ export default function AdminUsers() {
                           </div>
                           <div>
                             <div className="font-semibold">{user.name || 'Sem nome'}</div>
-                            {user.email === 'admin@admin.com' && (
-                              <div className="text-orange-400 text-xs">👑 ADMIN</div>
+                            {(user.email === 'admin@admin.com' || user.email === 'superadmin@admin.com') && (
+                              <div className="text-orange-400 text-xs">
+                                {user.email === 'superadmin@admin.com' ? '👑 SUPER ADMIN' : '🔧 ADMIN'}
+                              </div>
                             )}
                           </div>
                         </div>

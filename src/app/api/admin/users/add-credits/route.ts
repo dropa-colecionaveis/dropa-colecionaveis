@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 import { verifyAdminAuth } from '@/lib/admin-auth'
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const { prisma } = await import('@/lib/prisma')
     
