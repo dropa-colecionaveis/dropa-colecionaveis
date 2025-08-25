@@ -83,13 +83,11 @@ export default function CardPaymentForm({
 
   const loadInstallments = async () => {
     try {
-      // Use default installments as fallback
+      // Limit to maximum 3x installments to avoid additional fees
       const defaultInstallments = [
         { installments: 1, installment_amount: amount, installment_rate: 0 },
         { installments: 2, installment_amount: amount / 2, installment_rate: 0 },
-        { installments: 3, installment_amount: amount / 3, installment_rate: 0 },
-        { installments: 6, installment_amount: amount / 6, installment_rate: 0 },
-        { installments: 12, installment_amount: amount / 12, installment_rate: 0 }
+        { installments: 3, installment_amount: amount / 3, installment_rate: 0 }
       ]
       
       setAvailableInstallments(defaultInstallments)
@@ -292,7 +290,7 @@ export default function CardPaymentForm({
           className={`w-full px-3 py-2 bg-gray-700 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
             errors.cardNumber ? 'border-red-400' : 'border-gray-600'
           }`}
-          placeholder="4235 6477 2802 5682"
+          placeholder="1234 5678 9012 3456"
           maxLength={19}
         />
         {errors.cardNumber && <span className="text-red-400 text-xs mt-1">{errors.cardNumber}</span>}
@@ -311,7 +309,7 @@ export default function CardPaymentForm({
             className={`w-full px-3 py-2 bg-gray-700 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               errors.expiryMonth ? 'border-red-400' : 'border-gray-600'
             }`}
-            placeholder="11"
+            placeholder="12"
             maxLength={2}
           />
           {errors.expiryMonth && <span className="text-red-400 text-xs mt-1">{errors.expiryMonth}</span>}
@@ -327,7 +325,7 @@ export default function CardPaymentForm({
             className={`w-full px-3 py-2 bg-gray-700 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               errors.expiryYear ? 'border-red-400' : 'border-gray-600'
             }`}
-            placeholder="25"
+            placeholder="29"
             maxLength={2}
           />
           {errors.expiryYear && <span className="text-red-400 text-xs mt-1">{errors.expiryYear}</span>}
@@ -343,7 +341,7 @@ export default function CardPaymentForm({
             className={`w-full px-3 py-2 bg-gray-700 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               errors.securityCode ? 'border-red-400' : 'border-gray-600'
             }`}
-            placeholder="123"
+            placeholder="321"
             maxLength={4}
           />
           {errors.securityCode && <span className="text-red-400 text-xs mt-1">{errors.securityCode}</span>}
@@ -362,7 +360,7 @@ export default function CardPaymentForm({
           className={`w-full px-3 py-2 bg-gray-700 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
             errors.cardholderName ? 'border-red-400' : 'border-gray-600'
           }`}
-          placeholder="APRO"
+          placeholder="JOÃO DA SILVA"
         />
         {errors.cardholderName && <span className="text-red-400 text-xs mt-1">{errors.cardholderName}</span>}
       </div>
@@ -379,7 +377,7 @@ export default function CardPaymentForm({
           className={`w-full px-3 py-2 bg-gray-700 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
             errors.identificationNumber ? 'border-red-400' : 'border-gray-600'
           }`}
-          placeholder="123.456.789-01"
+          placeholder="000.000.000-00"
           maxLength={14}
         />
         {errors.identificationNumber && <span className="text-red-400 text-xs mt-1">{errors.identificationNumber}</span>}
