@@ -73,7 +73,7 @@ export async function POST(req: Request) {
     // Cache all items by rarity ONCE before transaction for maximum performance
     const itemsByRarity = await getCachedItemsByRarity()
 
-    // Process multiple pack openings in a transaction
+    // Process multiple pack openings in a transaction with extended timeout
     const result = await prisma.$transaction(async (tx) => {
       // Deduct credits from user
       const updatedUser = await tx.user.update({
@@ -90,18 +90,15 @@ export async function POST(req: Request) {
       const userItemRecords = []
       const transactionRecords = []
 
-      // Process each pack opening
+      // Pre-select all items and rarities to minimize DB queries in loop
+      const selectedItems = []
       for (let i = 0; i < quantity; i++) {
-        // Select random rarity based on pack probabilities
         const selectedRarity = selectRandomRarity(pack.probabilities)
-
-        // Get random item of selected rarity (usando cache)
         const allItems = itemsByRarity[selectedRarity]
 
-        // Filter items that are available (not sold out for limited editions)
         const availableItems = allItems.filter(item => {
           if (!item.isLimitedEdition) return true
-          if (!item.maxEditions) return true // unlimited limited edition
+          if (!item.maxEditions) return true
           return item.currentEditions < item.maxEditions
         })
 
@@ -110,27 +107,54 @@ export async function POST(req: Request) {
         }
 
         const selectedItem = availableItems[Math.floor(Math.random() * availableItems.length)]
+        selectedItems.push(selectedItem)
+      }
 
+      // Batch process limited edition updates
+      const limitedEditionUpdates = []
+      const limitedEditionItems = selectedItems.filter(item => item.isLimitedEdition)
+      
+      if (limitedEditionItems.length > 0) {
+        // Group by item ID to batch increments
+        const itemIncrements = new Map()
+        limitedEditionItems.forEach(item => {
+          const current = itemIncrements.get(item.id) || 0
+          itemIncrements.set(item.id, current + 1)
+        })
+
+        // Batch update all limited edition items
+        for (const [itemId, increment] of itemIncrements) {
+          limitedEditionUpdates.push(
+            tx.item.update({
+              where: { id: itemId },
+              data: { currentEditions: { increment } }
+            })
+          )
+        }
+      }
+
+      const updatedItems = await Promise.all(limitedEditionUpdates)
+      const updatedItemsMap = new Map(updatedItems.map(item => [item.id, item]))
+
+      // Process items with updated edition counts
+      let limitedEditionCounter = new Map()
+      
+      for (let i = 0; i < selectedItems.length; i++) {
+        const selectedItem = selectedItems[i]
         let limitedEditionId = null
         let limitedEditionInfo = null
 
-        // Handle limited edition items
         if (selectedItem.isLimitedEdition) {
-          // Update the item's current edition count
-          const updatedItem = await tx.item.update({
-            where: { id: selectedItem.id },
-            data: {
-              currentEditions: {
-                increment: 1
-              }
-            }
-          })
+          const updatedItem = updatedItemsMap.get(selectedItem.id)
+          const currentCount = limitedEditionCounter.get(selectedItem.id) || 0
+          limitedEditionCounter.set(selectedItem.id, currentCount + 1)
+          
+          const serialNumber = (updatedItem?.currentEditions || selectedItem.currentEditions) - (limitedEditionItems.filter(item => item.id === selectedItem.id).length - currentCount - 1)
 
-          // Create the limited edition record
           const limitedEdition = await tx.limitedEdition.create({
             data: {
               itemId: selectedItem.id,
-              serialNumber: updatedItem.currentEditions
+              serialNumber: serialNumber
             }
           })
 
@@ -142,7 +166,6 @@ export async function POST(req: Request) {
           }
         }
 
-        // Prepare records for bulk insert
         userItemRecords.push({
           userId: session.user.id,
           itemId: selectedItem.id,
@@ -168,18 +191,12 @@ export async function POST(req: Request) {
         })
       }
 
-      // Bulk insert all records
-      await tx.userItem.createMany({
-        data: userItemRecords
-      })
-
-      await tx.packOpening.createMany({
-        data: packOpeningRecords
-      })
-
-      await tx.transaction.createMany({
-        data: transactionRecords
-      })
+      // Bulk insert all records in parallel
+      await Promise.all([
+        tx.userItem.createMany({ data: userItemRecords }),
+        tx.packOpening.createMany({ data: packOpeningRecords }),
+        tx.transaction.createMany({ data: transactionRecords })
+      ])
 
       // Calculate summary statistics
       const rarityCounts: Record<string, number> = {}
@@ -204,6 +221,9 @@ export async function POST(req: Request) {
           rarityCounts
         }
       }
+    }, {
+      maxWait: 60000, // 60 seconds
+      timeout: 120000 // 2 minutes
     })
 
     // Process stats and achievements in background (non-blocking) - same pattern as free packs

@@ -10,6 +10,10 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({
     db: {
       url: process.env.DATABASE_URL
     }
+  },
+  transactionOptions: {
+    maxWait: 60000, // 60 seconds max wait time
+    timeout: 120000 // 2 minutes transaction timeout
   }
 })
 
