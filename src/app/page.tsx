@@ -2,19 +2,58 @@
 
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+
+interface PublicStats {
+  uniqueItems: {
+    count: number
+    formatted: string
+    label: string
+  }
+  totalUsers: {
+    count: number
+    formatted: string
+    label: string
+  }
+  packOpenings: {
+    count: number
+    formatted: string
+    label: string
+  }
+}
 
 export default function Home() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const [stats, setStats] = useState<PublicStats | null>(null)
+  const [statsLoading, setStatsLoading] = useState(true)
 
   useEffect(() => {
     if (status === 'authenticated') {
       router.push('/dashboard')
     }
   }, [status, router])
+
+  // Buscar estatísticas públicas
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/stats/public')
+        if (response.ok) {
+          const data = await response.json()
+          setStats(data)
+        }
+      } catch (error) {
+        console.error('Error fetching stats:', error)
+      } finally {
+        setStatsLoading(false)
+      }
+    }
+
+    fetchStats()
+  }, [])
 
   if (status === 'loading') {
     return (
@@ -139,19 +178,43 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Stats Section */}
+        {/* Stats Section - Real Data */}
         <div className="grid md:grid-cols-3 gap-8 mb-16 max-w-4xl mx-auto">
           <div className="text-center bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
-            <div className="text-4xl font-bold text-purple-400 mb-2">1000+</div>
-            <p className="text-gray-300">Itens Únicos</p>
+            <div className="text-4xl font-bold text-purple-400 mb-2">
+              {statsLoading ? (
+                <div className="animate-pulse bg-purple-300/30 h-12 w-20 rounded mx-auto"></div>
+              ) : (
+                stats?.uniqueItems.formatted || '0'
+              )}
+            </div>
+            <p className="text-gray-300">
+              {stats?.uniqueItems.label || 'Itens Únicos'}
+            </p>
           </div>
           <div className="text-center bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
-            <div className="text-4xl font-bold text-blue-400 mb-2">500+</div>
-            <p className="text-gray-300">Jogadores Ativos</p>
+            <div className="text-4xl font-bold text-blue-400 mb-2">
+              {statsLoading ? (
+                <div className="animate-pulse bg-blue-300/30 h-12 w-20 rounded mx-auto"></div>
+              ) : (
+                stats?.totalUsers.formatted || '0'
+              )}
+            </div>
+            <p className="text-gray-300">
+              {stats?.totalUsers.label || 'Jogadores Ativos'}
+            </p>
           </div>
           <div className="text-center bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
-            <div className="text-4xl font-bold text-indigo-400 mb-2">10k+</div>
-            <p className="text-gray-300">Pacotes Abertos</p>
+            <div className="text-4xl font-bold text-indigo-400 mb-2">
+              {statsLoading ? (
+                <div className="animate-pulse bg-indigo-300/30 h-12 w-20 rounded mx-auto"></div>
+              ) : (
+                stats?.packOpenings.formatted || '0'
+              )}
+            </div>
+            <p className="text-gray-300">
+              {stats?.packOpenings.label || 'Pacotes Abertos'}
+            </p>
           </div>
         </div>
 
