@@ -723,123 +723,87 @@ export default function Inventory() {
         </div>
       </main>
 
-      {/* Image Modal */}
+      {/* Image Modal - Mobile Optimized */}
       {selectedImage && selectedItem && (
         <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" 
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4" 
           onClick={() => {
             setSelectedImage(null)
             setSelectedItem(null)
           }}
         >
           <div 
-            className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto" 
+            className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 sm:p-6 max-w-sm sm:max-w-lg w-full mx-2 sm:mx-4 max-h-[95vh] overflow-hidden flex flex-col" 
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="text-center">
-              <div className="w-80 h-80 mx-auto bg-gray-700 rounded-xl mb-6 flex items-center justify-center overflow-hidden shadow-2xl">
-                {selectedImage && selectedImage !== '/items/default.jpg' ? (
-                  <img 
-                    src={selectedImage} 
-                    alt={selectedItem.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none'
-                      const parent = e.currentTarget.parentElement!
-                      parent.innerHTML = '<span class="text-8xl">🏆</span>'
-                    }}
-                  />
-                ) : (
-                  <span className="text-8xl">🏆</span>
-                )}
-              </div>
-              
-              <h3 className={`text-3xl font-bold mb-3 ${getRarityColor(selectedItem.rarity).split(' ')[0]}`}>
-                {selectedItem.name}
-                {filteredItems.find(item => item.item.id === selectedItem.id)?.limitedEdition && (
-                  <span className="text-purple-400 ml-2">
-                    🏆 #{filteredItems.find(item => item.item.id === selectedItem.id)?.limitedEdition?.serialNumber}
-                  </span>
-                )}
-              </h3>
-              
-              <p className="text-gray-300 mb-4 text-lg">
-                {selectedItem.description}
-              </p>
-              
-              <div className={`inline-block px-4 py-2 rounded-full text-sm font-semibold mb-6 ${getRarityColor(selectedItem.rarity)}`}>
-                {getRarityName(selectedItem.rarity)}
-              </div>
-              
-              <div className="text-green-400 font-bold text-xl mb-4">
-                {selectedItem.value} créditos
-              </div>
-              
-              {/* Collection Info */}
-              {filteredItems.find(item => item.item.id === selectedItem.id)?.item.collection && (
-                <div className="bg-white/10 rounded-lg p-4 mb-6">
-                  <div className="text-gray-300 text-sm mb-2">Da Coleção:</div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-lg">
-                        {filteredItems.find(item => item.item.id === selectedItem.id)?.item.collection?.theme?.emoji || '📚'}
-                      </span>
-                      <span className="text-white font-semibold">
-                        {filteredItems.find(item => item.item.id === selectedItem.id)?.item.collection?.name}
-                      </span>
-                    </div>
-                    <Link
-                      href={`/collections/${filteredItems.find(item => item.item.id === selectedItem.id)?.item.collection?.id}`}
-                      className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors"
-                      onClick={() => {
-                        setSelectedImage(null)
-                        setSelectedItem(null)
+            <div className="text-center flex-1 flex flex-col">
+              {/* Centered Image Container */}
+              <div className="flex justify-center items-center mb-4 sm:mb-6 flex-shrink-0">
+                <div className="w-64 h-64 sm:w-80 sm:h-80 bg-gray-700 rounded-xl flex items-center justify-center overflow-hidden shadow-2xl">
+                  {selectedImage && selectedImage !== '/items/default.jpg' ? (
+                    <img 
+                      src={selectedImage} 
+                      alt={selectedItem.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none'
+                        const parent = e.currentTarget.parentElement!
+                        parent.innerHTML = '<span class="text-6xl sm:text-8xl">🏆</span>'
                       }}
-                    >
-                      Ver Coleção
-                    </Link>
-                  </div>
+                    />
+                  ) : (
+                    <span className="text-6xl sm:text-8xl">🏆</span>
+                  )}
                 </div>
-              )}
-
-              {/* Limited Edition Info */}
-              {filteredItems.find(item => item.item.id === selectedItem.id)?.limitedEdition && (
-                <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-4 mb-6">
-                  <div className="text-purple-400 font-semibold text-sm mb-2 flex items-center">
-                    <span className="mr-2">🏆</span>
-                    Edição Limitada
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-gray-300">Número da Edição:</span>
-                      <span className="text-purple-400 font-bold">
-                        #{filteredItems.find(item => item.item.id === selectedItem.id)?.limitedEdition?.serialNumber}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-300">Total de Edições:</span>
-                      <span className="text-purple-400 font-bold">
-                        {filteredItems.find(item => item.item.id === selectedItem.id)?.limitedEdition?.item.maxEditions || '∞'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-300">Criado em:</span>
-                      <span className="text-purple-400 font-bold">
-                        {filteredItems.find(item => item.item.id === selectedItem.id)?.limitedEdition?.mintedAt && 
-                         formatDate(filteredItems.find(item => item.item.id === selectedItem.id)!.limitedEdition!.mintedAt)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
+              </div>
               
-              <div className="flex space-x-3">
+              {/* Item Info */}
+              <div className="flex-1 space-y-3 sm:space-y-4 min-h-0">
+                <h3 className={`text-2xl sm:text-3xl font-bold ${getRarityColor(selectedItem.rarity).split(' ')[0]} leading-tight`}>
+                  <span className="break-words">{selectedItem.name}</span>
+                  {filteredItems.find(item => item.item.id === selectedItem.id)?.limitedEdition && (
+                    <span className="text-purple-400 block sm:inline sm:ml-2 text-lg sm:text-2xl">
+                      🏆 #{filteredItems.find(item => item.item.id === selectedItem.id)?.limitedEdition?.serialNumber}
+                    </span>
+                  )}
+                </h3>
+                
+                <p className="text-gray-300 text-sm sm:text-lg break-words">
+                  {selectedItem.description}
+                </p>
+                
+                <div className={`inline-block px-3 sm:px-4 py-2 rounded-full text-sm font-semibold ${getRarityColor(selectedItem.rarity)}`}>
+                  {getRarityName(selectedItem.rarity)}
+                </div>
+                
+                <div className="text-green-400 font-bold text-lg sm:text-xl">
+                  {selectedItem.value} créditos
+                </div>
+
+                {/* Limited Edition Info - Compact */}
+                {filteredItems.find(item => item.item.id === selectedItem.id)?.limitedEdition && (
+                  <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3 sm:p-4">
+                    <div className="text-purple-400 font-semibold text-sm flex items-center justify-center mb-2">
+                      <span className="mr-2">🏆</span>
+                      Edição Limitada
+                    </div>
+                    <div className="text-center space-y-1">
+                      <div className="text-purple-400 font-bold text-sm">
+                        #{filteredItems.find(item => item.item.id === selectedItem.id)?.limitedEdition?.serialNumber} / {filteredItems.find(item => item.item.id === selectedItem.id)?.limitedEdition?.item.maxEditions || '∞'}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Close Button */}
+              <div className="mt-4 sm:mt-6 flex-shrink-0">
                 <button
                   onClick={() => {
                     setSelectedImage(null)
                     setSelectedItem(null)
                   }}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors font-semibold"
+                  className="w-full bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors font-semibold"
                 >
                   Fechar
                 </button>

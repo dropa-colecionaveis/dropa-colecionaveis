@@ -35,7 +35,7 @@ export default function Home() {
       </div>
 
       {/* Main content */}
-      <div className="relative z-10 container mx-auto px-4 py-12">
+      <div className="relative z-10 container mx-auto px-4 sm:px-6 py-12">
         {/* Hero Section */}
         <div className="text-center mb-16">
           {/* Logo */}
@@ -53,7 +53,7 @@ export default function Home() {
             </div>
           </div>
 
-          <h1 className="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-blue-400 to-indigo-400 mb-6 leading-tight">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-blue-400 to-indigo-400 mb-6 leading-tight px-2 sm:px-4 text-center">
             COLECIONÁVEIS DIGITAIS
           </h1>
 

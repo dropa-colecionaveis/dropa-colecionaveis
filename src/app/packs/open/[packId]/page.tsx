@@ -569,29 +569,37 @@ export default function OpenPack() {
                     </div>
                   </div>
                   
-                  {/* Enhanced Items Grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-10">
+                  {/* Enhanced Items Grid - Mobile Optimized */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 mb-10">
                     {multipleOpenResult.items.map((item, index) => (
-                      <div key={index} className={`bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-2xl p-5 border-2 shadow-xl transform hover:scale-105 transition-all duration-300 ${getRarityColor(item.rarity).split(' ')[1]} relative overflow-hidden group`}>
+                      <div key={index} className={`bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-2xl p-4 sm:p-5 border-2 shadow-xl transform hover:scale-105 transition-all duration-300 ${getRarityColor(item.rarity).split(' ')[1]} relative overflow-hidden group min-h-[280px] flex flex-col`}>
                         {/* Item glow effect */}
                         <div className={`absolute -inset-2 ${getRarityColor(item.rarity).split(' ')[1]} rounded-2xl blur-lg opacity-0 group-hover:opacity-30 transition-opacity duration-300`}></div>
                         
-                        <div className="relative z-10">
-                          <div className={`w-20 h-20 mx-auto rounded-2xl mb-4 flex items-center justify-center text-3xl shadow-lg transform group-hover:scale-110 transition-transform duration-300 ${getRarityColor(item.rarity).split(' ')[1]} relative overflow-hidden`}>
-                            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
-                            <div className="relative z-10">🏆</div>
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
+                        <div className="relative z-10 flex flex-col flex-1">
+                          {/* Centered Item Icon with fixed size */}
+                          <div className="flex justify-center items-center mb-4 flex-shrink-0">
+                            <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl shadow-lg transform group-hover:scale-110 transition-transform duration-300 ${getRarityColor(item.rarity).split(' ')[1]} relative overflow-hidden`}>
+                              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
+                              <div className="relative z-10">🏆</div>
+                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
+                            </div>
                           </div>
                           
-                          <h4 className={`text-lg font-bold mb-3 text-center ${getRarityColor(item.rarity).split(' ')[0]} drop-shadow-lg`}>
-                            {item.name}
+                          {/* Item Name with proper wrapping and spacing */}
+                          <h4 className={`text-base sm:text-lg font-bold mb-3 text-center ${getRarityColor(item.rarity).split(' ')[0]} drop-shadow-lg leading-tight min-h-[2.5rem] flex items-center justify-center px-1`}>
+                            <span className="break-words hyphens-auto">{item.name}</span>
                           </h4>
                           
-                          <div className={`text-center px-3 py-2 rounded-xl text-sm font-bold shadow-md transform group-hover:scale-105 transition-all duration-300 ${getRarityColor(item.rarity)} border border-white/30 backdrop-blur-sm`}>
-                            ⭐ {getRarityName(item.rarity)} ⭐
+                          {/* Rarity Badge with responsive text */}
+                          <div className={`text-center px-2 sm:px-3 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md transform group-hover:scale-105 transition-all duration-300 ${getRarityColor(item.rarity)} border border-white/30 backdrop-blur-sm mb-3`}>
+                            <div className="break-words">
+                              ⭐ {getRarityName(item.rarity)} ⭐
+                            </div>
                           </div>
                           
-                          <div className="text-center text-green-300 text-sm mt-3 font-semibold bg-green-500/20 rounded-lg py-1 border border-green-400/30">
+                          {/* Credits at bottom */}
+                          <div className="text-center text-green-300 text-xs sm:text-sm font-semibold bg-green-500/20 rounded-lg py-2 border border-green-400/30 mt-auto">
                             💰 {item.value} créditos
                           </div>
                         </div>
@@ -922,19 +930,19 @@ export default function OpenPack() {
               
               {/* Display Mode Selector */}
               {quantity > 1 && (
-                <div className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl rounded-2xl p-8 mb-8 border border-white/20 shadow-xl">
-                  <h3 className="text-2xl font-bold text-white mb-6 flex items-center justify-center space-x-3">
-                    <span className="text-3xl animate-pulse">🎭</span>
+                <div className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl rounded-2xl p-4 sm:p-8 mb-8 border border-white/20 shadow-xl">
+                  <h3 className="text-lg sm:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center justify-center space-x-2 sm:space-x-3">
+                    <span className="text-2xl sm:text-3xl animate-pulse">🎭</span>
                     <span>Modo de Exibição</span>
-                    <span className="text-3xl animate-pulse">🎭</span>
+                    <span className="text-2xl sm:text-3xl animate-pulse">🎭</span>
                   </h3>
-                  <div className="flex justify-center space-x-4">
+                  <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
                     <button
                       onClick={() => {
                         setDisplayMode('instant')
                         setAutoProgress(false) // Stop auto-progress
                       }}
-                      className={`px-6 py-3 rounded-lg transition duration-200 ${
+                      className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg transition duration-200 text-sm sm:text-base ${
                         displayMode === 'instant'
                           ? 'bg-blue-600 text-white'
                           : 'bg-white/20 text-gray-300 hover:bg-white/30'
@@ -948,7 +956,7 @@ export default function OpenPack() {
                         setCurrentItemIndex(0) // Reset to first item when switching to suspense
                         setAutoProgress(false) // Reset auto-progress
                       }}
-                      className={`px-6 py-3 rounded-lg transition duration-200 ${
+                      className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg transition duration-200 text-sm sm:text-base ${
                         displayMode === 'suspense'
                           ? 'bg-purple-600 text-white'
                           : 'bg-white/20 text-gray-300 hover:bg-white/30'
