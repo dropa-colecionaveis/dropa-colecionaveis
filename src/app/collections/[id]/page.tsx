@@ -172,8 +172,14 @@ export default function CollectionDetail({ params }: { params: { id: string } })
       {/* Header */}
       <header className="bg-black/20 backdrop-blur-lg border-b border-white/10">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/dashboard" className="text-2xl font-bold text-white">
-            Colecionáveis Digitais
+          <Link href="/dashboard" className="group">
+            <div className="flex items-center space-x-3 group-hover:scale-105 transition-all duration-300">
+              <img 
+                src="/Dropa!.png" 
+                alt="Dropa!" 
+                className="h-8 w-auto object-contain group-hover:animate-pulse"
+              />
+            </div>
           </Link>
           <div className="text-white">
             Olá, {session?.user?.name || session?.user?.email}
