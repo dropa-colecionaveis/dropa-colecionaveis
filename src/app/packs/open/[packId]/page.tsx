@@ -256,9 +256,12 @@ export default function OpenPack() {
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
               <Link href="/dashboard" className="group">
-                <div className="text-2xl font-bold text-white flex items-center space-x-2 group-hover:text-purple-300 transition-colors duration-300">
-                  <span className="text-3xl group-hover:animate-pulse">💎</span>
-                  <span>Colecionáveis Digitais</span>
+                <div className="flex items-center space-x-3 group-hover:scale-105 transition-all duration-300">
+                  <img 
+                    src="/Dropa!.png" 
+                    alt="Dropa!" 
+                    className="h-8 w-auto object-contain group-hover:animate-pulse"
+                  />
                 </div>
               </Link>
               <div className="hidden md:block text-purple-300 text-sm">
