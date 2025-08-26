@@ -103,7 +103,7 @@ export default function OpenPack() {
       }, 600) // Ultra fast 0.6 seconds per item
       
       return () => clearTimeout(timer)
-    } else if (autoProgress && currentItemIndex >= multipleOpenResult?.items.length - 1) {
+    } else if (autoProgress && multipleOpenResult?.items && currentItemIndex >= multipleOpenResult.items.length - 1) {
       // Auto-stop when reaching the last item
       setAutoProgress(false)
     }
