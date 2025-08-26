@@ -206,29 +206,32 @@ export async function POST(req: Request) {
       }
     })
 
-    // Track achievement progress (outside transaction) - simplified to avoid errors
-    try {
-      for (const item of result.items) {
-        await userStatsService.trackPackOpening(
-          session.user.id,
-          pack.id,
-          item.id,
-          item.rarity
-        )
+    // Process stats and achievements in background (non-blocking) - same pattern as free packs
+    setImmediate(async () => {
+      try {
+        // Process all stats and achievements in parallel for maximum speed
+        const allStatsPromises = result.items.flatMap(item => [
+          userStatsService.trackPackOpening(
+            session.user.id,
+            pack.id,
+            item.id,
+            item.rarity
+          ),
+          userStatsService.trackItemObtained(
+            session.user.id,
+            item.id,
+            item.rarity,
+            true
+          )
+        ])
 
-        await userStatsService.trackItemObtained(
-          session.user.id,
-          item.id,
-          item.rarity,
-          true
-        )
+        await Promise.allSettled(allStatsPromises)
+      } catch (backgroundError) {
+        console.error('Background processing error:', backgroundError)
       }
-    } catch (statsError) {
-      console.error('Error tracking achievement progress:', statsError)
-      // Don't fail the main transaction
-    }
+    })
 
-    return NextResponse.json(result)
+    return NextResponse.json(result) // ⚡ Immediate response
   } catch (error) {
     console.error('Multiple pack opening error:', error)
     return NextResponse.json(

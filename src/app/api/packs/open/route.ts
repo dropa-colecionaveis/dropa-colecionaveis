@@ -162,28 +162,30 @@ export async function POST(req: Request) {
       }
     })
 
-    // Track achievement progress (outside transaction)
-    try {
-      await userStatsService.trackPackOpening(
-        session.user.id,
-        pack.id,
-        selectedItem.id,
-        selectedItem.rarity
-      )
+    // Process stats and achievements in background (non-blocking) - same pattern as free packs
+    setImmediate(async () => {
+      try {
+        // Process stats and achievements in parallel
+        await Promise.allSettled([
+          userStatsService.trackPackOpening(
+            session.user.id,
+            pack.id,
+            selectedItem.id,
+            selectedItem.rarity
+          ),
+          userStatsService.trackItemObtained(
+            session.user.id,
+            selectedItem.id,
+            selectedItem.rarity,
+            true
+          )
+        ])
+      } catch (backgroundError) {
+        console.error('Background processing error:', backgroundError)
+      }
+    })
 
-      await userStatsService.trackItemObtained(
-        session.user.id,
-        selectedItem.id,
-        selectedItem.rarity,
-        true
-      )
-
-    } catch (statsError) {
-      console.error('Error tracking achievement progress:', statsError)
-      // Don't fail the main transaction
-    }
-
-    return NextResponse.json(result)
+    return NextResponse.json(result) // ⚡ Immediate response
   } catch (error) {
     console.error('Pack opening error:', error)
     return NextResponse.json(
