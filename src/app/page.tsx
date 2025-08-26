@@ -43,7 +43,10 @@ export default function Home() {
         const response = await fetch('/api/stats/public')
         if (response.ok) {
           const data = await response.json()
+          console.log('Stats data received:', data) // Debug log
           setStats(data)
+        } else {
+          console.error('Stats API response not ok:', response.status, response.statusText)
         }
       } catch (error) {
         console.error('Error fetching stats:', error)
@@ -185,36 +188,45 @@ export default function Home() {
               {statsLoading ? (
                 <div className="animate-pulse bg-purple-300/30 h-12 w-20 rounded mx-auto"></div>
               ) : (
-                stats?.uniqueItems.formatted || '0'
+                <span>{stats?.uniqueItems?.formatted ?? 'N/A'}</span>
               )}
             </div>
             <p className="text-gray-300">
-              {stats?.uniqueItems.label || 'Itens Únicos'}
+              {stats?.uniqueItems?.label ?? 'Itens Únicos'}
             </p>
+            {!statsLoading && !stats && (
+              <p className="text-xs text-red-400 mt-2">Erro ao carregar dados</p>
+            )}
           </div>
           <div className="text-center bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
             <div className="text-4xl font-bold text-blue-400 mb-2">
               {statsLoading ? (
                 <div className="animate-pulse bg-blue-300/30 h-12 w-20 rounded mx-auto"></div>
               ) : (
-                stats?.totalUsers.formatted || '0'
+                <span>{stats?.totalUsers?.formatted ?? 'N/A'}</span>
               )}
             </div>
             <p className="text-gray-300">
-              {stats?.totalUsers.label || 'Jogadores Ativos'}
+              {stats?.totalUsers?.label ?? 'Jogadores Ativos'}
             </p>
+            {!statsLoading && !stats && (
+              <p className="text-xs text-red-400 mt-2">Erro ao carregar dados</p>
+            )}
           </div>
           <div className="text-center bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
             <div className="text-4xl font-bold text-indigo-400 mb-2">
               {statsLoading ? (
                 <div className="animate-pulse bg-indigo-300/30 h-12 w-20 rounded mx-auto"></div>
               ) : (
-                stats?.packOpenings.formatted || '0'
+                <span>{stats?.packOpenings?.formatted ?? 'N/A'}</span>
               )}
             </div>
             <p className="text-gray-300">
-              {stats?.packOpenings.label || 'Pacotes Abertos'}
+              {stats?.packOpenings?.label ?? 'Pacotes Abertos'}
             </p>
+            {!statsLoading && !stats && (
+              <p className="text-xs text-red-400 mt-2">Erro ao carregar dados</p>
+            )}
           </div>
         </div>
 

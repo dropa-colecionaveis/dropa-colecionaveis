@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   try {
+    console.log('Fetching public stats...')
+    
     // Buscar estatísticas reais do banco de dados
     const [
       totalUniqueItems,
@@ -12,14 +14,16 @@ export async function GET() {
       // Total de itens únicos no sistema
       prisma.item.count({
         where: { isActive: true }
-      }),
+      }).catch(() => 0), // Fallback to 0 if query fails
       
       // Total de usuários registrados
-      prisma.user.count(),
+      prisma.user.count().catch(() => 0),
       
       // Total de pacotes abertos
-      prisma.packOpening.count()
+      prisma.packOpening.count().catch(() => 0)
     ])
+
+    console.log('Stats retrieved:', { totalUniqueItems, totalUsers, totalPackOpenings })
 
     // Formatar números com sufixos apropriados
     const formatNumber = (num: number): string => {
@@ -32,7 +36,7 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json({
+    const response = {
       uniqueItems: {
         count: totalUniqueItems,
         formatted: formatNumber(totalUniqueItems),
@@ -48,13 +52,16 @@ export async function GET() {
         formatted: formatNumber(totalPackOpenings),
         label: totalPackOpenings === 1 ? 'Pacote Aberto' : 'Pacotes Abertos'
       }
-    })
+    }
+
+    console.log('Returning response:', response)
+    return NextResponse.json(response)
 
   } catch (error) {
     console.error('Error fetching public stats:', error)
     
     // Em caso de erro, retornar valores padrão baixos
-    return NextResponse.json({
+    const fallbackResponse = {
       uniqueItems: {
         count: 0,
         formatted: '0',
@@ -70,6 +77,9 @@ export async function GET() {
         formatted: '0',
         label: 'Pacotes Abertos'
       }
-    })
+    }
+    
+    console.log('Returning fallback response:', fallbackResponse)
+    return NextResponse.json(fallbackResponse, { status: 200 })
   }
 }
