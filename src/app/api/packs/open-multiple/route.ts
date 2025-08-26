@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { Rarity, TransactionType } from '@prisma/client'
+import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+import { selectRandomRarity, getCachedItemsByRarity } from '@/lib/rarity-system'
+import { userStatsService } from '@/lib/user-stats'
 
 interface OpenedItem {
   id: string
@@ -18,11 +22,6 @@ interface OpenedItem {
 
 export async function POST(req: Request) {
   try {
-    const { authOptions } = await import('@/lib/auth')
-    const { prisma } = await import('@/lib/prisma')
-    const { selectRandomRarity } = await import('@/lib/rarity-system')
-    const { userStatsService } = await import('@/lib/user-stats')
-    
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.id) {
@@ -71,6 +70,9 @@ export async function POST(req: Request) {
       )
     }
 
+    // Cache all items by rarity ONCE before transaction for maximum performance
+    const itemsByRarity = await getCachedItemsByRarity()
+
     // Process multiple pack openings in a transaction
     const result = await prisma.$transaction(async (tx) => {
       // Deduct credits from user
@@ -87,10 +89,6 @@ export async function POST(req: Request) {
       const packOpeningRecords = []
       const userItemRecords = []
       const transactionRecords = []
-
-      // Cache all items by rarity ONCE outside the loop
-      const { getCachedItemsByRarity } = await import('@/lib/rarity-system')
-      const itemsByRarity = await getCachedItemsByRarity()
 
       // Process each pack opening
       for (let i = 0; i < quantity; i++) {
@@ -208,21 +206,23 @@ export async function POST(req: Request) {
       }
     })
 
-    // Track achievement progress (outside transaction)
+    // Track achievement progress (outside transaction) - simplified to avoid errors
     try {
-      // Use optimized bulk tracking functions
-      await userStatsService.trackMultiplePackOpenings(
-        session.user.id,
-        pack.id,
-        result.items.map(item => ({ id: item.id, rarity: item.rarity as Rarity }))
-      )
+      for (const item of result.items) {
+        await userStatsService.trackPackOpening(
+          session.user.id,
+          pack.id,
+          item.id,
+          item.rarity
+        )
 
-      await userStatsService.trackMultipleItemsObtained(
-        session.user.id,
-        result.items.map(item => ({ id: item.id, rarity: item.rarity as Rarity })),
-        true
-      )
-
+        await userStatsService.trackItemObtained(
+          session.user.id,
+          item.id,
+          item.rarity,
+          true
+        )
+      }
     } catch (statsError) {
       console.error('Error tracking achievement progress:', statsError)
       // Don't fail the main transaction

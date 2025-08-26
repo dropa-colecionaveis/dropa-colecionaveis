@@ -56,6 +56,7 @@ export default function OpenPack() {
   const [quantity, setQuantity] = useState(1)
   const [displayMode, setDisplayMode] = useState<'instant' | 'suspense'>('instant')
   const [currentItemIndex, setCurrentItemIndex] = useState(0)
+  const [autoProgress, setAutoProgress] = useState(false)
   
   // Refs for scroll control
   const resultSectionRef = useRef<HTMLDivElement>(null)
@@ -92,6 +93,21 @@ export default function OpenPack() {
       fetchUserProfile()
     }
   }, [status, router, packId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-progress in suspense mode for faster experience
+  useEffect(() => {
+    if (autoProgress && displayMode === 'suspense' && multipleOpenResult && currentItemIndex < multipleOpenResult.items.length - 1) {
+      const timer = setTimeout(() => {
+        setCurrentItemIndex(currentItemIndex + 1)
+        scrollToResult()
+      }, 600) // Ultra fast 0.6 seconds per item
+      
+      return () => clearTimeout(timer)
+    } else if (autoProgress && currentItemIndex >= multipleOpenResult?.items.length - 1) {
+      // Auto-stop when reaching the last item
+      setAutoProgress(false)
+    }
+  }, [autoProgress, displayMode, multipleOpenResult, currentItemIndex]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchPackDetails = async () => {
     try {
@@ -150,7 +166,7 @@ export default function OpenPack() {
             setIsOpening(false)
             setShowResult(true)
             scrollToResult() // Scroll to result after animation
-          }, 3000) // 3 second animation
+          }, 800) // Fast animation for better UX
         } else {
           const error = await response.json()
           alert(error.error || 'Failed to open pack')
@@ -174,8 +190,11 @@ export default function OpenPack() {
           setTimeout(() => {
             setIsOpening(false)
             setShowResult(true)
+            if (displayMode === 'suspense') {
+              setAutoProgress(true) // Start auto-progress for suspense mode
+            }
             scrollToResult() // Scroll to result after animation
-          }, 3000) // 3 second animation
+          }, 800) // Fast animation for better UX
         } else {
           const error = await response.json()
           alert(error.error || 'Failed to open packs')
@@ -221,7 +240,16 @@ export default function OpenPack() {
 
   const showAllItems = () => {
     setDisplayMode('instant')
+    setAutoProgress(false) // Stop auto-progress when showing all
     scrollToResult() // Scroll to show all items
+  }
+
+  const startAutoProgress = () => {
+    setAutoProgress(true)
+  }
+
+  const stopAutoProgress = () => {
+    setAutoProgress(false)
   }
 
   if (status === 'loading' || loading) {
@@ -697,6 +725,31 @@ export default function OpenPack() {
                           </div>
                           <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
                         </button>
+                        {!autoProgress ? (
+                          <button
+                            onClick={startAutoProgress}
+                            className="group px-4 sm:px-6 lg:px-8 py-3 sm:py-4 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl relative overflow-hidden"
+                          >
+                            <div className="flex items-center justify-center space-x-3">
+                              <span className="text-xl group-hover:animate-pulse">🚀</span>
+                              <span>Auto-Revelar Rápido</span>
+                              <span className="text-xl group-hover:animate-pulse">🚀</span>
+                            </div>
+                            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+                          </button>
+                        ) : (
+                          <button
+                            onClick={stopAutoProgress}
+                            className="group px-4 sm:px-6 lg:px-8 py-3 sm:py-4 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl relative overflow-hidden"
+                          >
+                            <div className="flex items-center justify-center space-x-3">
+                              <span className="text-xl group-hover:animate-pulse">⏸️</span>
+                              <span>Pausar Auto-Revelar</span>
+                              <span className="text-xl group-hover:animate-pulse">⏸️</span>
+                            </div>
+                            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+                          </button>
+                        )}
                         <button
                           onClick={showAllItems}
                           className="group px-4 sm:px-6 lg:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl relative overflow-hidden"
