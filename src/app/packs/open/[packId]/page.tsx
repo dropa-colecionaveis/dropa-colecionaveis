@@ -190,6 +190,8 @@ export default function OpenPack() {
           setTimeout(() => {
             setIsOpening(false)
             setShowResult(true)
+            // Reset to first item for suspense mode
+            setCurrentItemIndex(0)
             if (displayMode === 'suspense') {
               setAutoProgress(true) // Start auto-progress for suspense mode
             }
@@ -928,7 +930,10 @@ export default function OpenPack() {
                   </h3>
                   <div className="flex justify-center space-x-4">
                     <button
-                      onClick={() => setDisplayMode('instant')}
+                      onClick={() => {
+                        setDisplayMode('instant')
+                        setAutoProgress(false) // Stop auto-progress
+                      }}
                       className={`px-6 py-3 rounded-lg transition duration-200 ${
                         displayMode === 'instant'
                           ? 'bg-blue-600 text-white'
@@ -938,7 +943,11 @@ export default function OpenPack() {
                       ⚡ Resultados Instantâneos
                     </button>
                     <button
-                      onClick={() => setDisplayMode('suspense')}
+                      onClick={() => {
+                        setDisplayMode('suspense')
+                        setCurrentItemIndex(0) // Reset to first item when switching to suspense
+                        setAutoProgress(false) // Reset auto-progress
+                      }}
                       className={`px-6 py-3 rounded-lg transition duration-200 ${
                         displayMode === 'suspense'
                           ? 'bg-purple-600 text-white'
