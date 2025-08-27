@@ -1,16 +1,32 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { performanceMonitor } from '@/lib/ranking-performance'
 
 export async function GET(req: Request) {
   try {
     const { authOptions } = await import('@/lib/auth')
+    const { performanceMonitor } = await import('@/lib/ranking-performance')
+    const { prisma } = await import('@/lib/prisma')
+    
     const session = await getServerSession(authOptions)
 
-    // Only allow admin users to access performance metrics
-    if (!session?.user || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
+    // Check if user is authenticated
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    // Get user role from database
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true }
+    })
+
+    // Only allow admin users to access performance metrics
+    if (!user || !['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
+      return NextResponse.json(
+        { error: 'Forbidden' },
         { status: 403 }
       )
     }
