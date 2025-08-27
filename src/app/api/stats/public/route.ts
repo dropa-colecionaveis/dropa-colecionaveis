@@ -3,8 +3,6 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   try {
-    console.log('Fetching public stats...')
-    
     // Buscar estatísticas reais do banco de dados
     const [
       totalUniqueItems,
@@ -14,7 +12,7 @@ export async function GET() {
       // Total de itens únicos no sistema
       prisma.item.count({
         where: { isActive: true }
-      }).catch(() => 0), // Fallback to 0 if query fails
+      }).catch(() => 0),
       
       // Total de usuários registrados
       prisma.user.count().catch(() => 0),
@@ -22,8 +20,6 @@ export async function GET() {
       // Total de pacotes abertos
       prisma.packOpening.count().catch(() => 0)
     ])
-
-    console.log('Stats retrieved:', { totalUniqueItems, totalUsers, totalPackOpenings })
 
     // Formatar números com sufixos apropriados
     const formatNumber = (num: number): string => {
@@ -54,13 +50,12 @@ export async function GET() {
       }
     }
 
-    console.log('Returning response:', response)
     return NextResponse.json(response)
 
   } catch (error) {
     console.error('Error fetching public stats:', error)
     
-    // Em caso de erro, retornar valores padrão baixos
+    // Em caso de erro, retornar valores padrão
     const fallbackResponse = {
       uniqueItems: {
         count: 0,
@@ -79,7 +74,6 @@ export async function GET() {
       }
     }
     
-    console.log('Returning fallback response:', fallbackResponse)
     return NextResponse.json(fallbackResponse, { status: 200 })
   }
 }

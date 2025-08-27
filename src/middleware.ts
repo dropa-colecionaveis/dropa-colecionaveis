@@ -22,6 +22,11 @@ export default withAuth(
           return true
         }
 
+        // Allow access to public stats API
+        if (req.nextUrl.pathname.startsWith('/api/stats/public')) {
+          return true
+        }
+
         // Require authentication for dashboard, admin, and other protected routes
         if (req.nextUrl.pathname.startsWith('/dashboard') ||
             req.nextUrl.pathname.startsWith('/admin') ||
