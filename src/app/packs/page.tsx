@@ -29,11 +29,11 @@ export default function PackStore() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [packs, setPacks] = useState<Pack[]>([])
-  const [userProfile, setUserProfile] = useState<UserProfile>({ credits: 0 })
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [userStats, setUserStats] = useState<any>(null)
   const [packsLoading, setPacksLoading] = useState(false)
-  const [profileLoading, setProfileLoading] = useState(false)
-  const [statsLoading, setStatsLoading] = useState(false)
+  const [profileLoading, setProfileLoading] = useState(true)
+  const [statsLoading, setStatsLoading] = useState(true)
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const { bestRanking, loading: rankingLoading } = useUserRankings()
   const { isAdmin, isSuperAdmin } = useAdmin()
@@ -47,6 +47,12 @@ export default function PackStore() {
     if (status === 'authenticated' && session?.user) {
       // Progressive loading - start immediately without waiting for all data
       fetchDataProgressive()
+    } else if (status === 'loading') {
+      // Keep skeleton states as true during session loading
+    } else {
+      // Reset loading states if not authenticated
+      setProfileLoading(false)
+      setStatsLoading(false)
     }
   }, [status, router, session])
 
@@ -136,7 +142,7 @@ export default function PackStore() {
   }
 
   const canAffordPack = (price: number) => {
-    return userProfile.credits >= price
+    return userProfile ? userProfile.credits >= price : false
   }
 
   const getPackTypeEmoji = (type: string) => {
