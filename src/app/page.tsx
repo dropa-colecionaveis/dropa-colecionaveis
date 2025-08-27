@@ -70,16 +70,18 @@ export default function Home() {
     fetchStats()
   }, [])
 
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
-        <div className="text-white text-xl animate-pulse">⚡ Carregando...</div>
-      </div>
-    )
-  }
+  // Don't block the page, just handle redirect when ready
+  // if (status === 'loading') {
+  //   return loading screen - removed to prevent blocking
+  // }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative overflow-hidden">
+      {/* Session loading indicator */}
+      {status === 'loading' && (
+        <div className="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-blue-500 animate-pulse z-50"></div>
+      )}
+      
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-20 left-10 text-purple-300/20 text-6xl animate-pulse">⚡</div>
@@ -193,43 +195,78 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Stats Section - Real Data */}
+        {/* Stats Section - Real Data with Enhanced Skeleton Loading */}
         <div className="grid md:grid-cols-3 gap-8 mb-16 max-w-4xl mx-auto">
-          <div className="text-center bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
-            <div className="text-4xl font-bold text-purple-400 mb-2">
+          {/* Items Únicos */}
+          <div className="text-center bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:border-purple-400/50 transition-all duration-300 group">
+            <div className="text-4xl font-bold text-purple-400 mb-2 min-h-[48px] flex items-center justify-center">
               {statsLoading ? (
-                <div className="animate-pulse bg-purple-300/30 h-12 w-20 rounded mx-auto"></div>
+                <div className="relative">
+                  <div className="animate-pulse bg-gradient-to-r from-purple-300/20 via-purple-300/40 to-purple-300/20 h-12 w-20 rounded-lg">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-300/30 to-transparent animate-shimmer"></div>
+                  </div>
+                </div>
               ) : (
-                <span>{stats?.uniqueItems?.formatted || '0'}</span>
+                <span className="animate-fade-in group-hover:scale-110 transition-transform duration-300">
+                  {stats?.uniqueItems?.formatted || '0'}
+                </span>
               )}
             </div>
-            <p className="text-gray-300">
-              {stats?.uniqueItems?.label || 'Itens Únicos'}
-            </p>
+            <div className="text-gray-300 group-hover:text-purple-300 transition-colors duration-300">
+              {statsLoading ? (
+                <div className="animate-pulse bg-gray-300/20 h-4 w-24 rounded mx-auto"></div>
+              ) : (
+                <p>{stats?.uniqueItems?.label || 'Itens Únicos'}</p>
+              )}
+            </div>
           </div>
-          <div className="text-center bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
-            <div className="text-4xl font-bold text-blue-400 mb-2">
+
+          {/* Jogadores Ativos */}
+          <div className="text-center bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:border-blue-400/50 transition-all duration-300 group">
+            <div className="text-4xl font-bold text-blue-400 mb-2 min-h-[48px] flex items-center justify-center">
               {statsLoading ? (
-                <div className="animate-pulse bg-blue-300/30 h-12 w-20 rounded mx-auto"></div>
+                <div className="relative">
+                  <div className="animate-pulse bg-gradient-to-r from-blue-300/20 via-blue-300/40 to-blue-300/20 h-12 w-20 rounded-lg">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-300/30 to-transparent animate-shimmer"></div>
+                  </div>
+                </div>
               ) : (
-                <span>{stats?.totalUsers?.formatted || '0'}</span>
+                <span className="animate-fade-in group-hover:scale-110 transition-transform duration-300">
+                  {stats?.totalUsers?.formatted || '0'}
+                </span>
               )}
             </div>
-            <p className="text-gray-300">
-              {stats?.totalUsers?.label || 'Jogadores Ativos'}
-            </p>
+            <div className="text-gray-300 group-hover:text-blue-300 transition-colors duration-300">
+              {statsLoading ? (
+                <div className="animate-pulse bg-gray-300/20 h-4 w-32 rounded mx-auto"></div>
+              ) : (
+                <p>{stats?.totalUsers?.label || 'Jogadores Ativos'}</p>
+              )}
+            </div>
           </div>
-          <div className="text-center bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
-            <div className="text-4xl font-bold text-indigo-400 mb-2">
+
+          {/* Pacotes Abertos */}
+          <div className="text-center bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:border-indigo-400/50 transition-all duration-300 group">
+            <div className="text-4xl font-bold text-indigo-400 mb-2 min-h-[48px] flex items-center justify-center">
               {statsLoading ? (
-                <div className="animate-pulse bg-indigo-300/30 h-12 w-20 rounded mx-auto"></div>
+                <div className="relative">
+                  <div className="animate-pulse bg-gradient-to-r from-indigo-300/20 via-indigo-300/40 to-indigo-300/20 h-12 w-20 rounded-lg">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-indigo-300/30 to-transparent animate-shimmer"></div>
+                  </div>
+                </div>
               ) : (
-                <span>{stats?.packOpenings?.formatted || '0'}</span>
+                <span className="animate-fade-in group-hover:scale-110 transition-transform duration-300">
+                  {stats?.packOpenings?.formatted || '0'}
+                </span>
               )}
             </div>
-            <p className="text-gray-300">
-              {stats?.packOpenings?.label || 'Pacotes Abertos'}
-            </p>
+            <div className="text-gray-300 group-hover:text-indigo-300 transition-colors duration-300">
+              {statsLoading ? (
+                <div className="animate-pulse bg-gray-300/20 h-4 w-28 rounded mx-auto"></div>
+              ) : (
+                <p>{stats?.packOpenings?.label || 'Pacotes Abertos'}</p>
+              )}
+            </div>
           </div>
         </div>
 
