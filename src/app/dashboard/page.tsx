@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import LoadingSpinner from '@/components/LoadingSpinner'
 import { useUserRankings } from '@/hooks/useUserRankings'
 import { useAdmin } from '@/hooks/useAdmin'
 import FreePackModal from '@/components/FreePackModal'
@@ -17,9 +16,9 @@ export default function Dashboard() {
   const [userProfile, setUserProfile] = useState<any>(null)
   const [userStats, setUserStats] = useState<any>(null)
   const [recentActivities, setRecentActivities] = useState<any[]>([])
-  const [profileLoading, setProfileLoading] = useState(false)
-  const [statsLoading, setStatsLoading] = useState(false)
-  const [activitiesLoading, setActivitiesLoading] = useState(false)
+  const [profileLoading, setProfileLoading] = useState(true)
+  const [statsLoading, setStatsLoading] = useState(true)
+  const [activitiesLoading, setActivitiesLoading] = useState(true)
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [showFreePackModal, setShowFreePackModal] = useState(false)
   const [hasUnclaimedFreePack, setHasUnclaimedFreePack] = useState(false)
@@ -35,6 +34,13 @@ export default function Dashboard() {
     if (status === 'authenticated' && session?.user) {
       // Carregamento progressivo - começar imediatamente sem aguardar todos os dados
       fetchUserDataProgressive()
+    } else if (status === 'loading') {
+      // Keep skeleton states as true during session loading
+    } else {
+      // Reset loading states if not authenticated
+      setProfileLoading(false)
+      setStatsLoading(false)
+      setActivitiesLoading(false)
     }
   }, [status, router, session])
 
@@ -185,23 +191,18 @@ export default function Dashboard() {
     signOut({ callbackUrl: '/' })
   }
 
-  // Mostrar loading apenas durante autenticação inicial
-  if (status === 'loading') {
-    return <LoadingSpinner />
-  }
-
-  // Se não autenticado, mostrar loading durante redirecionamento
-  if (status === 'unauthenticated') {
-    return <LoadingSpinner />
-  }
-
-  // Se não tem session ainda, aguardar um pouco mais
-  if (!session?.user) {
-    return <LoadingSpinner />
-  }
+  // Don't block the entire page on session loading
+  // if (status === 'loading') {
+  //   return loading screen - removed to prevent blocking
+  // }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+      {/* Session loading indicator */}
+      {status === 'loading' && (
+        <div className="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-blue-500 animate-pulse z-50"></div>
+      )}
+      
       {/* Header */}
       <header className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 backdrop-blur-lg border-b border-purple-500/30 shadow-xl">
         <div className="container mx-auto px-4 py-3">
@@ -230,7 +231,7 @@ export default function Dashboard() {
 
             {/* Stats and Actions */}
             <div className="flex items-center space-x-4">
-              {(statsLoading || profileLoading || rankingLoading) && !userStats && !userProfile ? (
+              {(statsLoading || profileLoading || rankingLoading) || (!userStats && !userProfile) ? (
                 <HeaderStatsSkeleton />
               ) : (
                 <>
@@ -341,7 +342,7 @@ export default function Dashboard() {
             
             {/* Quick Stats */}
             <div className="mb-12 max-w-3xl mx-auto">
-              {statsLoading && !userStats ? (
+              {statsLoading || !userStats ? (
                 <StatsSkeleton />
               ) : (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
