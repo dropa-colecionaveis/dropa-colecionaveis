@@ -8,6 +8,7 @@ import Image from 'next/image'
 import { getRarityName } from '@/lib/rarity-system'
 import { useUserRankings } from '@/hooks/useUserRankings'
 import { useAdmin } from '@/hooks/useAdmin'
+import { HeaderStatsSkeleton } from '@/components/SkeletonLoader'
 
 interface MarketplaceListing {
   id: string
@@ -72,6 +73,7 @@ export default function Marketplace() {
   const [purchasing, setPurchasing] = useState<string | null>(null)
   const [userProfile, setUserProfile] = useState<any>(null)
   const [userStats, setUserStats] = useState<any>(null)
+  const [profileLoading, setProfileLoading] = useState(true)
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const { bestRanking, loading: rankingLoading } = useUserRankings()
   const { isAdmin, isSuperAdmin } = useAdmin()
@@ -147,6 +149,8 @@ export default function Marketplace() {
       }
     } catch (error) {
       console.error('Error fetching user data:', error)
+    } finally {
+      setProfileLoading(false)
     }
   }
 
@@ -262,63 +266,52 @@ export default function Marketplace() {
 
             {/* Stats and Actions */}
             <div className="flex items-center space-x-4">
-              {/* Level and XP */}
-              {userStats ? (
-                <div className="bg-gradient-to-r from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-400/30 hover:border-purple-300/50 transition-colors duration-200">
-                  <Link href="/achievements" className="flex items-center space-x-3 group">
-                    <div className="text-center">
-                      <div className="text-purple-300 font-bold text-sm group-hover:text-purple-200 transition-colors">⭐ Nível {userStats.level || 1}</div>
-                      <div className="text-xs text-gray-300 group-hover:text-purple-200 transition-colors">{userStats.totalXP || 0} XP</div>
-                    </div>
-                  </Link>
-                </div>
+              {profileLoading || (!userStats && !userProfile) ? (
+                <HeaderStatsSkeleton />
               ) : (
-                <div className="bg-gradient-to-r from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-400/30 animate-pulse">
-                  <div className="text-center">
-                    <div className="bg-purple-300/30 h-4 w-16 rounded mb-1"></div>
-                    <div className="bg-gray-300/30 h-3 w-12 rounded"></div>
-                  </div>
-                </div>
-              )}
+                <>
+                  {/* Level and XP */}
+                  {userStats && (
+                    <div className="bg-gradient-to-r from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-400/30 hover:border-purple-300/50 transition-colors duration-200">
+                      <Link href="/achievements" className="flex items-center space-x-3 group">
+                        <div className="text-center">
+                          <div className="text-purple-300 font-bold text-sm group-hover:text-purple-200 transition-colors">⭐ Nível {userStats.level || 1}</div>
+                          <div className="text-xs text-gray-300 group-hover:text-purple-200 transition-colors">{userStats.totalXP || 0} XP</div>
+                        </div>
+                      </Link>
+                    </div>
+                  )}
 
-              {/* User Ranking */}
-              {!rankingLoading && bestRanking.position > 0 && (
-                <div className="bg-gradient-to-r from-indigo-600/30 to-cyan-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-indigo-400/30 hover:border-indigo-300/50 transition-colors duration-200">
-                  <Link href="/rankings" className="flex items-center space-x-3 group">
-                    <div className="text-center">
-                      <div className="text-indigo-300 font-bold text-sm flex items-center">
-                        <span className="mr-1">📊</span>
-                        <span>#{bestRanking.position}</span>
-                        <span className="ml-1 text-xs opacity-75">({Math.round(bestRanking.percentage)}%)</span>
+                  {/* User Ranking */}
+                  {!rankingLoading && bestRanking.position > 0 && (
+                    <div className="bg-gradient-to-r from-indigo-600/30 to-cyan-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-indigo-400/30 hover:border-indigo-300/50 transition-colors duration-200">
+                      <Link href="/rankings" className="flex items-center space-x-3 group">
+                        <div className="text-center">
+                          <div className="text-indigo-300 font-bold text-sm flex items-center">
+                            <span className="mr-1">📊</span>
+                            <span>#{bestRanking.position}</span>
+                            <span className="ml-1 text-xs opacity-75">({Math.round(bestRanking.percentage)}%)</span>
+                          </div>
+                          <div className="text-xs text-gray-300 group-hover:text-indigo-200 transition-colors">
+                            Ranking Global
+                          </div>
+                        </div>
+                      </Link>
+                    </div>
+                  )}
+                  
+                  {/* Credits */}
+                  <div className="bg-gradient-to-r from-yellow-600/30 to-orange-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-yellow-400/30 hover:border-yellow-300/50 transition-colors duration-200">
+                    <Link href="/credits/purchase" className="flex items-center space-x-2 group">
+                      <span className="text-yellow-300 text-lg group-hover:scale-110 transition-transform duration-200">💰</span>
+                      <div>
+                        <div className="text-yellow-300 font-bold group-hover:text-yellow-200 transition-colors">{userProfile?.credits || 0}</div>
+                        <div className="text-xs text-yellow-200 group-hover:text-yellow-100 transition-colors">créditos</div>
                       </div>
-                      <div className="text-xs text-gray-300 group-hover:text-indigo-200 transition-colors">
-                        Ranking Global
-                      </div>
-                    </div>
-                  </Link>
-                </div>
-              )}
-              
-              {/* Credits */}
-              <div className="bg-gradient-to-r from-yellow-600/30 to-orange-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-yellow-400/30 hover:border-yellow-300/50 transition-colors duration-200">
-                {userProfile ? (
-                  <Link href="/credits/purchase" className="flex items-center space-x-2 group">
-                    <span className="text-yellow-300 text-lg group-hover:scale-110 transition-transform duration-200">💰</span>
-                    <div>
-                      <div className="text-yellow-300 font-bold group-hover:text-yellow-200 transition-colors">{userProfile.credits || 0}</div>
-                      <div className="text-xs text-yellow-200 group-hover:text-yellow-100 transition-colors">créditos</div>
-                    </div>
-                  </Link>
-                ) : (
-                  <div className="flex items-center space-x-2 animate-pulse">
-                    <span className="text-yellow-300 text-lg">💰</span>
-                    <div>
-                      <div className="bg-yellow-300/30 h-4 w-8 rounded mb-1"></div>
-                      <div className="bg-yellow-200/30 h-3 w-12 rounded"></div>
-                    </div>
+                    </Link>
                   </div>
-                )}
-              </div>
+                </>
+              )}
               
               {/* Quick Actions */}
               <div className="flex items-center space-x-2">

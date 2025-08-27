@@ -1,5 +1,6 @@
 import { prisma } from './prisma'
 import { RankingCategory } from '@prisma/client'
+import { performanceMonitor } from './ranking-performance'
 
 export interface GlobalRankingEntry {
   userId: string
@@ -39,12 +40,58 @@ export class GlobalRankingService {
     MONTHLY_ACTIVE: 0.05   // 5% - Atividade mensal
   }
 
+  // Cache for category totals to avoid N+1 queries
+  private categoryTotalsCache = new Map<RankingCategory, { total: number, expireAt: number }>()
+  private readonly CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+
+  private async getCachedCategoryTotal(category: RankingCategory): Promise<number> {
+    const now = Date.now()
+    const cached = this.categoryTotalsCache.get(category)
+    
+    // Return cached value if still valid
+    if (cached && cached.expireAt > now) {
+      performanceMonitor.trackCacheHit()
+      return cached.total
+    }
+    
+    performanceMonitor.trackCacheMiss()
+
+    // Fetch fresh value
+    const total = await prisma.ranking.count({
+      where: { 
+        category,
+        user: {
+          role: {
+            notIn: ['ADMIN', 'SUPER_ADMIN']
+          }
+        }
+      }
+    })
+
+    // Cache the result
+    this.categoryTotalsCache.set(category, {
+      total,
+      expireAt: now + this.CACHE_TTL
+    })
+
+    return total
+  }
+
   // Calcular ranking global de todos os usuários
   async calculateGlobalRanking(): Promise<GlobalRankingEntry[]> {
+    return performanceMonitor.trackQueryExecution('calculateGlobalRanking', async () => {
     // 1. Buscar todos os usuários que têm pelo menos um ranking, excluindo admins
+    // Optimized with proper index usage
     const usersWithRankings = await prisma.ranking.findMany({
       distinct: ['userId'],
-      select: { userId: true },
+      select: { 
+        userId: true,
+        user: {
+          select: {
+            role: true
+          }
+        }
+      },
       where: {
         user: {
           role: {
@@ -56,26 +103,43 @@ export class GlobalRankingService {
 
     const globalRankings: GlobalRankingEntry[] = []
 
-    // 2. Para cada usuário, calcular score global
-    for (const userRef of usersWithRankings) {
-      const userId = userRef.userId
-
-      // Buscar todos os rankings do usuário (já filtrados por não-admin)
-      const userRankings = await prisma.ranking.findMany({
-        where: { 
-          userId,
-          user: {
-            role: {
-              notIn: ['ADMIN', 'SUPER_ADMIN']
-            }
-          }
+    // 2. Optimized bulk query to get all user rankings at once
+    const allUserRankings = await prisma.ranking.findMany({
+      where: {
+        userId: {
+          in: usersWithRankings.map(u => u.userId)
         },
-        include: {
-          user: {
-            select: { name: true, email: true, role: true }
+        user: {
+          role: {
+            notIn: ['ADMIN', 'SUPER_ADMIN']
           }
         }
-      })
+      },
+      select: {
+        userId: true,
+        category: true,
+        position: true,
+        value: true,
+        user: {
+          select: { name: true, email: true, role: true }
+        }
+      },
+      orderBy: { userId: 'asc' }
+    })
+
+    // Group rankings by userId for efficient processing
+    const rankingsByUser = new Map<string, typeof allUserRankings>()
+    for (const ranking of allUserRankings) {
+      if (!rankingsByUser.has(ranking.userId)) {
+        rankingsByUser.set(ranking.userId, [])
+      }
+      rankingsByUser.get(ranking.userId)!.push(ranking)
+    }
+
+    // 3. Process each user's rankings
+    for (const userRef of usersWithRankings) {
+      const userId = userRef.userId
+      const userRankings = rankingsByUser.get(userId) || []
 
       if (userRankings.length === 0) continue
 
@@ -96,16 +160,8 @@ export class GlobalRankingService {
         
         if (ranking) {
           // Usuário tem ranking nesta categoria
-          const totalInCategory = await prisma.ranking.count({
-            where: { 
-              category: ranking.category,
-              user: {
-                role: {
-                  notIn: ['ADMIN', 'SUPER_ADMIN']
-                }
-              }
-            }
-          })
+          // Use cached totals to avoid N+1 queries
+          const totalInCategory = await this.getCachedCategoryTotal(ranking.category)
 
           // Calcular pontos normalizados (0-1)
           const normalizedPoints = (totalInCategory - ranking.position + 1) / totalInCategory
@@ -162,6 +218,7 @@ export class GlobalRankingService {
     })
 
     return globalRankings
+    })
   }
 
   // Obter informações sobre como o ranking global funciona

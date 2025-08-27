@@ -191,7 +191,7 @@ export default function Collections() {
 
             {/* Stats and Actions */}
             <div className="flex items-center space-x-4">
-              {profileLoading ? (
+              {profileLoading || (!userStats && !userProfile) ? (
                 <HeaderStatsSkeleton />
               ) : (
                 <>

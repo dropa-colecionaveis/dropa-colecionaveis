@@ -8,7 +8,7 @@ import Image from 'next/image'
 import { useUserRankings } from '@/hooks/useUserRankings'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import { useAdmin } from '@/hooks/useAdmin'
-import { RankingsSkeleton, RankingCategoriesSkeleton, UserRankingStatsSkeleton } from '@/components/SkeletonLoader'
+import { RankingsSkeleton, RankingCategoriesSkeleton, UserRankingStatsSkeleton, HeaderStatsSkeleton } from '@/components/SkeletonLoader'
 
 interface RankingEntry {
   userId: string
@@ -64,7 +64,7 @@ export default function Rankings() {
   const [userStats, setUserStats] = useState<UserStats | null>(null)
   const [rankingsLoading, setRankingsLoading] = useState(false)
   const [userStatsLoading, setUserStatsLoading] = useState(false)
-  const [profileLoading, setProfileLoading] = useState(false)
+  const [profileLoading, setProfileLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState<string>('GLOBAL')
   const [userPosition, setUserPosition] = useState<number>(0)
   const [updateLoading, setUpdateLoading] = useState(false)
@@ -72,7 +72,7 @@ export default function Rankings() {
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [globalRankings, setGlobalRankings] = useState<GlobalRankingEntry[]>([])
   const [globalRankingInfo, setGlobalRankingInfo] = useState<GlobalRankingInfo | null>(null)
-  const [showGlobalRanking, setShowGlobalRanking] = useState(false)
+  const [showGlobalRanking, setShowGlobalRanking] = useState(true)
   const [globalRankingLoading, setGlobalRankingLoading] = useState(false)
   const [userGlobalPosition, setUserGlobalPosition] = useState<{
     position: number,
@@ -147,6 +147,11 @@ export default function Rankings() {
     }
   }, [selectedCategory])
 
+  // Sincronizar showGlobalRanking com selectedCategory na inicialização
+  useEffect(() => {
+    setShowGlobalRanking(selectedCategory === 'GLOBAL')
+  }, [selectedCategory])
+
   // Carregamento progressivo para rankings
   const fetchRankingsProgressive = async () => {
     // 1. Buscar dados do usuário primeiro (mais rápido)
@@ -187,11 +192,12 @@ export default function Rankings() {
       
       if (selectedCategory === 'GLOBAL') {
         await fetchGlobalRankings()
-        setShowGlobalRanking(true)
       } else {
-        setShowGlobalRanking(false)
         const response = await fetch(`/api/rankings/${selectedCategory}?limit=100`, {
-          headers: { 'Cache-Control': 'max-age=120' } // Cache 2min
+          next: { 
+            revalidate: 120, // Cache for 2 minutes
+            tags: [`rankings-${selectedCategory}`] 
+          }
         })
         if (response.ok) {
           const data = await response.json()
@@ -267,7 +273,10 @@ export default function Rankings() {
   const fetchGlobalRankings = async () => {
     try {
       setGlobalRankingLoading(true)
-      const response = await fetch('/api/rankings/global?limit=50')
+      const response = await fetch('/api/rankings/global?limit=50', {
+        next: { revalidate: 300, tags: ['rankings-global'] },
+        cache: 'force-cache'
+      })
       if (response.ok) {
         const data = await response.json()
         setGlobalRankings(data.rankings || [])
@@ -365,8 +374,12 @@ export default function Rankings() {
 
             {/* Stats and Actions */}
             <div className="flex items-center space-x-4">
-              {/* Level and XP */}
-              {userStats && (
+              {profileLoading || (!userStats && !userProfile) ? (
+                <HeaderStatsSkeleton />
+              ) : (
+                <>
+                  {/* Level and XP */}
+                  {userStats && (
                 <div className="bg-gradient-to-r from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-400/30 hover:border-purple-300/50 transition-colors duration-200">
                   <Link href="/achievements" className="flex items-center space-x-3 group">
                     <div className="text-center">
@@ -393,28 +406,20 @@ export default function Rankings() {
                     </div>
                   </Link>
                 </div>
-              )}
-              
-              {/* Credits */}
-              <div className="bg-gradient-to-r from-yellow-600/30 to-orange-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-yellow-400/30 hover:border-yellow-300/50 transition-colors duration-200">
-                {userProfile ? (
-                  <Link href="/credits/purchase" className="flex items-center space-x-2 group">
-                    <span className="text-yellow-300 text-lg group-hover:scale-110 transition-transform duration-200">💰</span>
-                    <div>
-                      <div className="text-yellow-300 font-bold group-hover:text-yellow-200 transition-colors">{userProfile.credits || 0}</div>
-                      <div className="text-xs text-yellow-200 group-hover:text-yellow-100 transition-colors">créditos</div>
-                    </div>
-                  </Link>
-                ) : (
-                  <div className="flex items-center space-x-2 animate-pulse">
-                    <span className="text-yellow-300 text-lg">💰</span>
-                    <div>
-                      <div className="bg-yellow-300/30 h-4 w-8 rounded mb-1"></div>
-                      <div className="bg-yellow-200/30 h-3 w-12 rounded"></div>
-                    </div>
+                  )}
+                  
+                  {/* Credits */}
+                  <div className="bg-gradient-to-r from-yellow-600/30 to-orange-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-yellow-400/30 hover:border-yellow-300/50 transition-colors duration-200">
+                    <Link href="/credits/purchase" className="flex items-center space-x-2 group">
+                      <span className="text-yellow-300 text-lg group-hover:scale-110 transition-transform duration-200">💰</span>
+                      <div>
+                        <div className="text-yellow-300 font-bold group-hover:text-yellow-200 transition-colors">{userProfile?.credits || 0}</div>
+                        <div className="text-xs text-yellow-200 group-hover:text-yellow-100 transition-colors">créditos</div>
+                      </div>
+                    </Link>
                   </div>
-                )}
-              </div>
+                </>
+              )}
               
               {/* Quick Actions */}
               <div className="flex items-center space-x-2">
@@ -526,7 +531,13 @@ export default function Rankings() {
               {categories.map(category => (
                 <button
                   key={category.key}
-                  onClick={() => setSelectedCategory(category.key)}
+                  onClick={() => {
+      setSelectedCategory(category.key)
+      // Limpar dados da categoria anterior imediatamente para feedback visual
+      setRankings([])
+      setUserPosition(0)
+      setGlobalRankings([])
+    }}
                   className={`group p-6 rounded-2xl border-2 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-2xl text-left ${
                     selectedCategory === category.key
                       ? 'bg-gradient-to-br from-white/30 to-white/20 border-white/50 text-white'

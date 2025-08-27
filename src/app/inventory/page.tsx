@@ -371,7 +371,7 @@ export default function Inventory() {
 
             {/* Stats and Actions */}
             <div className="flex items-center space-x-4">
-              {profileLoading ? (
+              {profileLoading || (!userStats && !userProfile) ? (
                 <HeaderStatsSkeleton />
               ) : (
                 <>
@@ -475,7 +475,7 @@ export default function Inventory() {
           </div>
 
           {/* Stats Cards */}
-          {inventoryLoading ? (
+          {inventoryLoading || !stats ? (
             <InventoryStatsSkeleton />
           ) : (
             <div className="grid md:grid-cols-4 gap-6 mb-8 animate-fadeIn">

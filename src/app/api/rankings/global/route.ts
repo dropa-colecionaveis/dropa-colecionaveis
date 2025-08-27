@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 
-export const dynamic = 'force-dynamic'
+// Cache settings for better performance
+export const revalidate = 300 // 5 minutes (global ranking updates less frequently)
+export const runtime = 'nodejs'
 
 export async function GET(req: Request) {
   try {
@@ -59,12 +61,18 @@ export async function GET(req: Request) {
           userGlobalPosition = await globalRankingService.getUserGlobalPosition(session.user.id)
         }
 
-        return NextResponse.json({
+        const response = NextResponse.json({
           rankings,
           userPosition: userGlobalPosition,
           total: rankings.length,
           info: globalRankingService.getGlobalRankingInfo()
         })
+
+        // Set cache headers for better performance
+        response.headers.set('Cache-Control', 'public, max-age=300, s-maxage=600, stale-while-revalidate=1200')
+        response.headers.set('Vary', 'Authorization')
+        
+        return response
     }
   } catch (error) {
     console.error('Error fetching global ranking:', error)

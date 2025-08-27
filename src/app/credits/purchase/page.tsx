@@ -229,7 +229,7 @@ export default function PurchaseCredits() {
 
             {/* Stats and Actions */}
             <div className="flex items-center space-x-4">
-              {(statsLoading || profileLoading || rankingLoading) && !userStats && !userProfile ? (
+              {(statsLoading || profileLoading || rankingLoading) || (!userStats && !userProfile) ? (
                 <HeaderStatsSkeleton />
               ) : (
                 <>

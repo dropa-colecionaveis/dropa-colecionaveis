@@ -221,7 +221,7 @@ export default function PackStore() {
             {/* Stats and Actions */}
             <div className="flex items-center space-x-4">
               {/* Show skeleton while loading or actual data when available */}
-              {(statsLoading || profileLoading || rankingLoading) && !userStats && !userProfile ? (
+              {(statsLoading || profileLoading || rankingLoading) || (!userStats && !userProfile) ? (
                 <HeaderStatsSkeleton />
               ) : (
                 <>
@@ -310,7 +310,7 @@ export default function PackStore() {
           </div>
 
           {/* Packs Grid with Skeleton */}
-          {packsLoading && packs.length === 0 ? (
+          {packsLoading || packs.length === 0 ? (
             <PacksSkeleton />
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">

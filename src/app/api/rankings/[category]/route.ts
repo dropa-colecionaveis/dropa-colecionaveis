@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { RankingCategory } from '@prisma/client'
 
+// Cache settings for better performance
+export const revalidate = 120 // 2 minutes
+export const runtime = 'nodejs'
+
 export async function GET(
   req: Request,
   { params }: { params: { category: string } }
@@ -78,13 +82,19 @@ export async function GET(
       )
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       category,
       rankings,
       userPosition,
       total: rankings.length,
       season: seasonId ? await rankingService.getActiveSeason() : null
     })
+
+    // Set cache headers for better performance
+    response.headers.set('Cache-Control', 'public, max-age=120, s-maxage=300, stale-while-revalidate=600')
+    response.headers.set('Vary', 'Authorization')
+    
+    return response
   } catch (error) {
     console.error(`Error fetching ranking for category ${params.category}:`, error)
     return NextResponse.json(

@@ -1,5 +1,6 @@
 import { prisma } from './prisma'
 import { RankingCategory } from '@prisma/client'
+import { performanceMonitor } from './ranking-performance'
 
 export interface RankingEntry {
   userId: string
@@ -275,23 +276,26 @@ export class RankingService {
     limit: number = 100, 
     seasonId?: string
   ): Promise<RankingEntry[]> {
+    return performanceMonitor.trackQueryExecution(`getRanking_${category}`, async () => {
+    // Use optimized query with explicit index usage
     const rankings = await prisma.ranking.findMany({
       where: {
         category,
-        seasonId,
+        seasonId: seasonId || null,
         user: {
           role: {
             notIn: ['ADMIN', 'SUPER_ADMIN']
           }
         }
       },
-      include: {
+      select: {
+        userId: true,
+        position: true,
+        value: true,
         user: {
           select: {
-            id: true,
             name: true,
-            email: true,
-            role: true
+            email: true
           }
         }
       },
@@ -305,6 +309,7 @@ export class RankingService {
       position: ranking.position,
       value: ranking.value
     }))
+    })
   }
 
   // Obter posição do usuário em um ranking
