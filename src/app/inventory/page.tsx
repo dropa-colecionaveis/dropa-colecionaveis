@@ -329,18 +329,20 @@ export default function Inventory() {
     signOut({ callbackUrl: '/' })
   }
 
-  if (status === 'loading' || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
-        <div className="text-white text-xl">Carregando...</div>
-      </div>
-    )
-  }
+  // Don't block the entire page on session loading
+  // if (status === 'loading' || loading) {
+  //   return loading screen - removed to prevent blocking
+  // }
 
   const filteredItems = getFilteredItems()
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+      {/* Session loading indicator */}
+      {status === 'loading' && (
+        <div className="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-blue-500 animate-pulse z-50"></div>
+      )}
+      
       {/* Header */}
       <header className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 backdrop-blur-lg border-b border-purple-500/30 shadow-xl">
         <div className="container mx-auto px-4 py-3">

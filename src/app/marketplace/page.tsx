@@ -222,16 +222,18 @@ export default function Marketplace() {
     })
   }
 
-  if (status === 'loading' || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
-        <div className="text-white text-xl">Carregando...</div>
-      </div>
-    )
-  }
+  // Don't block the entire page on session loading
+  // if (status === 'loading') {
+  //   return loading screen - removed to prevent blocking
+  // }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+      {/* Session loading indicator */}
+      {status === 'loading' && (
+        <div className="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-blue-500 animate-pulse z-50"></div>
+      )}
+      
       {/* Header */}
       <header className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 backdrop-blur-lg border-b border-purple-500/30 shadow-xl">
         <div className="container mx-auto px-4 py-3">
@@ -261,7 +263,7 @@ export default function Marketplace() {
             {/* Stats and Actions */}
             <div className="flex items-center space-x-4">
               {/* Level and XP */}
-              {userStats && (
+              {userStats ? (
                 <div className="bg-gradient-to-r from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-400/30 hover:border-purple-300/50 transition-colors duration-200">
                   <Link href="/achievements" className="flex items-center space-x-3 group">
                     <div className="text-center">
@@ -269,6 +271,13 @@ export default function Marketplace() {
                       <div className="text-xs text-gray-300 group-hover:text-purple-200 transition-colors">{userStats.totalXP || 0} XP</div>
                     </div>
                   </Link>
+                </div>
+              ) : (
+                <div className="bg-gradient-to-r from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-400/30 animate-pulse">
+                  <div className="text-center">
+                    <div className="bg-purple-300/30 h-4 w-16 rounded mb-1"></div>
+                    <div className="bg-gray-300/30 h-3 w-12 rounded"></div>
+                  </div>
                 </div>
               )}
 
@@ -292,13 +301,23 @@ export default function Marketplace() {
               
               {/* Credits */}
               <div className="bg-gradient-to-r from-yellow-600/30 to-orange-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-yellow-400/30 hover:border-yellow-300/50 transition-colors duration-200">
-                <Link href="/credits/purchase" className="flex items-center space-x-2 group">
-                  <span className="text-yellow-300 text-lg group-hover:scale-110 transition-transform duration-200">💰</span>
-                  <div>
-                    <div className="text-yellow-300 font-bold group-hover:text-yellow-200 transition-colors">{userProfile?.credits || 0}</div>
-                    <div className="text-xs text-yellow-200 group-hover:text-yellow-100 transition-colors">créditos</div>
+                {userProfile ? (
+                  <Link href="/credits/purchase" className="flex items-center space-x-2 group">
+                    <span className="text-yellow-300 text-lg group-hover:scale-110 transition-transform duration-200">💰</span>
+                    <div>
+                      <div className="text-yellow-300 font-bold group-hover:text-yellow-200 transition-colors">{userProfile.credits || 0}</div>
+                      <div className="text-xs text-yellow-200 group-hover:text-yellow-100 transition-colors">créditos</div>
+                    </div>
+                  </Link>
+                ) : (
+                  <div className="flex items-center space-x-2 animate-pulse">
+                    <span className="text-yellow-300 text-lg">💰</span>
+                    <div>
+                      <div className="bg-yellow-300/30 h-4 w-8 rounded mb-1"></div>
+                      <div className="bg-yellow-200/30 h-3 w-12 rounded"></div>
+                    </div>
                   </div>
-                </Link>
+                )}
               </div>
               
               {/* Quick Actions */}
@@ -444,7 +463,59 @@ export default function Marketplace() {
           </div>
 
           {/* Listings Grid */}
-          {listings.length > 0 ? (
+          {loading ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+              {/* Skeleton Loading Cards */}
+              {Array.from({ length: 8 }).map((_, index) => (
+                <div
+                  key={`skeleton-${index}`}
+                  className="group bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-6 border-2 border-white/10 animate-pulse"
+                >
+                  <div className="text-center mb-4">
+                    {/* Image skeleton */}
+                    <div className="w-32 h-32 mx-auto bg-gradient-to-r from-gray-600/20 via-gray-500/40 to-gray-600/20 rounded-xl mb-4 relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-400/30 to-transparent animate-shimmer"></div>
+                    </div>
+                    
+                    {/* Title skeleton */}
+                    <div className="bg-gradient-to-r from-gray-600/20 via-gray-500/40 to-gray-600/20 h-6 w-3/4 mx-auto mb-2 rounded relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-400/30 to-transparent animate-shimmer"></div>
+                    </div>
+                    
+                    {/* Rarity badge skeleton */}
+                    <div className="bg-gradient-to-r from-gray-600/20 via-gray-500/40 to-gray-600/20 h-4 w-16 mx-auto mb-4 rounded-full relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-400/30 to-transparent animate-shimmer"></div>
+                    </div>
+                  </div>
+                  
+                  {/* Details skeleton */}
+                  <div className="space-y-2 mb-4">
+                    <div className="flex justify-between">
+                      <div className="bg-gradient-to-r from-gray-600/20 via-gray-500/40 to-gray-600/20 h-4 w-12 rounded relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-400/30 to-transparent animate-shimmer"></div>
+                      </div>
+                      <div className="bg-gradient-to-r from-gray-600/20 via-gray-500/40 to-gray-600/20 h-4 w-20 rounded relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-400/30 to-transparent animate-shimmer"></div>
+                      </div>
+                    </div>
+                    <div className="flex justify-between">
+                      <div className="bg-gradient-to-r from-gray-600/20 via-gray-500/40 to-gray-600/20 h-4 w-16 rounded relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-400/30 to-transparent animate-shimmer"></div>
+                      </div>
+                      <div className="bg-gradient-to-r from-gray-600/20 via-gray-500/40 to-gray-600/20 h-4 w-24 rounded relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-400/30 to-transparent animate-shimmer"></div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Button skeleton */}
+                  <div className="bg-gradient-to-r from-gray-600/20 via-gray-500/40 to-gray-600/20 h-10 w-full rounded-xl relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-400/30 to-transparent animate-shimmer"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : listings.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
               {listings.map((listing) => (
                 <div

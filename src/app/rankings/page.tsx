@@ -312,25 +312,31 @@ export default function Rankings() {
     return categories.find(cat => cat.key === selectedCategory) || categories[0]
   }
 
-  // Mostrar loading apenas durante autenticação inicial
-  if (status === 'loading') {
-    return <LoadingSpinner />
-  }
+  // Don't block the entire page on session loading
+  // if (status === 'loading') {
+  //   return <LoadingSpinner /> - removed to prevent blocking
+  // }
 
-  // Se não autenticado, mostrar loading durante redirecionamento
+  // Handle redirect for unauthenticated users
   if (status === 'unauthenticated') {
-    return <LoadingSpinner />
+    router.push('/auth/signin')
+    return null
   }
 
-  // Se não tem session ainda, aguardar um pouco mais
-  if (!session?.user) {
-    return <LoadingSpinner />
-  }
+  // Allow page to render even without session initially
+  // if (!session?.user) {
+  //   return <LoadingSpinner /> - removed to prevent blocking
+  // }
 
   const currentCategory = getCurrentCategory()
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+      {/* Session loading indicator */}
+      {status === 'loading' && (
+        <div className="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-blue-500 animate-pulse z-50"></div>
+      )}
+      
       {/* Header */}
       <header className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 backdrop-blur-lg border-b border-purple-500/30 shadow-xl">
         <div className="container mx-auto px-4 py-3">
@@ -391,13 +397,23 @@ export default function Rankings() {
               
               {/* Credits */}
               <div className="bg-gradient-to-r from-yellow-600/30 to-orange-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-yellow-400/30 hover:border-yellow-300/50 transition-colors duration-200">
-                <Link href="/credits/purchase" className="flex items-center space-x-2 group">
-                  <span className="text-yellow-300 text-lg group-hover:scale-110 transition-transform duration-200">💰</span>
-                  <div>
-                    <div className="text-yellow-300 font-bold group-hover:text-yellow-200 transition-colors">{userProfile?.credits || 0}</div>
-                    <div className="text-xs text-yellow-200 group-hover:text-yellow-100 transition-colors">créditos</div>
+                {userProfile ? (
+                  <Link href="/credits/purchase" className="flex items-center space-x-2 group">
+                    <span className="text-yellow-300 text-lg group-hover:scale-110 transition-transform duration-200">💰</span>
+                    <div>
+                      <div className="text-yellow-300 font-bold group-hover:text-yellow-200 transition-colors">{userProfile.credits || 0}</div>
+                      <div className="text-xs text-yellow-200 group-hover:text-yellow-100 transition-colors">créditos</div>
+                    </div>
+                  </Link>
+                ) : (
+                  <div className="flex items-center space-x-2 animate-pulse">
+                    <span className="text-yellow-300 text-lg">💰</span>
+                    <div>
+                      <div className="bg-yellow-300/30 h-4 w-8 rounded mb-1"></div>
+                      <div className="bg-yellow-200/30 h-3 w-12 rounded"></div>
+                    </div>
                   </div>
-                </Link>
+                )}
               </div>
               
               {/* Quick Actions */}
