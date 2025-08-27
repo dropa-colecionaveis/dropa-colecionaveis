@@ -56,21 +56,38 @@ export default function PackStore() {
     }
   }, [status, router, session])
 
-  // Progressive data fetching for better UX
+  // Optimized data fetching with priority
   const fetchDataProgressive = async () => {
-    // 1. Fetch packs first (most important for this page)
-    fetchPacks()
+    // 1. Fetch critical data in parallel for header skeleton
+    const headerDataPromises = [
+      fetchUserProfile(),
+      fetchUserStats()
+    ]
     
-    // 2. Fetch user profile and stats in parallel
-    fetchUserProfile()
-    fetchUserStats()
+    // 2. Fetch page-specific data (packs) in parallel
+    const pageDataPromise = fetchPacks()
+    
+    // 3. Wait for header data to remove skeleton faster
+    try {
+      await Promise.allSettled(headerDataPromises)
+    } catch (error) {
+      console.error('Error loading header data:', error)
+    }
+    
+    // 4. Page data can continue loading
+    try {
+      await pageDataPromise
+    } catch (error) {
+      console.error('Error loading packs:', error)
+    }
   }
 
   const fetchPacks = async () => {
     try {
       setPacksLoading(true)
       const response = await fetch('/api/packs', {
-        headers: { 'Cache-Control': 'max-age=300' } // Cache 5min
+        cache: 'force-cache',
+        next: { revalidate: 600 } // Cache 10min - packs change rarely
       })
       if (response.ok) {
         const data = await response.json()
@@ -87,7 +104,8 @@ export default function PackStore() {
     try {
       setProfileLoading(true)
       const response = await fetch('/api/user/profile', {
-        headers: { 'Cache-Control': 'max-age=300' } // Cache 5min
+        cache: 'force-cache',
+        next: { revalidate: 300 } // Cache 5min with ISR
       })
       
       if (response.ok) {
@@ -105,7 +123,8 @@ export default function PackStore() {
     try {
       setStatsLoading(true)
       const response = await fetch('/api/user/stats', {
-        headers: { 'Cache-Control': 'max-age=180' } // Cache 3min
+        cache: 'force-cache',
+        next: { revalidate: 180 } // Cache 3min - stats change more frequently
       })
       
       if (response.ok) {

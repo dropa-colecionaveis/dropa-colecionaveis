@@ -38,26 +38,39 @@ export default function Dashboard() {
     }
   }, [status, router, session])
 
-  // Carregamento progressivo para melhor UX
+  // Carregamento otimizado com priorização
   const fetchUserDataProgressive = async () => {
-    // 1. Buscar perfil primeiro (mais crítico)
-    fetchUserProfile()
+    // 1. Buscar dados críticos em paralelo (header stats)
+    const criticalDataPromises = [
+      fetchUserProfile(),
+      fetchUserStats()
+    ]
     
-    // 2. Buscar stats em paralelo
-    fetchUserStats()
-    
-    // 3. Buscar dados menos críticos depois
-    setTimeout(() => {
-      fetchRecentActivities()
+    // 2. Buscar dados menos críticos sem aguardar os críticos
+    const nonCriticalPromises = [
+      fetchRecentActivities(),
       checkFreePack()
-    }, 100) // Pequeno delay para não sobrecarregar
+    ]
+    
+    // 3. Aguardar dados críticos para remover skeleton do header mais rápido
+    try {
+      await Promise.allSettled(criticalDataPromises)
+    } catch (error) {
+      console.error('Error loading critical data:', error)
+    }
+    
+    // 4. Dados não críticos podem continuar carregando em background
+    Promise.allSettled(nonCriticalPromises).catch(error => {
+      console.error('Error loading non-critical data:', error)
+    })
   }
 
   const fetchUserProfile = async () => {
     try {
       setProfileLoading(true)
       const response = await fetch('/api/user/profile', {
-        headers: { 'Cache-Control': 'max-age=300' } // Cache 5min
+        cache: 'force-cache',
+        next: { revalidate: 300 } // Cache 5min with ISR
       })
       
       if (response.ok) {
@@ -75,7 +88,8 @@ export default function Dashboard() {
     try {
       setStatsLoading(true)
       const response = await fetch('/api/user/stats', {
-        headers: { 'Cache-Control': 'max-age=180' } // Cache 3min
+        cache: 'force-cache', 
+        next: { revalidate: 180 } // Cache 3min with ISR - shorter because stats change more frequently
       })
       
       if (response.ok) {
@@ -107,11 +121,10 @@ export default function Dashboard() {
   const fetchRecentActivities = async () => {
     try {
       setActivitiesLoading(true)
-      // Add cache headers to improve performance
+      // Add cache for improved performance
       const response = await fetch('/api/user/recent-activity?limit=10', {
-        headers: {
-          'Cache-Control': 'max-age=60' // Cache por 1 minuto
-        }
+        cache: 'force-cache',
+        next: { revalidate: 60 } // Cache 1min - activities change frequently
       })
       
       if (response.ok) {

@@ -15,6 +15,7 @@ export async function GET(req: Request) {
       )
     }
 
+    // Optimized single query with rare items count
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: {
@@ -28,6 +29,16 @@ export async function GET(req: Request) {
             packOpenings: true,
             userItems: true,
           }
+        },
+        userItems: {
+          where: {
+            item: {
+              rarity: {
+                in: ['RARO', 'EPICO', 'LENDARIO']
+              }
+            }
+          },
+          select: { id: true }
         }
       }
     })
@@ -40,26 +51,20 @@ export async function GET(req: Request) {
       )
     }
 
-    // Count rare items
-    const rareItemsCount = await prisma.userItem.count({
-      where: {
-        userId: session.user.id,
-        item: {
-          rarity: {
-            in: ['RARO', 'EPICO', 'LENDARIO']
-          }
-        }
-      }
-    })
-
-    return NextResponse.json({
+    const response = NextResponse.json({
       ...user,
       stats: {
         packOpenings: user._count.packOpenings,
         totalItems: user._count.userItems,
-        rareItems: rareItemsCount
+        rareItems: user.userItems.length
       }
     })
+
+    // Add aggressive caching headers
+    response.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=600')
+    response.headers.set('CDN-Cache-Control', 'public, max-age=600')
+    
+    return response
   } catch (error) {
     console.error('Profile fetch error:', error)
     return NextResponse.json(
