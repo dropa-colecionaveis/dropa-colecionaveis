@@ -587,7 +587,7 @@ export class UserStatsService {
       // Só calcular posição se o usuário tem atividade de trader
       traderRank = await prisma.$queryRaw`
         SELECT COUNT(*) as count 
-        FROM "UserStats" 
+        FROM "user_stats" 
         WHERE (COALESCE("marketplaceSales", 0) + COALESCE("marketplacePurchases", 0)) > ${userTraderValue}
       `.then((result: any) => Number(result[0]?.count || 0) + 1)
     }
