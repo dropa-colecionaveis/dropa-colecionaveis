@@ -529,8 +529,8 @@ export class UserStatsService {
       const { rankingService } = await import('./rankings')
       // Atualizar rankings de streak em background (não esperar)
       Promise.all([
-        rankingService.updateRanking('WEEKLY_ACTIVE', null, true),
-        rankingService.updateRanking('MONTHLY_ACTIVE', null, true)
+        rankingService.updateRanking('WEEKLY_ACTIVE', undefined, true),
+        rankingService.updateRanking('MONTHLY_ACTIVE', undefined, true)
       ]).catch(error => {
         console.warn('Failed to update streak rankings for new user:', error)
       })

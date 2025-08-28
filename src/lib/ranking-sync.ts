@@ -50,12 +50,12 @@ export class RankingSyncService {
         const monthlyRanking = userStat.user.rankings.find(r => r.category === 'MONTHLY_ACTIVE')
         
         // Verificar se deveria estar em WEEKLY_ACTIVE mas não está
-        if (!weeklyRanking && userStat.lastActivityAt >= weekAgo) {
+        if (!weeklyRanking && userStat.lastActivityAt && userStat.lastActivityAt >= weekAgo) {
           inconsistencies.push(`${userStat.user.email} deve estar em WEEKLY_ACTIVE`)
         }
         
         // Verificar se deveria estar em MONTHLY_ACTIVE mas não está
-        if (!monthlyRanking && userStat.lastActivityAt >= monthAgo) {
+        if (!monthlyRanking && userStat.lastActivityAt && userStat.lastActivityAt >= monthAgo) {
           inconsistencies.push(`${userStat.user.email} deve estar em MONTHLY_ACTIVE`)
         }
       }
@@ -69,8 +69,8 @@ export class RankingSyncService {
         
         console.log('🔄 Recalculando rankings de streak...')
         await Promise.all([
-          rankingService.updateRanking('WEEKLY_ACTIVE', null, true),
-          rankingService.updateRanking('MONTHLY_ACTIVE', null, true)
+          rankingService.updateRanking('WEEKLY_ACTIVE', undefined, true),
+          rankingService.updateRanking('MONTHLY_ACTIVE', undefined, true)
         ])
         
         console.log('✅ Rankings de streak recalculados')
