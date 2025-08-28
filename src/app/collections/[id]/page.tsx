@@ -302,7 +302,7 @@ export default function CollectionDetail({ params }: { params: { id: string } })
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
-      {(status === 'loading' || loading || profileLoading || statsLoading) && (
+      {(loading || profileLoading || statsLoading) && (
         <div className="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-blue-500 animate-pulse z-50"></div>
       )}
       
