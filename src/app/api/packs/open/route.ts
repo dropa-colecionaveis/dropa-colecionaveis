@@ -165,6 +165,14 @@ export async function POST(req: Request) {
     // Process stats and achievements in background (non-blocking) - same pattern as free packs
     setImmediate(async () => {
       try {
+        const { achievementEngine } = await import('@/lib/achievements')
+        const { achievementValidatorService } = await import('@/lib/achievement-validator')
+        
+        // Check if this is the user's first pack
+        const isFirstPack = await prisma.packOpening.count({
+          where: { userId: session.user.id }
+        }) === 1
+        
         // Process stats and achievements in parallel
         await Promise.allSettled([
           userStatsService.trackPackOpening(
@@ -178,8 +186,39 @@ export async function POST(req: Request) {
             selectedItem.id,
             selectedItem.rarity,
             true
-          )
+          ),
+          // Add missing achievement check for PACK_OPENED
+          achievementEngine.checkAchievements({
+            type: 'PACK_OPENED',
+            userId: session.user.id,
+            data: {
+              packId: pack.id,
+              packType: pack.type,
+              isFirstPack,
+              itemId: selectedItem.id,
+              itemRarity: selectedItem.rarity,
+              items: [{ 
+                id: selectedItem.id, 
+                rarity: selectedItem.rarity,
+                name: selectedItem.name 
+              }]
+            }
+          })
         ])
+        
+        // Clear activity cache to show new activity immediately
+        try {
+          const { clearActivityCache } = await import('@/app/api/user/recent-activity/route')
+          clearActivityCache(session.user.id)
+        } catch (cacheError) {
+          console.warn('Failed to clear activity cache:', cacheError)
+        }
+        
+        // Auto-validate achievements for new users (prevent missing achievements)
+        if (isFirstPack) {
+          achievementValidatorService.autoValidateAfterActivity(session.user.id, 'PACK_OPENED')
+        }
+        
       } catch (backgroundError) {
         console.error('Background processing error:', backgroundError)
       }

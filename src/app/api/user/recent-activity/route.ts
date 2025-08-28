@@ -17,6 +17,10 @@ export interface RecentActivity {
   }
 }
 
+// Cache for recent activities (3 minutes for better UX)
+const activityCache = new Map<string, { data: any, expireAt: number }>()
+const CACHE_TTL = 3 * 60 * 1000 // 3 minutes
+
 export async function GET(req: Request) {
   try {
     const { authOptions } = await import('@/lib/auth')
@@ -33,29 +37,76 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url)
     const limit = parseInt(searchParams.get('limit') || '20')
-
     const userId = session.user.id
+
+    // 🚀 CACHE CHECK: Return cached result if available
+    const cacheKey = `activities_${userId}_${limit}`
+    const now = Date.now()
+    const cached = activityCache.get(cacheKey)
+    
+    if (cached && cached.expireAt > now) {
+      const response = NextResponse.json({ ...cached.data, cached: true })
+      response.headers.set('X-Cache', 'HIT')
+      return response
+    }
+
     const activities: RecentActivity[] = []
 
-    // Fetch all activities in parallel using Promise.allSettled for better performance
+    // 🚀 OPTIMIZATION 1: Optimized pack openings with direct item include (prevents N+1)
+    const packOpenings = await prisma.packOpening.findMany({
+      where: { userId },
+      take: Math.min(limit, 15),
+      orderBy: { createdAt: 'desc' },
+      include: {
+        pack: {
+          select: { name: true, type: true }
+        },
+        // Include item data directly to prevent additional query
+        item: {
+          select: {
+            name: true,
+            rarity: true,
+            imageUrl: true,
+            collection: {
+              select: { name: true }
+            }
+          }
+        }
+      }
+    })
+
+    // Process pack openings (now O(1) complexity)
+    packOpenings.forEach(opening => {
+      if (opening.item) {
+        activities.push({
+          id: `pack_${opening.id}`,
+          type: 'PACK_OPENED',
+          timestamp: opening.createdAt,
+          description: `Abriu um pacote ${opening.pack.name} e recebeu ${opening.item.name}`,
+          data: {
+            pack: {
+              name: opening.pack.name,
+              type: opening.pack.type
+            },
+            item: {
+              name: opening.item.name,
+              rarity: opening.item.rarity,
+              imageUrl: opening.item.imageUrl,
+              collectionName: opening.item.collection?.name
+            }
+          }
+        })
+      }
+    })
+
+    // 🚀 OPTIMIZATION 2: Parallel execution for independent queries
     const [
-      packOpeningsResult,
       marketplaceTransactionsResult, 
       achievementsResult,
       completedCollectionsResult,
       creditPurchasesResult
     ] = await Promise.allSettled([
-      // 1. Pack Openings
-      prisma.packOpening.findMany({
-        where: { userId },
-        take: Math.min(limit, 10),
-        orderBy: { createdAt: 'desc' },
-        include: {
-          pack: true
-        }
-      }),
-      
-      // 2. Marketplace Transactions  
+      // 1. Marketplace Transactions (optimized with selective includes)
       prisma.marketplaceTransaction.findMany({
         where: {
           OR: [
@@ -66,30 +117,35 @@ export async function GET(req: Request) {
         },
         take: Math.min(limit, 10),
         orderBy: { completedAt: 'desc' },
-        include: {
+        select: {
+          id: true,
+          amount: true,
+          sellerId: true,
+          buyerId: true,
+          completedAt: true,
+          createdAt: true,
           listing: {
-            include: {
+            select: {
               userItem: {
-                include: {
+                select: {
                   item: {
-                    include: {
-                      collection: true
+                    select: {
+                      name: true,
+                      rarity: true,
+                      imageUrl: true,
+                      collection: { select: { name: true } }
                     }
                   }
                 }
               }
             }
           },
-          buyer: {
-            select: { name: true, email: true }
-          },
-          seller: {
-            select: { name: true, email: true }
-          }
+          buyer: { select: { name: true, email: true } },
+          seller: { select: { name: true, email: true } }
         }
       }),
 
-      // 3. Achievements
+      // 2. Achievements (optimized select)
       prisma.userAchievement.findMany({
         where: { 
           userId,
@@ -97,80 +153,53 @@ export async function GET(req: Request) {
         },
         take: Math.min(limit, 8),
         orderBy: { unlockedAt: 'desc' },
-        include: {
-          achievement: true
+        select: {
+          id: true,
+          unlockedAt: true,
+          achievement: {
+            select: {
+              name: true,
+              icon: true,
+              points: true
+            }
+          }
         }
       }),
 
-      // 4. Completed Collections
+      // 3. Completed Collections (optimized select)
       prisma.userCollection.findMany({
         where: { 
           userId,
-          NOT: {
-            completedAt: null
-          }
+          NOT: { completedAt: null }
         },
         take: Math.min(limit, 5),
         orderBy: { completedAt: 'desc' },
-        include: {
-          collection: true
+        select: {
+          id: true,
+          completedAt: true,
+          collection: {
+            select: { name: true }
+          }
         }
       }),
 
-      // 5. Credit Purchases
+      // 4. Credit Purchases (optimized select)
       prisma.transaction.findMany({
         where: { 
           userId,
           type: 'PURCHASE_CREDITS'
         },
         take: Math.min(limit, 5),
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          amount: true,
+          createdAt: true
+        }
       })
     ])
 
-    // Process pack openings
-    if (packOpeningsResult.status === 'fulfilled') {
-      const packOpenings = packOpeningsResult.value
-      
-      // Fetch items for pack openings if needed
-      if (packOpenings.length > 0) {
-        try {
-          const itemIds = packOpenings.map(opening => opening.itemId).filter(Boolean)
-          const items = await prisma.item.findMany({
-            where: { id: { in: itemIds } },
-            include: { collection: true }
-          })
-          
-          const itemsMap = new Map(items.map(item => [item.id, item]))
-          
-          packOpenings.forEach(opening => {
-            const item = itemsMap.get(opening.itemId)
-            if (item) {
-              activities.push({
-                id: `pack_${opening.id}`,
-                type: 'PACK_OPENED',
-                timestamp: opening.createdAt,
-                description: `Abriu um pacote ${opening.pack.name} e recebeu ${item.name}`,
-                data: {
-                  pack: {
-                    name: opening.pack.name,
-                    type: opening.pack.type
-                  },
-                  item: {
-                    name: item.name,
-                    rarity: item.rarity,
-                    imageUrl: item.imageUrl,
-                    collectionName: item.collection?.name
-                  }
-                }
-              })
-            }
-          })
-        } catch (error) {
-          console.error('Error fetching pack opening items:', error)
-        }
-      }
-    }
+    // 🚀 Pack openings already processed above (eliminated N+1 query)
 
     // Process marketplace transactions
     if (marketplaceTransactionsResult.status === 'fulfilled') {
@@ -261,11 +290,34 @@ export async function GET(req: Request) {
       .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
       .slice(0, limit)
 
-    return NextResponse.json({
+    const result = {
       activities: sortedActivities,
       total: sortedActivities.length,
-      hasMore: activities.length > limit
+      hasMore: activities.length > limit,
+      cached: false
+    }
+
+    // 🚀 CACHE: Store result for faster subsequent requests
+    activityCache.set(cacheKey, {
+      data: result,
+      expireAt: now + CACHE_TTL
     })
+
+    // Clean old cache entries periodically
+    if (activityCache.size > 50) {
+      const entries = Array.from(activityCache.entries())
+      entries.forEach(([key, value]) => {
+        if (value.expireAt <= now) {
+          activityCache.delete(key)
+        }
+      })
+    }
+
+    const response = NextResponse.json(result)
+    response.headers.set('X-Cache', 'MISS')
+    response.headers.set('Cache-Control', 'private, max-age=180') // 3 minutes browser cache
+    
+    return response
 
   } catch (error) {
     console.error('Error fetching recent activities:', error)
@@ -274,4 +326,20 @@ export async function GET(req: Request) {
       { status: 500 }
     )
   }
+}
+
+// 🚀 Utility function to clear cache when activities are updated
+export function clearActivityCache(userId: string) {
+  const keysToDelete = Array.from(activityCache.keys()).filter(key => 
+    key.includes(`activities_${userId}`)
+  )
+  keysToDelete.forEach(key => activityCache.delete(key))
+  console.log(`🗑️ Cleared ${keysToDelete.length} activity cache entries for user ${userId}`)
+}
+
+// 🚀 Clear cache on server restart/deployment
+export function clearAllActivityCache() {
+  const size = activityCache.size
+  activityCache.clear()
+  console.log(`🗑️ Cleared ${size} activity cache entries`)
 }

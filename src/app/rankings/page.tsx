@@ -189,22 +189,42 @@ export default function Rankings() {
     signOut({ callbackUrl: '/' })
   }
 
-  const fetchRankings = async () => {
+  const fetchRankings = async (noCache = false) => {
     try {
       setRankingsLoading(true)
       
       if (selectedCategory === 'GLOBAL') {
         await fetchGlobalRankings()
       } else {
-        const response = await fetch(`/api/rankings/${selectedCategory}?limit=100`, {
-          next: { 
-            revalidate: 120, // Cache for 2 minutes
-            tags: [`rankings-${selectedCategory}`] 
+        const url = `/api/rankings/${selectedCategory}?limit=100${noCache ? `&_t=${Date.now()}` : ''}`
+        // Categorias de streak têm cache menor pois são mais dinâmicas
+        const isStreakCategory = ['WEEKLY_ACTIVE', 'MONTHLY_ACTIVE'].includes(selectedCategory)
+        const cacheTime = isStreakCategory ? 30 : 120 // 30s para streak, 2min para outros
+        
+        const fetchOptions = noCache ? 
+          { 
+            cache: 'no-store' as RequestCache,
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0'
+            }
+          } : 
+          {
+            next: { 
+              revalidate: cacheTime,
+              tags: [`rankings-${selectedCategory}`] 
+            }
           }
-        })
+        
+        const response = await fetch(url, fetchOptions)
         if (response.ok) {
           const data = await response.json()
-          console.log('Rankings data:', data)
+          if (noCache) {
+            console.log(`🔄 Rankings fetched without cache for ${selectedCategory}:`, data)
+          } else {
+            console.log('Rankings data:', data)
+          }
           setRankings(data.rankings || [])
           setUserPosition(data.userPosition || 0)
           
@@ -342,6 +362,16 @@ export default function Rankings() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'update', category: 'COLLECTOR', forceUpdate: true })
+          }),
+          fetch('/api/rankings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'update', category: 'WEEKLY_ACTIVE', forceUpdate: true })
+          }),
+          fetch('/api/rankings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'update', category: 'MONTHLY_ACTIVE', forceUpdate: true })
           })
         ])
         
@@ -351,7 +381,7 @@ export default function Rankings() {
             method: 'POST'
           })
           if (response.ok) {
-            console.log('✅ Cache cleared')
+            console.log('✅ Global cache cleared')
           }
         } catch (error) {
           console.log('Cache clear error (non-critical):', error)
@@ -362,20 +392,20 @@ export default function Rankings() {
           fetch('/api/rankings', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'update', category: 'WEEKLY_ACTIVE' })
+            body: JSON.stringify({ action: 'update', category: 'WEEKLY_ACTIVE', forceUpdate: true })
           }),
           fetch('/api/rankings', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'update', category: 'MONTHLY_ACTIVE' })
+            body: JSON.stringify({ action: 'update', category: 'MONTHLY_ACTIVE', forceUpdate: true })
           })
         ])
       } else {
-        // Para outras categorias, atualizar apenas a selecionada
+        // Para outras categorias individuais, forçar atualização
         const response = await fetch('/api/rankings', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'update', category: selectedCategory })
+          body: JSON.stringify({ action: 'update', category: selectedCategory, forceUpdate: true })
         })
         
         if (!response.ok) {
@@ -384,11 +414,39 @@ export default function Rankings() {
         }
       }
       
-      // Recarregar rankings após atualização
-      await fetchRankings()
+      // Aguardar mais tempo para garantir propagação dos dados
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // Forçar limpeza de estados antes de buscar novos dados
+      if (selectedCategory !== 'GLOBAL') {
+        setRankings([])
+        setUserPosition(0)
+      } else {
+        setGlobalRankings([])
+        setUserGlobalPosition(null)
+      }
+      
+      // Aguardar render
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      // Recarregar rankings após atualização SEM CACHE
+      await fetchRankings(true) // noCache = true
       if (showGlobalRanking) {
         await fetchGlobalRankings()
       }
+      
+      console.log(`✅ ${selectedCategory} ranking updated successfully`)
+      
+      // Se ainda não atualizou após 2 segundos, forçar reload da página
+      setTimeout(() => {
+        if (selectedCategory !== 'GLOBAL' && rankings.length === 0) {
+          console.log('🔄 Rankings still empty, forcing page reload...')
+          window.location.reload()
+        } else if (selectedCategory === 'GLOBAL' && globalRankings.length === 0) {
+          console.log('🔄 Global rankings still empty, forcing page reload...')
+          window.location.reload()
+        }
+      }, 2000)
     } catch (error) {
       console.error('Error updating rankings:', error)
     } finally {
@@ -769,6 +827,15 @@ export default function Rankings() {
                   Leaderboard - {currentCategory.name}
                 </h3>
                 
+                {/* Botão Fix para cada categoria */}
+                <button
+                  onClick={forceUpdateRankings}
+                  disabled={updateLoading}
+                  className="px-3 py-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 disabled:bg-gray-600 text-white rounded text-xs font-medium shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200"
+                  title={`Atualizar ranking ${currentCategory.name}`}
+                >
+                  {updateLoading ? '🔄' : '🔄 Atualizar'}
+                </button>
               </div>
             </div>
             

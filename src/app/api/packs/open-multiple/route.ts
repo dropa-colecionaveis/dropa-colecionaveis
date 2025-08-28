@@ -229,8 +229,15 @@ export async function POST(req: Request) {
     // Process stats and achievements in background (non-blocking) - same pattern as free packs
     setImmediate(async () => {
       try {
+        const { achievementEngine } = await import('@/lib/achievements')
+        
+        // Check if this includes the user's first pack
+        const userPackCount = await prisma.packOpening.count({
+          where: { userId: session.user.id }
+        })
+        
         // Process all stats and achievements in parallel for maximum speed
-        const allStatsPromises = result.items.flatMap(item => [
+        const allStatsPromises = result.items.flatMap((item, index) => [
           userStatsService.trackPackOpening(
             session.user.id,
             pack.id,
@@ -244,8 +251,30 @@ export async function POST(req: Request) {
             true
           )
         ])
+        
+        // Add achievement checks for each pack opened
+        const achievementPromises = result.items.map((item, index) => {
+          const isFirstPack = (userPackCount - result.items.length + index) === 0
+          
+          return achievementEngine.checkAchievements({
+            type: 'PACK_OPENED',
+            userId: session.user.id,
+            data: {
+              packId: pack.id,
+              packType: pack.type,
+              isFirstPack,
+              itemId: item.id,
+              itemRarity: item.rarity,
+              items: [{ 
+                id: item.id, 
+                rarity: item.rarity,
+                name: item.name 
+              }]
+            }
+          })
+        })
 
-        await Promise.allSettled(allStatsPromises)
+        await Promise.allSettled([...allStatsPromises, ...achievementPromises])
       } catch (backgroundError) {
         console.error('Background processing error:', backgroundError)
       }

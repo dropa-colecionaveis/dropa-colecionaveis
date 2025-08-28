@@ -35,9 +35,23 @@ export class UserStatsService {
         userId,
         totalXP: 0,
         level: 1,
+        currentStreak: 1,        // Primeiro dia = streak 1
+        longestStreak: 1,        // Primeiro dia = longest 1
         lastActivityAt: new Date()
       }
     })
+  }
+
+  // Invalidar cache de rankings relacionados à atividade
+  private async invalidateActivityCache(): Promise<void> {
+    try {
+      const { revalidateTag } = await import('next/cache')
+      revalidateTag('rankings-WEEKLY_ACTIVE')
+      revalidateTag('rankings-MONTHLY_ACTIVE')
+    } catch (error) {
+      // Não é crítico se falhar
+      console.warn('Failed to invalidate activity cache:', error)
+    }
   }
 
   // Atualizar atividade do usuário
@@ -57,6 +71,14 @@ export class UserStatsService {
     const lastActivity = userStats.lastActivityAt
     const wasActiveToday = lastActivity && lastActivity >= today
 
+    // Verificar se é um usuário recém-criado (criado hoje)
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { createdAt: true }
+    })
+    
+    const isNewUser = user && user.createdAt >= today
+    
     // Atualizar streak se não foi ativo hoje
     if (!wasActiveToday) {
       const yesterday = new Date(today)
@@ -64,8 +86,12 @@ export class UserStatsService {
       
       let newStreak = 1
       
+      // Para usuários novos, manter o streak inicial se já tem um
+      if (isNewUser && userStats.currentStreak > 0) {
+        newStreak = userStats.currentStreak
+      }
       // Se foi ativo ontem, continua o streak
-      if (lastActivity && lastActivity >= yesterday) {
+      else if (lastActivity && lastActivity >= yesterday) {
         newStreak = (userStats.currentStreak || 0) + 1
       }
 
@@ -80,6 +106,9 @@ export class UserStatsService {
           lastActivityAt: now
         }
       })
+      
+      // Invalidar cache se o streak mudou (pode afetar rankings)
+      await this.invalidateActivityCache()
     } else {
       // Apenas atualizar última atividade
       await prisma.userStats.update({
@@ -491,6 +520,23 @@ export class UserStatsService {
     }
 
     await achievementEngine.checkAchievements(event)
+
+    // Invalidar cache e atualizar rankings de atividade para novos usuários
+    await this.invalidateActivityCache()
+    
+    // Atualizar rankings de streak para incluir o novo usuário
+    try {
+      const { rankingService } = await import('./rankings')
+      // Atualizar rankings de streak em background (não esperar)
+      Promise.all([
+        rankingService.updateRanking('WEEKLY_ACTIVE', null, true),
+        rankingService.updateRanking('MONTHLY_ACTIVE', null, true)
+      ]).catch(error => {
+        console.warn('Failed to update streak rankings for new user:', error)
+      })
+    } catch (error) {
+      console.warn('Failed to import ranking service:', error)
+    }
 
     // XP inicial removido - o usuário ganha XP através da conquista "Bem-vindo!"
   }

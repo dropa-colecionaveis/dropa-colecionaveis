@@ -70,8 +70,15 @@ export async function POST(req: Request) {
     if (action === 'update') {
       if (category) {
         await rankingService.updateRanking(category as RankingCategory, seasonId, forceUpdate)
+        // Invalidar cache desta categoria
+        const { revalidateTag } = await import('next/cache')
+        revalidateTag(`rankings-${category}`)
       } else {
         await rankingService.updateAllRankings()
+        // Invalidar cache de todas as categorias
+        const { revalidateTag } = await import('next/cache')
+        const categories = ['TOTAL_XP', 'PACK_OPENER', 'COLLECTOR', 'TRADER', 'WEEKLY_ACTIVE', 'MONTHLY_ACTIVE']
+        categories.forEach(cat => revalidateTag(`rankings-${cat}`))
       }
 
       return NextResponse.json({
