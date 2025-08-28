@@ -7,6 +7,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { getRarityName } from '@/lib/rarity-system'
 import { useUserRankings } from '@/hooks/useUserRankings'
+import { useAdmin } from '@/hooks/useAdmin'
+import { HeaderStatsSkeleton, RankingsSkeleton } from '@/components/SkeletonLoader'
 
 interface UserMarketplaceListing {
   id: string
@@ -130,14 +132,18 @@ export default function MyMarketplaceListings() {
   const [saving, setSaving] = useState(false)
   const [userProfile, setUserProfile] = useState<any>(null)
   const [userStats, setUserStats] = useState<any>(null)
+  const [profileLoading, setProfileLoading] = useState(true)
+  const [statsLoading, setStatsLoading] = useState(true)
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const { bestRanking, loading: rankingLoading } = useUserRankings()
+  const { isAdmin, isSuperAdmin } = useAdmin()
 
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin')
     } else if (status === 'authenticated') {
       fetchUserProfile()
+      fetchUserStats()
       if (activeTab === 'sales') {
         fetchListings(true) // Só mostrar loading no carregamento inicial
       } else {
@@ -168,7 +174,10 @@ export default function MyMarketplaceListings() {
         params.append('status', selectedStatus)
       }
 
-      const response = await fetch(`/api/user/marketplace/listings?${params}`)
+      const response = await fetch(`/api/user/marketplace/listings?${params}`, {
+        headers: { 'Cache-Control': 'max-age=120' },
+        cache: 'default'
+      })
       if (response.ok) {
         const data = await response.json()
         setListings(data.listings)
@@ -193,7 +202,10 @@ export default function MyMarketplaceListings() {
         type: 'purchases'
       })
 
-      const response = await fetch(`/api/marketplace/transactions?${params}`)
+      const response = await fetch(`/api/marketplace/transactions?${params}`, {
+        headers: { 'Cache-Control': 'max-age=180' },
+        cache: 'default'
+      })
       if (response.ok) {
         const data = await response.json()
         setPurchases(data.transactions)
@@ -264,22 +276,37 @@ export default function MyMarketplaceListings() {
 
   const fetchUserProfile = async () => {
     try {
-      const [profileResponse, statsResponse] = await Promise.all([
-        fetch('/api/user/profile'),
-        fetch('/api/user/stats')
-      ])
+      setProfileLoading(true)
+      const profileResponse = await fetch('/api/user/profile', {
+        headers: { 'Cache-Control': 'max-age=300' }
+      })
       
       if (profileResponse.ok) {
         const profileData = await profileResponse.json()
         setUserProfile(profileData)
       }
+    } catch (error) {
+      console.error('Error fetching user profile:', error)
+    } finally {
+      setProfileLoading(false)
+    }
+  }
+
+  const fetchUserStats = async () => {
+    try {
+      setStatsLoading(true)
+      const statsResponse = await fetch('/api/user/stats', {
+        headers: { 'Cache-Control': 'max-age=180' }
+      })
       
       if (statsResponse.ok) {
         const statsData = await statsResponse.json()
         setUserStats(statsData)
       }
     } catch (error) {
-      console.error('Error fetching user data:', error)
+      console.error('Error fetching user stats:', error)
+    } finally {
+      setStatsLoading(false)
     }
   }
 
@@ -325,16 +352,18 @@ export default function MyMarketplaceListings() {
     })
   }
 
-  if (status === 'loading' || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
-        <div className="text-white text-xl">Carregando...</div>
-      </div>
-    )
+  // Handle redirect for unauthenticated users
+  if (status === 'unauthenticated') {
+    router.push('/auth/signin')
+    return null
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+      {status === 'loading' && (
+        <div className="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-blue-500 animate-pulse z-50"></div>
+      )}
+      
       {/* Header */}
       <header className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 backdrop-blur-lg border-b border-purple-500/30 shadow-xl">
         <div className="container mx-auto px-4 py-3">
@@ -363,57 +392,63 @@ export default function MyMarketplaceListings() {
 
             {/* Stats and Actions */}
             <div className="flex items-center space-x-4">
-              {/* Level and XP */}
-              {userStats && (
-                <div className="bg-gradient-to-r from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-400/30 hover:border-purple-300/50 transition-colors duration-200">
-                  <Link href="/achievements" className="flex items-center space-x-3 group">
-                    <div className="text-center">
-                      <div className="text-purple-300 font-bold text-sm group-hover:text-purple-200 transition-colors">⭐ Nível {userStats.level || 1}</div>
-                      <div className="text-xs text-gray-300 group-hover:text-purple-200 transition-colors">{userStats.totalXP || 0} XP</div>
+              {(profileLoading || statsLoading || rankingLoading) || (!userStats && !userProfile) ? (
+                <HeaderStatsSkeleton />
+              ) : (
+                <>
+                  {/* Level and XP */}
+                  {userStats && (
+                    <div className="bg-gradient-to-r from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-400/30 hover:border-purple-300/50 transition-colors duration-200">
+                      <Link href="/achievements" className="flex items-center space-x-3 group">
+                        <div className="text-center">
+                          <div className="text-purple-300 font-bold text-sm group-hover:text-purple-200 transition-colors">⭐ Nível {userStats.level || 1}</div>
+                          <div className="text-xs text-gray-300 group-hover:text-purple-200 transition-colors">{userStats.totalXP || 0} XP</div>
+                        </div>
+                      </Link>
                     </div>
-                  </Link>
-                </div>
-              )}
+                  )}
 
-              {/* User Ranking */}
-              {!rankingLoading && bestRanking.position > 0 && (
-                <div className="bg-gradient-to-r from-indigo-600/30 to-cyan-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-indigo-400/30 hover:border-indigo-300/50 transition-colors duration-200">
-                  <Link href="/rankings" className="flex items-center space-x-3 group">
-                    <div className="text-center">
-                      <div className="text-indigo-300 font-bold text-sm flex items-center">
-                        <span className="mr-1">📊</span>
-                        <span>#{bestRanking.position}</span>
-                        <span className="ml-1 text-xs opacity-75">({Math.round(bestRanking.percentage)}%)</span>
-                      </div>
-                      <div className="text-xs text-gray-300 group-hover:text-indigo-200 transition-colors">
-                        Ranking Global
-                      </div>
+                  {/* User Ranking */}
+                  {!rankingLoading && bestRanking.position > 0 && (
+                    <div className="bg-gradient-to-r from-indigo-600/30 to-cyan-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-indigo-400/30 hover:border-indigo-300/50 transition-colors duration-200">
+                      <Link href="/rankings" className="flex items-center space-x-3 group">
+                        <div className="text-center">
+                          <div className="text-indigo-300 font-bold text-sm flex items-center">
+                            <span className="mr-1">📊</span>
+                            <span>#{bestRanking.position}</span>
+                            <span className="ml-1 text-xs opacity-75">({Math.round(bestRanking.percentage)}%)</span>
+                          </div>
+                          <div className="text-xs text-gray-300 group-hover:text-indigo-200 transition-colors">
+                            Ranking Global
+                          </div>
+                        </div>
+                      </Link>
                     </div>
-                  </Link>
-                </div>
-              )}
-              
-              {/* Credits */}
-              <div className="bg-gradient-to-r from-yellow-600/30 to-orange-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-yellow-400/30 hover:border-yellow-300/50 transition-colors duration-200">
-                <Link href="/credits/purchase" className="flex items-center space-x-2 group">
-                  <span className="text-yellow-300 text-lg group-hover:scale-110 transition-transform duration-200">💰</span>
-                  <div>
-                    <div className="text-yellow-300 font-bold group-hover:text-yellow-200 transition-colors">{userProfile?.credits || 0}</div>
-                    <div className="text-xs text-yellow-200 group-hover:text-yellow-100 transition-colors">créditos</div>
+                  )}
+                  
+                  {/* Credits */}
+                  <div className="bg-gradient-to-r from-yellow-600/30 to-orange-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-yellow-400/30 hover:border-yellow-300/50 transition-colors duration-200">
+                    <Link href="/credits/purchase" className="flex items-center space-x-2 group">
+                      <span className="text-yellow-300 text-lg group-hover:scale-110 transition-transform duration-200">💰</span>
+                      <div>
+                        <div className="text-yellow-300 font-bold group-hover:text-yellow-200 transition-colors">{userProfile?.credits || 0}</div>
+                        <div className="text-xs text-yellow-200 group-hover:text-yellow-100 transition-colors">créditos</div>
+                      </div>
+                    </Link>
                   </div>
-                </Link>
-              </div>
+                </>
+              )}
               
               {/* Quick Actions */}
               <div className="flex items-center space-x-2">
                 {/* Admin Link */}
-                {session?.user?.email === 'admin@admin.com' && (
+                {isAdmin && (
                   <Link
                     href="/admin"
                     className="p-2 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white rounded-lg transition-all duration-200 text-sm font-medium shadow-lg hover:shadow-xl hover:scale-105"
-                    title="Admin"
+                    title={isSuperAdmin ? "Super Admin" : "Admin"}
                   >
-                    🔧
+                    {isSuperAdmin ? '👑' : '🔧'}
                   </Link>
                 )}
                 
@@ -559,9 +594,45 @@ export default function MyMarketplaceListings() {
           )}
 
           {/* Sales Tab Content */}
-          {activeTab === 'sales' && listings.length > 0 && (
+          {activeTab === 'sales' && (
             <div className="space-y-4">
-              {listings.map((listing) => (
+              {loading && listings.length === 0 ? (
+                // Listings skeleton loading
+                <div className="space-y-4">
+                  {Array.from({ length: 3 }, (_, i) => (
+                    <div key={i} className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-6 border-2 border-gray-500/30 animate-pulse">
+                      <div className="flex flex-col lg:flex-row lg:items-center gap-6">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-20 h-20 bg-gray-600 rounded-lg"></div>
+                          <div>
+                            <div className="w-32 h-6 bg-gray-600 rounded mb-2"></div>
+                            <div className="w-20 h-4 bg-gray-600 rounded"></div>
+                          </div>
+                        </div>
+                        <div className="flex-1 grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                          <div>
+                            <div className="w-12 h-4 bg-gray-600 rounded mb-1"></div>
+                            <div className="w-20 h-6 bg-gray-600 rounded"></div>
+                          </div>
+                          <div>
+                            <div className="w-12 h-4 bg-gray-600 rounded mb-1"></div>
+                            <div className="w-16 h-4 bg-gray-600 rounded"></div>
+                          </div>
+                          <div>
+                            <div className="w-16 h-4 bg-gray-600 rounded mb-1"></div>
+                            <div className="w-24 h-4 bg-gray-600 rounded"></div>
+                          </div>
+                        </div>
+                        <div className="flex space-x-2">
+                          <div className="w-16 h-8 bg-gray-600 rounded"></div>
+                          <div className="w-16 h-8 bg-gray-600 rounded"></div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : listings.length > 0 ? (
+                listings.map((listing) => (
                 <div
                   key={listing.id}
                   className={`group bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-6 border-2 ${getRarityColor(listing.userItem.item.rarity)} hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-[1.02]`}
@@ -662,33 +733,69 @@ export default function MyMarketplaceListings() {
                     </div>
                   )}
                 </div>
-              ))}
-            </div>
-          )}
-
-          {/* Empty state for sales */}
-          {activeTab === 'sales' && listings.length === 0 && (
-            <div className="text-center py-16">
-              <div className="text-6xl mb-4">📦</div>
-              <h2 className="text-2xl font-bold text-white mb-4">
-                Nenhuma listagem encontrada
-              </h2>
-              <p className="text-gray-300 mb-8">
-                Você ainda não tem itens listados no marketplace.
-              </p>
-              <Link
-                href="/inventory"
-                className="inline-block px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition duration-200"
-              >
-                Ir para Inventário
-              </Link>
+              ))
+              ) : (
+                // Empty state for sales when not loading
+                !loading && (
+                  <div className="text-center py-16">
+                    <div className="text-6xl mb-4">📦</div>
+                    <h2 className="text-2xl font-bold text-white mb-4">
+                      Nenhuma listagem encontrada
+                    </h2>
+                    <p className="text-gray-300 mb-8">
+                      Você ainda não tem itens listados no marketplace.
+                    </p>
+                    <Link
+                      href="/inventory"
+                      className="inline-block px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition duration-200"
+                    >
+                      Ir para Inventário
+                    </Link>
+                  </div>
+                )
+              )}
             </div>
           )}
 
           {/* Purchases Tab Content */}
-          {activeTab === 'purchases' && purchases.length > 0 && (
+          {activeTab === 'purchases' && (
             <div className="space-y-4">
-              {purchases.map((purchase) => (
+              {loading && purchases.length === 0 ? (
+                // Purchases skeleton loading
+                <div className="space-y-4">
+                  {Array.from({ length: 3 }, (_, i) => (
+                    <div key={i} className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-6 border-2 border-gray-500/30 animate-pulse">
+                      <div className="flex flex-col lg:flex-row lg:items-center gap-6">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-20 h-20 bg-gray-600 rounded-lg"></div>
+                          <div>
+                            <div className="w-32 h-6 bg-gray-600 rounded mb-2"></div>
+                            <div className="w-20 h-4 bg-gray-600 rounded"></div>
+                          </div>
+                        </div>
+                        <div className="flex-1 grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          <div>
+                            <div className="w-16 h-4 bg-gray-600 rounded mb-1"></div>
+                            <div className="w-20 h-6 bg-gray-600 rounded"></div>
+                          </div>
+                          <div>
+                            <div className="w-16 h-4 bg-gray-600 rounded mb-1"></div>
+                            <div className="w-24 h-4 bg-gray-600 rounded"></div>
+                          </div>
+                          <div>
+                            <div className="w-20 h-4 bg-gray-600 rounded mb-1"></div>
+                            <div className="w-28 h-4 bg-gray-600 rounded"></div>
+                          </div>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="w-20 h-6 bg-gray-600 rounded-full"></div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : purchases.length > 0 ? (
+                purchases.map((purchase) => (
                 <div
                   key={purchase.id}
                   className={`group bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-6 border-2 ${getRarityColor(purchase.listing.userItem.item.rarity)} hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-[1.02]`}
@@ -766,26 +873,27 @@ export default function MyMarketplaceListings() {
                     </div>
                   )}
                 </div>
-              ))}
-            </div>
-          )}
-
-          {/* Empty state for purchases */}
-          {activeTab === 'purchases' && purchases.length === 0 && (
-            <div className="text-center py-16">
-              <div className="text-6xl mb-4">🛒</div>
-              <h2 className="text-2xl font-bold text-white mb-4">
-                Nenhuma compra encontrada
-              </h2>
-              <p className="text-gray-300 mb-8">
-                Você ainda não comprou nenhum item no marketplace.
-              </p>
-              <Link
-                href="/marketplace"
-                className="inline-block px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition duration-200"
-              >
-                Explorar Marketplace
-              </Link>
+              ))
+              ) : (
+                // Empty state for purchases when not loading
+                !loading && (
+                  <div className="text-center py-16">
+                    <div className="text-6xl mb-4">🛒</div>
+                    <h2 className="text-2xl font-bold text-white mb-4">
+                      Nenhuma compra encontrada
+                    </h2>
+                    <p className="text-gray-300 mb-8">
+                      Você ainda não comprou nenhum item no marketplace.
+                    </p>
+                    <Link
+                      href="/marketplace"
+                      className="inline-block px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition duration-200"
+                    >
+                      Explorar Marketplace
+                    </Link>
+                  </div>
+                )
+              )}
             </div>
           )}
 

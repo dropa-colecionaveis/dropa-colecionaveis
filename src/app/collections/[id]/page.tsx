@@ -1,10 +1,14 @@
 'use client'
 
-import { useSession } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { getRarityName } from '@/lib/rarity-system'
+import { useUserRankings } from '@/hooks/useUserRankings'
+import { useAdmin } from '@/hooks/useAdmin'
+import { HeaderStatsSkeleton } from '@/components/SkeletonLoader'
 
 interface Item {
   id: string
@@ -59,12 +63,21 @@ export default function CollectionDetail({ params }: { params: { id: string } })
   const [loading, setLoading] = useState(true)
   const [selectedRarity, setSelectedRarity] = useState<string>('ALL')
   const [selectedItem, setSelectedItem] = useState<Item | null>(null)
+  const [userProfile, setUserProfile] = useState<any>(null)
+  const [userStats, setUserStats] = useState<any>(null)
+  const [profileLoading, setProfileLoading] = useState(true)
+  const [statsLoading, setStatsLoading] = useState(true)
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
+  const { bestRanking, loading: rankingLoading } = useUserRankings()
+  const { isAdmin, isSuperAdmin } = useAdmin()
 
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin')
     } else if (status === 'authenticated') {
       fetchCollection()
+      fetchUserProfile()
+      fetchUserStats()
     }
   }, [status, router, params.id])
 
@@ -82,6 +95,47 @@ export default function CollectionDetail({ params }: { params: { id: string } })
     } finally {
       setLoading(false)
     }
+  }
+
+  const fetchUserProfile = async () => {
+    try {
+      setProfileLoading(true)
+      const profileResponse = await fetch('/api/user/profile', {
+        headers: { 'Cache-Control': 'max-age=180' }
+      })
+      
+      if (profileResponse.ok) {
+        const profileData = await profileResponse.json()
+        setUserProfile(profileData)
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error)
+    } finally {
+      setProfileLoading(false)
+    }
+  }
+
+  const fetchUserStats = async () => {
+    try {
+      setStatsLoading(true)
+      const statsResponse = await fetch('/api/user/stats', {
+        headers: { 'Cache-Control': 'max-age=180' }
+      })
+      
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json()
+        setUserStats(statsData)
+      }
+    } catch (error) {
+      console.error('Error fetching user stats:', error)
+    } finally {
+      setStatsLoading(false)
+    }
+  }
+
+  const handleLogout = () => {
+    setShowLogoutModal(false)
+    signOut({ callbackUrl: '/' })
   }
 
   const getRarityColor = (rarity: string) => {
@@ -145,8 +199,87 @@ export default function CollectionDetail({ params }: { params: { id: string } })
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
-        <div className="text-white text-xl">Carregando...</div>
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+        <div className="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-blue-500 animate-pulse z-50"></div>
+        
+        {/* Header Skeleton */}
+        <header className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 backdrop-blur-lg border-b border-purple-500/30 shadow-xl">
+          <div className="container mx-auto px-4 py-3">
+            <div className="flex items-center justify-between">
+              {/* Logo Section */}
+              <div className="flex items-center space-x-4">
+                <div className="w-[120px] h-[60px] bg-gray-700/50 rounded animate-pulse"></div>
+                <div className="hidden md:block">
+                  <div className="w-32 h-5 bg-gray-700/50 rounded animate-pulse mb-2"></div>
+                  <div className="w-48 h-4 bg-gray-700/50 rounded animate-pulse"></div>
+                </div>
+              </div>
+              {/* Header Stats Skeleton */}
+              <HeaderStatsSkeleton />
+            </div>
+          </div>
+        </header>
+
+        <main className="container mx-auto px-4 py-8">
+          <div className="max-w-7xl mx-auto">
+            {/* Collection Header Skeleton */}
+            <div className="bg-gradient-to-br from-gray-500/20 to-slate-500/20 backdrop-blur-lg rounded-lg p-8 mb-8">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
+                <div className="flex items-center space-x-4 mb-4 md:mb-0">
+                  <div className="w-16 h-16 bg-gray-700/50 rounded animate-pulse"></div>
+                  <div>
+                    <div className="w-48 h-8 bg-gray-700/50 rounded animate-pulse mb-2"></div>
+                    <div className="w-32 h-5 bg-gray-700/50 rounded animate-pulse mb-2"></div>
+                    <div className="w-64 h-4 bg-gray-700/50 rounded animate-pulse"></div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="w-16 h-8 bg-gray-700/50 rounded animate-pulse mb-1"></div>
+                  <div className="w-20 h-4 bg-gray-700/50 rounded animate-pulse"></div>
+                </div>
+              </div>
+              <div className="mt-6">
+                <div className="w-full h-4 bg-gray-700/50 rounded animate-pulse"></div>
+              </div>
+            </div>
+
+            {/* Stats Cards Skeleton */}
+            <div className="grid md:grid-cols-5 gap-4 mb-8">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="backdrop-blur-lg rounded-lg p-4 border-2 bg-gray-500/20 border-gray-500">
+                  <div className="text-center">
+                    <div className="w-12 h-6 bg-gray-700/50 rounded animate-pulse mx-auto mb-2"></div>
+                    <div className="w-16 h-4 bg-gray-700/50 rounded animate-pulse mx-auto mb-2"></div>
+                    <div className="w-10 h-4 bg-gray-700/50 rounded animate-pulse mx-auto"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Filter Buttons Skeleton */}
+            <div className="mb-6">
+              <div className="flex flex-wrap gap-2">
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                  <div key={i} className="w-20 h-10 bg-gray-700/50 rounded-lg animate-pulse"></div>
+                ))}
+              </div>
+            </div>
+
+            {/* Items Grid Skeleton */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+              {Array.from({ length: 20 }).map((_, i) => (
+                <div key={i} className="backdrop-blur-lg rounded-lg p-4 border-2 bg-gray-800/50 border-gray-600">
+                  <div className="text-center">
+                    <div className="w-20 h-20 mx-auto bg-gray-700/50 rounded-lg mb-3 animate-pulse"></div>
+                    <div className="w-24 h-4 bg-gray-700/50 rounded animate-pulse mx-auto mb-2"></div>
+                    <div className="w-16 h-6 bg-gray-700/50 rounded-full animate-pulse mx-auto mb-2"></div>
+                    <div className="w-20 h-3 bg-gray-700/50 rounded animate-pulse mx-auto"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </main>
       </div>
     )
   }
@@ -169,20 +302,107 @@ export default function CollectionDetail({ params }: { params: { id: string } })
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+      {(status === 'loading' || loading || profileLoading || statsLoading) && (
+        <div className="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-blue-500 animate-pulse z-50"></div>
+      )}
+      
       {/* Header */}
-      <header className="bg-black/20 backdrop-blur-lg border-b border-white/10">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/dashboard" className="group">
-            <div className="flex items-center space-x-3 group-hover:scale-105 transition-all duration-300">
-              <img 
-                src="/Dropa!.png" 
-                alt="Dropa!" 
-                className="h-8 w-auto object-contain group-hover:animate-pulse"
-              />
+      <header className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 backdrop-blur-lg border-b border-purple-500/30 shadow-xl">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            {/* Logo Section */}
+            <div className="flex items-center space-x-4">
+              <Link href="/dashboard" className="flex items-center">
+                <Image
+                  src="/Dropa!.png"
+                  alt="Dropa!"
+                  width={120}
+                  height={60}
+                  className="drop-shadow-lg filter drop-shadow-[0_0_10px_rgba(168,85,247,0.3)] hover:scale-105 transition-transform duration-300"
+                  priority
+                />
+              </Link>
+              
+              {/* Page Title */}
+              <div className="hidden md:block">
+                <div className="text-white font-medium">
+                  📚 <span className="text-purple-300">Detalhes da Coleção</span>
+                </div>
+                <div className="text-gray-400 text-sm">Visualize seu progresso e itens</div>
+              </div>
             </div>
-          </Link>
-          <div className="text-white">
-            Olá, {session?.user?.name || session?.user?.email}
+
+            {/* Stats and Actions */}
+            <div className="flex items-center space-x-4">
+              {(profileLoading || statsLoading || rankingLoading) || (!userStats && !userProfile) ? (
+                <HeaderStatsSkeleton />
+              ) : (
+                <>
+                  {/* Level and XP */}
+                  {userStats && (
+                    <div className="bg-gradient-to-r from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-400/30 hover:border-purple-300/50 transition-colors duration-200">
+                      <Link href="/achievements" className="flex items-center space-x-3 group">
+                        <div className="text-center">
+                          <div className="text-purple-300 font-bold text-sm group-hover:text-purple-200 transition-colors">⭐ Nível {userStats.level || 1}</div>
+                          <div className="text-xs text-gray-300 group-hover:text-purple-200 transition-colors">{userStats.totalXP || 0} XP</div>
+                        </div>
+                      </Link>
+                    </div>
+                  )}
+
+                  {/* User Ranking */}
+                  {!rankingLoading && bestRanking.position > 0 && (
+                    <div className="bg-gradient-to-r from-indigo-600/30 to-cyan-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-indigo-400/30 hover:border-indigo-300/50 transition-colors duration-200">
+                      <Link href="/rankings" className="flex items-center space-x-3 group">
+                        <div className="text-center">
+                          <div className="text-indigo-300 font-bold text-sm flex items-center">
+                            <span className="mr-1">📊</span>
+                            <span>#{bestRanking.position}</span>
+                            <span className="ml-1 text-xs opacity-75">({Math.round(bestRanking.percentage)}%)</span>
+                          </div>
+                          <div className="text-xs text-gray-300 group-hover:text-indigo-200 transition-colors">
+                            Ranking Global
+                          </div>
+                        </div>
+                      </Link>
+                    </div>
+                  )}
+                  
+                  {/* Credits */}
+                  <div className="bg-gradient-to-r from-yellow-600/30 to-orange-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-yellow-400/30 hover:border-yellow-300/50 transition-colors duration-200">
+                    <Link href="/credits/purchase" className="flex items-center space-x-2 group">
+                      <span className="text-yellow-300 text-lg group-hover:scale-110 transition-transform duration-200">💰</span>
+                      <div>
+                        <div className="text-yellow-300 font-bold group-hover:text-yellow-200 transition-colors">{userProfile?.credits || 0}</div>
+                        <div className="text-xs text-yellow-200 group-hover:text-yellow-100 transition-colors">créditos</div>
+                      </div>
+                    </Link>
+                  </div>
+                </>
+              )}
+              
+              {/* Quick Actions */}
+              <div className="flex items-center space-x-2">
+                {/* Admin Link */}
+                {isAdmin && (
+                  <Link
+                    href="/admin"
+                    className="p-2 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white rounded-lg transition-all duration-200 text-sm font-medium shadow-lg hover:shadow-xl hover:scale-105"
+                    title={isSuperAdmin ? "Super Admin" : "Admin"}
+                  >
+                    {isSuperAdmin ? '👑' : '🔧'}
+                  </Link>
+                )}
+                
+                <button
+                  onClick={() => setShowLogoutModal(true)}
+                  className="p-2 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white rounded-lg transition-all duration-200 font-medium shadow-lg hover:shadow-xl hover:scale-105"
+                  title="Sair"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </header>
@@ -398,6 +618,33 @@ export default function CollectionDetail({ params }: { params: { id: string } })
           </div>
         </div>
       </main>
+
+      {/* Logout Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gradient-to-br from-red-900/90 to-pink-900/90 backdrop-blur-lg rounded-2xl p-6 max-w-sm w-full border border-red-500/30">
+            <div className="text-center">
+              <div className="text-6xl mb-4">⚠️</div>
+              <h3 className="text-xl font-bold text-white mb-2">Confirmar Saída</h3>
+              <p className="text-gray-300 mb-6">Tem certeza que deseja sair da sua conta?</p>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowLogoutModal(false)}
+                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                  Sair
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Item Detail Modal */}
       {selectedItem && (
