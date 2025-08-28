@@ -95,13 +95,25 @@ export class RankingService {
         const usersWithAchievements = await this.calculateCorrectTotalXP()
         return usersWithAchievements
           .filter(user => user.value > 0)
-          .sort((a, b) => b.value - a.value)
+          .sort((a, b) => {
+            // Primeiro critério: XP em ordem decrescente
+            if (a.value !== b.value) {
+              return b.value - a.value
+            }
+            // Critério de desempate: usuários mais antigos primeiro
+            return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          })
 
       case 'PACK_OPENER':
         query = {
           select: {
             userId: true,
-            totalPacksOpened: true
+            totalPacksOpened: true,
+            user: {
+              select: {
+                createdAt: true
+              }
+            }
           },
           where: {
             totalPacksOpened: { gt: 0 },
@@ -111,7 +123,10 @@ export class RankingService {
               }
             }
           },
-          orderBy: { totalPacksOpened: 'desc' }
+          orderBy: [
+            { totalPacksOpened: 'desc' },
+            { user: { createdAt: 'asc' } } // Em caso de empate, usuários mais antigos primeiro
+          ]
         }
         break
 
@@ -119,7 +134,12 @@ export class RankingService {
         query = {
           select: {
             userId: true,
-            totalItemsCollected: true
+            totalItemsCollected: true,
+            user: {
+              select: {
+                createdAt: true
+              }
+            }
           },
           where: {
             totalItemsCollected: { gt: 0 },
@@ -129,7 +149,10 @@ export class RankingService {
               }
             }
           },
-          orderBy: { totalItemsCollected: 'desc' }
+          orderBy: [
+            { totalItemsCollected: 'desc' },
+            { user: { createdAt: 'asc' } } // Em caso de empate, usuários mais antigos primeiro
+          ]
         }
         break
 
@@ -138,7 +161,12 @@ export class RankingService {
           select: {
             userId: true,
             marketplaceSales: true,
-            marketplacePurchases: true
+            marketplacePurchases: true,
+            user: {
+              select: {
+                createdAt: true
+              }
+            }
           },
           where: {
             AND: [
@@ -159,7 +187,8 @@ export class RankingService {
           },
           orderBy: [
             { marketplaceSales: 'desc' },
-            { marketplacePurchases: 'desc' }
+            { marketplacePurchases: 'desc' },
+            { user: { createdAt: 'asc' } } // Em caso de empate, usuários mais antigos primeiro
           ]
         }
         break
@@ -172,7 +201,12 @@ export class RankingService {
           select: {
             userId: true,
             currentStreak: true,
-            lastActivityAt: true
+            lastActivityAt: true,
+            user: {
+              select: {
+                createdAt: true
+              }
+            }
           },
           where: {
             currentStreak: { gt: 0 }, // Apenas usuários com streak > 0
@@ -183,7 +217,10 @@ export class RankingService {
               }
             }
           },
-          orderBy: { currentStreak: 'desc' }
+          orderBy: [
+            { currentStreak: 'desc' },
+            { user: { createdAt: 'asc' } } // Em caso de empate, usuários mais antigos primeiro
+          ]
         }
         break
 
@@ -195,7 +232,12 @@ export class RankingService {
           select: {
             userId: true,
             longestStreak: true,
-            lastActivityAt: true
+            lastActivityAt: true,
+            user: {
+              select: {
+                createdAt: true
+              }
+            }
           },
           where: {
             longestStreak: { gt: 0 }, // Apenas usuários com streak > 0
@@ -206,7 +248,10 @@ export class RankingService {
               }
             }
           },
-          orderBy: { longestStreak: 'desc' }
+          orderBy: [
+            { longestStreak: 'desc' },
+            { user: { createdAt: 'asc' } } // Em caso de empate, usuários mais antigos primeiro
+          ]
         }
         break
 
@@ -223,7 +268,7 @@ export class RankingService {
   }
 
   // Calcular XP correto baseado apenas nas conquistas completadas
-  private async calculateCorrectTotalXP(): Promise<Array<{ userId: string, value: number }>> {
+  private async calculateCorrectTotalXP(): Promise<Array<{ userId: string, value: number, createdAt: string }>> {
     // Buscar todos os usuários com conquistas completadas, excluindo admins
     const userAchievements = await prisma.userAchievement.findMany({
       where: {
@@ -235,6 +280,11 @@ export class RankingService {
         }
       },
       include: {
+        user: {
+          select: {
+            createdAt: true
+          }
+        },
         achievement: {
           select: {
             points: true
@@ -244,17 +294,21 @@ export class RankingService {
     })
 
     // Agrupar por userId e somar os pontos
-    const userXPMap = new Map<string, number>()
+    const userXPMap = new Map<string, { xp: number, createdAt: string }>()
     
     for (const ua of userAchievements) {
-      const currentXP = userXPMap.get(ua.userId) || 0
-      userXPMap.set(ua.userId, currentXP + ua.achievement.points)
+      const currentData = userXPMap.get(ua.userId) || { xp: 0, createdAt: ua.user.createdAt.toISOString() }
+      userXPMap.set(ua.userId, {
+        xp: currentData.xp + ua.achievement.points,
+        createdAt: currentData.createdAt
+      })
     }
 
     // Converter para array
-    return Array.from(userXPMap.entries()).map(([userId, xp]) => ({
+    return Array.from(userXPMap.entries()).map(([userId, data]) => ({
       userId,
-      value: xp
+      value: data.xp,
+      createdAt: data.createdAt
     }))
   }
 

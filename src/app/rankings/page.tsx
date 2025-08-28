@@ -700,8 +700,8 @@ export default function Rankings() {
             </div>
           </div>
 
-          {/* Current Category Info */}
-          {!showGlobalRanking ? (
+          {/* Current Category Info - Para categorias normais */}
+          {!showGlobalRanking && (
             <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-8 mb-8 border border-white/20 shadow-xl">
               <div className="flex items-center space-x-6 mb-6">
                 <div className="text-6xl animate-pulse">{currentCategory.icon}</div>
@@ -724,97 +724,30 @@ export default function Rankings() {
                 </div>
               )}
             </div>
-          ) : (
-            /* Global Ranking Info */
-            <div className="bg-gradient-to-br from-purple-900/20 to-indigo-900/20 backdrop-blur-lg rounded-2xl p-8 mb-8 border border-purple-500/30 shadow-xl">
-              <div className="flex items-center space-x-6 mb-8">
-                <div className="text-6xl animate-pulse">🏆</div>
-                <div>
-                  <h2 className="text-3xl font-bold text-white mb-2">Ranking Global</h2>
-                  <p className="text-gray-300 text-lg">Performance geral em todas as categorias</p>
+          )}
+
+          {/* Sua Posição Global - Para ranking global */}
+          {showGlobalRanking && bestRanking.position > 0 && (
+            <div className="bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border border-purple-500/40 rounded-2xl p-6 shadow-lg mb-8">
+              <div className="text-purple-400 font-bold text-lg mb-3 flex items-center">
+                <span className="mr-2">🎯</span>
+                Sua Posição Global
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <span className="text-4xl">{getPositionIcon(bestRanking.position)}</span>
+                  <div>
+                    <div className="text-3xl font-bold text-white">#{bestRanking.position}</div>
+                    <div className="text-purple-300 text-sm">Posição Global</div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-3xl font-bold text-purple-300">
+                    {Math.round(bestRanking.percentage)}%
+                  </div>
+                  <div className="text-purple-400 text-sm">Score Global</div>
                 </div>
               </div>
-
-              {globalRankingInfo && (
-                <div className="space-y-6">
-                  {/* Explicação do Sistema */}
-                  <div className="bg-gradient-to-r from-indigo-600/20 to-purple-600/20 border border-indigo-500/40 rounded-2xl p-6">
-                    <h3 className="text-xl font-bold text-indigo-300 mb-3 flex items-center">
-                      <span className="mr-2">📊</span>
-                      Como Funciona o Ranking Global
-                    </h3>
-                    <p className="text-gray-300 mb-4 leading-relaxed">
-                      {globalRankingInfo.description}
-                    </p>
-                    <div className="bg-black/20 rounded-lg p-3 mb-4">
-                      <code className="text-green-300 text-sm">{globalRankingInfo.formula}</code>
-                    </div>
-                  </div>
-
-                  {/* Pesos das Categorias */}
-                  <div className="bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/40 rounded-2xl p-6">
-                    <h3 className="text-xl font-bold text-blue-300 mb-4 flex items-center">
-                      <span className="mr-2">⚖️</span>
-                      Pesos das Categorias
-                    </h3>
-                    <div className="grid md:grid-cols-2 gap-4">
-                      {Object.entries(globalRankingInfo.weights).map(([category, weight]) => {
-                        const categoryName = categories.find(c => c.key === category)?.name || category
-                        const percentage = (weight * 100).toFixed(0)
-                        return (
-                          <div key={category} className="flex justify-between items-center bg-black/20 rounded-lg p-3">
-                            <span className="text-white font-medium">{categoryName}</span>
-                            <div className="flex items-center space-x-2">
-                              <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${weight * 100}px` }}></div>
-                              <span className="text-blue-300 font-bold">{percentage}%</span>
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Explicação Detalhada */}
-                  <div className="bg-gradient-to-r from-green-600/20 to-emerald-600/20 border border-green-500/40 rounded-2xl p-6">
-                    <h3 className="text-xl font-bold text-green-300 mb-4 flex items-center">
-                      <span className="mr-2">📝</span>
-                      Explicação Detalhada
-                    </h3>
-                    <div className="space-y-2">
-                      {globalRankingInfo.explanation.map((line, index) => (
-                        <div key={index} className="text-gray-300 text-sm leading-relaxed">
-                          {line}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* User's Global Position */}
-              {bestRanking.position > 0 && (
-                <div className="bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border border-purple-500/40 rounded-2xl p-6 shadow-lg">
-                  <div className="text-purple-400 font-bold text-lg mb-3 flex items-center">
-                    <span className="mr-2">🎯</span>
-                    Sua Posição Global
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <span className="text-4xl">{getPositionIcon(bestRanking.position)}</span>
-                      <div>
-                        <div className="text-3xl font-bold text-white">#{bestRanking.position}</div>
-                        <div className="text-purple-300 text-sm">Posição Global</div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-3xl font-bold text-purple-300">
-                        {Math.round(bestRanking.percentage)}%
-                      </div>
-                      <div className="text-purple-400 text-sm">Score Global</div>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
@@ -1024,6 +957,73 @@ export default function Rankings() {
               </div>
             )}
           </div>
+
+          {/* Global Ranking Explanations - Aparecem após o leaderboard quando em ranking global */}
+          {showGlobalRanking && globalRankingInfo && (
+            <div className="bg-gradient-to-br from-purple-900/20 to-indigo-900/20 backdrop-blur-lg rounded-2xl p-8 mt-8 border border-purple-500/30 shadow-xl">
+              <div className="flex items-center space-x-6 mb-8">
+                <div className="text-6xl animate-pulse">🏆</div>
+                <div>
+                  <h2 className="text-3xl font-bold text-white mb-2">Como Funciona o Ranking Global</h2>
+                  <p className="text-gray-300 text-lg">Entenda a metodologia e os pesos das categorias</p>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                {/* Explicação do Sistema */}
+                <div className="bg-gradient-to-r from-indigo-600/20 to-purple-600/20 border border-indigo-500/40 rounded-2xl p-6">
+                  <h3 className="text-xl font-bold text-indigo-300 mb-3 flex items-center">
+                    <span className="mr-2">📊</span>
+                    Como Funciona o Ranking Global
+                  </h3>
+                  <p className="text-gray-300 mb-4 leading-relaxed">
+                    {globalRankingInfo.description}
+                  </p>
+                  <div className="bg-black/20 rounded-lg p-3 mb-4">
+                    <code className="text-green-300 text-sm">{globalRankingInfo.formula}</code>
+                  </div>
+                </div>
+
+                {/* Pesos das Categorias */}
+                <div className="bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/40 rounded-2xl p-6">
+                  <h3 className="text-xl font-bold text-blue-300 mb-4 flex items-center">
+                    <span className="mr-2">⚖️</span>
+                    Pesos das Categorias
+                  </h3>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {Object.entries(globalRankingInfo.weights).map(([category, weight]) => {
+                      const categoryName = categories.find(c => c.key === category)?.name || category
+                      const percentage = (weight * 100).toFixed(0)
+                      return (
+                        <div key={category} className="flex justify-between items-center bg-black/20 rounded-lg p-3">
+                          <span className="text-white font-medium">{categoryName}</span>
+                          <div className="flex items-center space-x-2">
+                            <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${weight * 100}px` }}></div>
+                            <span className="text-blue-300 font-bold">{percentage}%</span>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Explicação Detalhada */}
+                <div className="bg-gradient-to-r from-green-600/20 to-emerald-600/20 border border-green-500/40 rounded-2xl p-6">
+                  <h3 className="text-xl font-bold text-green-300 mb-4 flex items-center">
+                    <span className="mr-2">📝</span>
+                    Explicação Detalhada
+                  </h3>
+                  <div className="space-y-2">
+                    {globalRankingInfo.explanation.map((line, index) => (
+                      <div key={index} className="text-gray-300 text-sm leading-relaxed">
+                        {line}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Footer */}
           <div className="text-center mt-12 space-y-6">
