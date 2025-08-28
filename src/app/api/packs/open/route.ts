@@ -208,7 +208,7 @@ export async function POST(req: Request) {
         
         // Clear activity cache to show new activity immediately
         try {
-          const { clearActivityCache } = await import('@/app/api/user/recent-activity/route')
+          const { clearActivityCache } = await import('@/lib/activity-cache')
           clearActivityCache(session.user.id)
         } catch (cacheError) {
           console.warn('Failed to clear activity cache:', cacheError)

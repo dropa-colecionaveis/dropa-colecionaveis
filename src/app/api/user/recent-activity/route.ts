@@ -17,14 +17,11 @@ export interface RecentActivity {
   }
 }
 
-// Cache for recent activities (3 minutes for better UX)
-const activityCache = new Map<string, { data: any, expireAt: number }>()
-const CACHE_TTL = 3 * 60 * 1000 // 3 minutes
-
 export async function GET(req: Request) {
   try {
     const { authOptions } = await import('@/lib/auth')
     const { prisma } = await import('@/lib/prisma')
+    const { getActivityCache, setActivityCache, cleanExpiredCache } = await import('@/lib/activity-cache')
     
     const session = await getServerSession(authOptions)
     
@@ -42,17 +39,17 @@ export async function GET(req: Request) {
     // 🚀 CACHE CHECK: Return cached result if available
     const cacheKey = `activities_${userId}_${limit}`
     const now = Date.now()
-    const cached = activityCache.get(cacheKey)
+    const cached = getActivityCache(cacheKey, now)
     
-    if (cached && cached.expireAt > now) {
-      const response = NextResponse.json({ ...cached.data, cached: true })
+    if (cached) {
+      const response = NextResponse.json({ ...cached, cached: true })
       response.headers.set('X-Cache', 'HIT')
       return response
     }
 
     const activities: RecentActivity[] = []
 
-    // 🚀 OPTIMIZATION 1: Optimized pack openings with direct item include (prevents N+1)
+    // 🚀 OPTIMIZATION 1: Optimized pack openings with pack data
     const packOpenings = await prisma.packOpening.findMany({
       where: { userId },
       take: Math.min(limit, 15),
@@ -60,39 +57,45 @@ export async function GET(req: Request) {
       include: {
         pack: {
           select: { name: true, type: true }
-        },
-        // Include item data directly to prevent additional query
-        item: {
-          select: {
-            name: true,
-            rarity: true,
-            imageUrl: true,
-            collection: {
-              select: { name: true }
-            }
-          }
         }
       }
     })
 
+    // Get item details for pack openings in a separate optimized query
+    const itemIds = packOpenings.map(opening => opening.itemId).filter(Boolean)
+    const items = itemIds.length > 0 ? await prisma.item.findMany({
+      where: { id: { in: itemIds } },
+      select: {
+        id: true,
+        name: true,
+        rarity: true,
+        imageUrl: true,
+        collection: { select: { name: true } }
+      }
+    }) : []
+    
+    // Create a map for quick item lookup
+    const itemMap = new Map(items.map(item => [item.id, item]))
+
     // Process pack openings (now O(1) complexity)
     packOpenings.forEach(opening => {
-      if (opening.item) {
+      const item = itemMap.get(opening.itemId)
+      if (item) {
         activities.push({
           id: `pack_${opening.id}`,
           type: 'PACK_OPENED',
           timestamp: opening.createdAt,
-          description: `Abriu um pacote ${opening.pack.name} e recebeu ${opening.item.name}`,
+          description: `Abriu um pacote ${opening.pack.name} e recebeu ${item.name}`,
           data: {
             pack: {
               name: opening.pack.name,
               type: opening.pack.type
             },
             item: {
-              name: opening.item.name,
-              rarity: opening.item.rarity,
-              imageUrl: opening.item.imageUrl,
-              collectionName: opening.item.collection?.name
+              name: item.name,
+              rarity: item.rarity,
+              imageUrl: item.imageUrl,
+              collectionName: item.collection?.name
             }
           }
         })
@@ -298,20 +301,10 @@ export async function GET(req: Request) {
     }
 
     // 🚀 CACHE: Store result for faster subsequent requests
-    activityCache.set(cacheKey, {
-      data: result,
-      expireAt: now + CACHE_TTL
-    })
+    setActivityCache(cacheKey, result, now)
 
     // Clean old cache entries periodically
-    if (activityCache.size > 50) {
-      const entries = Array.from(activityCache.entries())
-      entries.forEach(([key, value]) => {
-        if (value.expireAt <= now) {
-          activityCache.delete(key)
-        }
-      })
-    }
+    cleanExpiredCache(now)
 
     const response = NextResponse.json(result)
     response.headers.set('X-Cache', 'MISS')
@@ -326,20 +319,4 @@ export async function GET(req: Request) {
       { status: 500 }
     )
   }
-}
-
-// 🚀 Utility function to clear cache when activities are updated
-export function clearActivityCache(userId: string) {
-  const keysToDelete = Array.from(activityCache.keys()).filter(key => 
-    key.includes(`activities_${userId}`)
-  )
-  keysToDelete.forEach(key => activityCache.delete(key))
-  console.log(`🗑️ Cleared ${keysToDelete.length} activity cache entries for user ${userId}`)
-}
-
-// 🚀 Clear cache on server restart/deployment
-export function clearAllActivityCache() {
-  const size = activityCache.size
-  activityCache.clear()
-  console.log(`🗑️ Cleared ${size} activity cache entries`)
 }
