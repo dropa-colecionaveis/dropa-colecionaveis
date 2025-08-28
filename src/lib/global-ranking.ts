@@ -43,6 +43,10 @@ export class GlobalRankingService {
   // Cache for category totals to avoid N+1 queries
   private categoryTotalsCache = new Map<RankingCategory, { total: number, expireAt: number }>()
   private readonly CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+  
+  // Cache for full global ranking to avoid recalculation
+  private globalRankingCache: { rankings: GlobalRankingEntry[], expireAt: number } | null = null
+  private readonly GLOBAL_CACHE_TTL = 3 * 60 * 1000 // 3 minutes
 
   private async getCachedCategoryTotal(category: RankingCategory): Promise<number> {
     const now = Date.now()
@@ -80,6 +84,14 @@ export class GlobalRankingService {
   // Calcular ranking global de todos os usuários
   async calculateGlobalRanking(): Promise<GlobalRankingEntry[]> {
     return performanceMonitor.trackQueryExecution('calculateGlobalRanking', async () => {
+    // Check cache first
+    const now = Date.now()
+    if (this.globalRankingCache && this.globalRankingCache.expireAt > now) {
+      performanceMonitor.trackCacheHit()
+      return this.globalRankingCache.rankings
+    }
+    
+    performanceMonitor.trackCacheMiss()
     // 1. Buscar todos os usuários que têm pelo menos um ranking, excluindo admins
     // Optimized with proper index usage
     const usersWithRankings = await prisma.ranking.findMany({
@@ -216,6 +228,12 @@ export class GlobalRankingService {
     globalRankings.forEach((entry, index) => {
       entry.position = index + 1
     })
+
+    // Cache the results
+    this.globalRankingCache = {
+      rankings: globalRankings,
+      expireAt: Date.now() + this.GLOBAL_CACHE_TTL
+    }
 
     return globalRankings
     })

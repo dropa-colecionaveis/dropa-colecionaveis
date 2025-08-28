@@ -36,18 +36,60 @@ export async function GET(req: Request) {
           )
         }
         
-        const userPosition = await globalRankingService.getUserGlobalPosition(userId)
-        if (!userPosition) {
+        try {
+          const userPosition = await globalRankingService.getUserGlobalPosition(userId)
+          if (!userPosition) {
+            // Fallback: verificar se usuário tem rankings individuais
+            const { prisma } = await import('@/lib/prisma')
+            const userRankings = await prisma.ranking.findMany({
+              where: { 
+                userId,
+                user: {
+                  role: {
+                    notIn: ['ADMIN', 'SUPER_ADMIN']
+                  }
+                }
+              },
+              select: {
+                category: true,
+                position: true
+              }
+            })
+            
+            if (userRankings.length > 0) {
+              // Usuário tem rankings mas não apareceu no global - retornar posição 0 temporariamente
+              console.warn(`User ${userId} has individual rankings but not in global ranking`)
+              return NextResponse.json({
+                position: 0,
+                globalScore: 0,
+                globalPercentage: 0,
+                categoryBreakdown: [],
+                message: 'Rankings being calculated. Please refresh in a moment.',
+                hasIndividualRankings: true
+              })
+            }
+            
+            return NextResponse.json({
+              position: 0,
+              globalScore: 0,
+              globalPercentage: 0,
+              categoryBreakdown: [],
+              message: 'User not yet ranked. Play more to appear in rankings!'
+            })
+          }
+          
+          return NextResponse.json(userPosition)
+        } catch (error) {
+          console.error('Error in user-position action:', error)
           return NextResponse.json({
-            position: null,
+            position: 0,
             globalScore: 0,
             globalPercentage: 0,
             categoryBreakdown: [],
-            message: 'User not yet ranked. Play more to appear in rankings!'
+            message: 'Error calculating position. Please try again later.',
+            error: true
           })
         }
-        
-        return NextResponse.json(userPosition)
 
       default:
         // Retornar ranking global completo
