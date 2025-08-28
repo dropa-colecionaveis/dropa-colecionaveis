@@ -33,20 +33,23 @@ export class RankingService {
   }
 
   // Atualizar ranking específico
-  async updateRanking(category: RankingCategory, seasonId?: string): Promise<void> {
-    // Verificar se já existe ranking recente para evitar recálculos desnecessários
-    const recentRanking = await prisma.ranking.findFirst({
-      where: {
-        category,
-        seasonId: seasonId || null,
-        updatedAt: {
-          gte: new Date(Date.now() - 5 * 60 * 1000) // 5 minutos atrás
+  async updateRanking(category: RankingCategory, seasonId?: string, forceUpdate: boolean = false): Promise<void> {
+    if (!forceUpdate) {
+      // Verificar se já existe ranking recente para evitar recálculos desnecessários
+      const recentRanking = await prisma.ranking.findFirst({
+        where: {
+          category,
+          seasonId: seasonId || null,
+          updatedAt: {
+            gte: new Date(Date.now() - 5 * 60 * 1000) // 5 minutos atrás
+          }
         }
-      }
-    })
+      })
 
-    if (recentRanking) {
-      return // Ranking foi atualizado recentemente, não precisa recalcular
+      if (recentRanking) {
+        console.log(`⏭️ Skipping ${category} - updated recently`)
+        return // Ranking foi atualizado recentemente, não precisa recalcular
+      }
     }
 
     const rankings = await this.calculateRanking(category, seasonId)
@@ -168,9 +171,11 @@ export class RankingService {
         query = {
           select: {
             userId: true,
-            currentStreak: true
+            currentStreak: true,
+            lastActivityAt: true
           },
           where: {
+            currentStreak: { gt: 0 }, // Apenas usuários com streak > 0
             lastActivityAt: { gte: weekAgo },
             user: {
               role: {
@@ -189,9 +194,11 @@ export class RankingService {
         query = {
           select: {
             userId: true,
-            longestStreak: true
+            longestStreak: true,
+            lastActivityAt: true
           },
           where: {
+            longestStreak: { gt: 0 }, // Apenas usuários com streak > 0
             lastActivityAt: { gte: monthAgo },
             user: {
               role: {
@@ -375,19 +382,19 @@ export class RankingService {
         break
       case 'WEEKLY_ACTIVE':
         userValue = userStats.currentStreak || 0
-        // Verificar se foi ativo na última semana
+        // Verificar se foi ativo na última semana E tem streak > 0
         const weekAgo = new Date()
         weekAgo.setDate(weekAgo.getDate() - 7)
-        if (!userStats.lastActivityAt || userStats.lastActivityAt < weekAgo) {
+        if (!userStats.lastActivityAt || userStats.lastActivityAt < weekAgo || userValue <= 0) {
           return 0 // Não qualificado para ranking semanal
         }
         break
       case 'MONTHLY_ACTIVE':
         userValue = userStats.longestStreak || 0
-        // Verificar se foi ativo no último mês
+        // Verificar se foi ativo no último mês E tem streak > 0
         const monthAgo = new Date()
         monthAgo.setMonth(monthAgo.getMonth() - 1)
-        if (!userStats.lastActivityAt || userStats.lastActivityAt < monthAgo) {
+        if (!userStats.lastActivityAt || userStats.lastActivityAt < monthAgo || userValue <= 0) {
           return 0 // Não qualificado para ranking mensal
         }
         break

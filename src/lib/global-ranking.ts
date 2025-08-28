@@ -82,6 +82,12 @@ export class GlobalRankingService {
   }
 
   // Calcular ranking global de todos os usuários
+  // Método público para limpar cache
+  clearCache(): void {
+    this.globalRankingCache = null
+    this.categoryTotalsCache.clear()
+  }
+
   async calculateGlobalRanking(): Promise<GlobalRankingEntry[]> {
     return performanceMonitor.trackQueryExecution('calculateGlobalRanking', async () => {
     // Check cache first
@@ -172,17 +178,31 @@ export class GlobalRankingService {
         
         if (ranking) {
           // Usuário tem ranking nesta categoria
+          // Para TOTAL_XP, obter posição mais atualizada da API
+          let actualPosition = ranking.position
+          if (ranking.category === 'TOTAL_XP') {
+            try {
+              const { rankingService } = await import('./rankings')
+              const updatedPosition = await rankingService.getUserPosition(userId, ranking.category)
+              if (updatedPosition > 0) {
+                actualPosition = updatedPosition
+              }
+            } catch (error) {
+              // Fallback silencioso para posição da tabela ranking
+            }
+          }
+          
           // Use cached totals to avoid N+1 queries
           const totalInCategory = await this.getCachedCategoryTotal(ranking.category)
 
           // Calcular pontos normalizados (0-1)
-          const normalizedPoints = (totalInCategory - ranking.position + 1) / totalInCategory
+          const normalizedPoints = (totalInCategory - actualPosition + 1) / totalInCategory
           const percentage = normalizedPoints * 100
           const contribution = normalizedPoints * weight
 
           categoryBreakdown.push({
             category: ranking.category,
-            position: ranking.position,
+            position: actualPosition,
             totalInCategory,
             points: normalizedPoints,
             percentage,

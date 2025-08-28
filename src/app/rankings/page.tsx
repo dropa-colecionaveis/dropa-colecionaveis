@@ -80,6 +80,8 @@ export default function Rankings() {
     globalPercentage: number,
     categoryBreakdown: CategoryBreakdown[]
   } | null>(null)
+  const [totalXPPosition, setTotalXPPosition] = useState<number>(0)
+  const [lastKnownPositions, setLastKnownPositions] = useState<Record<string, number>>({})
   const { bestRanking, loading: rankingLoading } = useUserRankings()
   const { isAdmin, isSuperAdmin } = useAdmin()
 
@@ -116,15 +118,15 @@ export default function Rankings() {
     },
     {
       key: 'WEEKLY_ACTIVE',
-      name: 'Ativo Semanal',
+      name: 'Streak Atual',
       icon: '🔥',
-      description: 'Maior streak ativo na semana'
+      description: 'Sequência atual de dias consecutivos ativos'
     },
     {
       key: 'MONTHLY_ACTIVE',
-      name: 'Ativo Mensal',
+      name: 'Melhor Streak',
       icon: '📅',
-      description: 'Maior streak ativo no mês'
+      description: 'Maior sequência de dias consecutivos já alcançada'
     }
   ]
 
@@ -157,6 +159,7 @@ export default function Rankings() {
     // 1. Buscar dados do usuário primeiro (mais rápido)
     fetchUserProfile()
     fetchUserStats()
+    fetchTotalXPPosition()
     
     // 2. Buscar rankings depois
     setTimeout(() => {
@@ -204,6 +207,14 @@ export default function Rankings() {
           console.log('Rankings data:', data)
           setRankings(data.rankings || [])
           setUserPosition(data.userPosition || 0)
+          
+          // Armazenar posição conhecida para esta categoria
+          if (data.userPosition > 0) {
+            setLastKnownPositions(prev => ({
+              ...prev,
+              [selectedCategory]: data.userPosition
+            }))
+          }
         } else {
           console.error('Error fetching rankings - Response not ok:', response.status, response.statusText)
           const errorText = await response.text()
@@ -231,6 +242,20 @@ export default function Rankings() {
       console.error('Error fetching user stats:', error)
     } finally {
       setUserStatsLoading(false)
+    }
+  }
+
+  const fetchTotalXPPosition = async () => {
+    try {
+      const response = await fetch(`/api/rankings/TOTAL_XP?action=user-position&userId=${session?.user?.id}`, {
+        headers: { 'Cache-Control': 'max-age=180' } // Cache 3min
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setTotalXPPosition(data.position || 0)
+      }
+    } catch (error) {
+      console.error('Error fetching TOTAL_XP position:', error)
     }
   }
 
@@ -273,9 +298,8 @@ export default function Rankings() {
   const fetchGlobalRankings = async () => {
     try {
       setGlobalRankingLoading(true)
-      const response = await fetch('/api/rankings/global?limit=50', {
-        next: { revalidate: 300, tags: ['rankings-global'] },
-        cache: 'force-cache'
+      const response = await fetch(`/api/rankings/global?limit=50&_t=${Date.now()}`, {
+        cache: 'no-store'
       })
       if (response.ok) {
         const data = await response.json()
@@ -295,20 +319,75 @@ export default function Rankings() {
   const forceUpdateRankings = async () => {
     try {
       setUpdateLoading(true)
-      const response = await fetch('/api/rankings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'update', category: selectedCategory })
-      })
       
-      if (response.ok) {
-        // Recarregar rankings após atualização
-        await fetchRankings()
-        if (showGlobalRanking) {
-          await fetchGlobalRankings()
+      if (selectedCategory === 'GLOBAL') {
+        // Para ranking global, atualizar todas as categorias COM FORÇA
+        await Promise.all([
+          fetch('/api/rankings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'update', category: 'TOTAL_XP', forceUpdate: true })
+          }),
+          fetch('/api/rankings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'update', category: 'TRADER', forceUpdate: true })
+          }),
+          fetch('/api/rankings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'update', category: 'PACK_OPENER', forceUpdate: true })
+          }),
+          fetch('/api/rankings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'update', category: 'COLLECTOR', forceUpdate: true })
+          })
+        ])
+        
+        // Limpar cache do global ranking
+        try {
+          const response = await fetch('/api/rankings/global?action=clear-cache', {
+            method: 'POST'
+          })
+          if (response.ok) {
+            console.log('✅ Cache cleared')
+          }
+        } catch (error) {
+          console.log('Cache clear error (non-critical):', error)
         }
+      } else if (selectedCategory === 'WEEKLY_ACTIVE' || selectedCategory === 'MONTHLY_ACTIVE') {
+        // Se está nas categorias de streak, atualizar ambas para garantir consistência
+        await Promise.all([
+          fetch('/api/rankings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'update', category: 'WEEKLY_ACTIVE' })
+          }),
+          fetch('/api/rankings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'update', category: 'MONTHLY_ACTIVE' })
+          })
+        ])
       } else {
-        console.error('Error updating rankings')
+        // Para outras categorias, atualizar apenas a selecionada
+        const response = await fetch('/api/rankings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'update', category: selectedCategory })
+        })
+        
+        if (!response.ok) {
+          console.error('Error updating rankings')
+          return
+        }
+      }
+      
+      // Recarregar rankings após atualização
+      await fetchRankings()
+      if (showGlobalRanking) {
+        await fetchGlobalRankings()
       }
     } catch (error) {
       console.error('Error updating rankings:', error)
@@ -480,25 +559,31 @@ export default function Rankings() {
                 <div className="text-3xl mb-2 group-hover:animate-pulse">📊</div>
                 <div className="text-3xl font-bold text-purple-400 mb-1">
                   {selectedCategory === 'GLOBAL' 
-                    ? (userGlobalPosition?.position ? `#${userGlobalPosition.position}` : 'Não rankeado')
+                    ? (bestRanking.position > 0 ? `#${bestRanking.position}` : 'Não rankeado')
                     : (() => {
                         // Lógica mais robusta para determinar posição
                         const apiPosition = userPosition > 0 ? userPosition : 0
                         const statsPosition = userStats?.rankings?.[selectedCategory] > 0 ? userStats.rankings[selectedCategory] : 0
+                        const lastKnownPosition = lastKnownPositions[selectedCategory] || 0
                         
-                        // Se temos posição da API, usar ela
+                        // Se temos posição da API atual, usar ela
                         if (apiPosition > 0) {
                           return `#${apiPosition}`
                         }
                         
-                        // Se não, verificar se temos dados nas stats e há rankings válidos na lista
-                        if (statsPosition > 0 && rankings.length > 0) {
+                        // Se não temos posição atual mas temos uma posição conhecida (durante carregamento), usar ela
+                        if (rankingsLoading && lastKnownPosition > 0) {
+                          return `#${lastKnownPosition}`
+                        }
+                        
+                        // Se não, verificar se temos dados nas stats
+                        if (statsPosition > 0) {
                           return `#${statsPosition}`
                         }
                         
-                        // Se não há rankings na lista, não pode estar rankeado
-                        if (rankings.length === 0) {
-                          return 'Não rankeado'
+                        // Se temos posição conhecida como fallback
+                        if (lastKnownPosition > 0) {
+                          return `#${lastKnownPosition}`
                         }
                         
                         // Default
@@ -514,7 +599,7 @@ export default function Rankings() {
               <div className="group bg-gradient-to-br from-yellow-600/20 to-orange-600/20 backdrop-blur-lg rounded-2xl p-6 text-center text-white border border-yellow-500/30 hover:border-yellow-400/50 transition-all duration-300 hover:transform hover:scale-105 shadow-lg hover:shadow-xl">
                 <div className="text-3xl mb-2 group-hover:animate-spin">🏆</div>
                 <div className="text-3xl font-bold text-yellow-400 mb-1">
-                  #{userStats.rankings?.TOTAL_XP || '--'}
+                  {totalXPPosition > 0 ? `#${totalXPPosition}` : '--'}
                 </div>
                 <div className="text-sm text-gray-300">Ranking Total XP</div>
               </div>
@@ -532,11 +617,14 @@ export default function Rankings() {
                 <button
                   key={category.key}
                   onClick={() => {
-      setSelectedCategory(category.key)
-      // Limpar dados da categoria anterior imediatamente para feedback visual
-      setRankings([])
-      setUserPosition(0)
-      setGlobalRankings([])
+      // Só limpar dados se realmente mudou de categoria
+      if (selectedCategory !== category.key) {
+        setSelectedCategory(category.key)
+        // Limpar dados da categoria anterior imediatamente para feedback visual
+        setRankings([])
+        setUserPosition(0)
+        setGlobalRankings([])
+      }
     }}
                   className={`group p-6 rounded-2xl border-2 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-2xl text-left ${
                     selectedCategory === category.key
@@ -646,7 +734,7 @@ export default function Rankings() {
               )}
 
               {/* User's Global Position */}
-              {userGlobalPosition && userGlobalPosition.position > 0 && (
+              {bestRanking.position > 0 && (
                 <div className="bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border border-purple-500/40 rounded-2xl p-6 shadow-lg">
                   <div className="text-purple-400 font-bold text-lg mb-3 flex items-center">
                     <span className="mr-2">🎯</span>
@@ -654,15 +742,15 @@ export default function Rankings() {
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                      <span className="text-4xl">{getPositionIcon(userGlobalPosition.position)}</span>
+                      <span className="text-4xl">{getPositionIcon(bestRanking.position)}</span>
                       <div>
-                        <div className="text-3xl font-bold text-white">#{userGlobalPosition.position}</div>
+                        <div className="text-3xl font-bold text-white">#{bestRanking.position}</div>
                         <div className="text-purple-300 text-sm">Posição Global</div>
                       </div>
                     </div>
                     <div className="text-right">
                       <div className="text-3xl font-bold text-purple-300">
-                        {userGlobalPosition.globalPercentage.toFixed(1)}%
+                        {Math.round(bestRanking.percentage)}%
                       </div>
                       <div className="text-purple-400 text-sm">Score Global</div>
                     </div>
@@ -675,10 +763,13 @@ export default function Rankings() {
           {/* Rankings List */}
           <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl overflow-hidden border border-white/20 shadow-xl">
             <div className="p-8 border-b border-white/20">
-              <h3 className="text-2xl font-bold text-white text-center flex items-center justify-center">
-                <span className="mr-3">🏆</span>
-                Leaderboard - {currentCategory.name}
-              </h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-2xl font-bold text-white flex items-center">
+                  <span className="mr-3">🏆</span>
+                  Leaderboard - {currentCategory.name}
+                </h3>
+                
+              </div>
             </div>
             
             <div className="divide-y divide-white/10">

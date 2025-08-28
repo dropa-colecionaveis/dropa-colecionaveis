@@ -5,6 +5,27 @@ import { getServerSession } from 'next-auth'
 export const revalidate = 300 // 5 minutes (global ranking updates less frequently)
 export const runtime = 'nodejs'
 
+export async function POST(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url)
+    const action = searchParams.get('action')
+    
+    if (action === 'clear-cache') {
+      const { globalRankingService } = await import('@/lib/global-ranking')
+      globalRankingService.clearCache()
+      return NextResponse.json({ message: 'Cache cleared successfully' })
+    }
+    
+    return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
+  } catch (error) {
+    console.error('Error in global rankings POST:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
 export async function GET(req: Request) {
   try {
     const { authOptions } = await import('@/lib/auth')

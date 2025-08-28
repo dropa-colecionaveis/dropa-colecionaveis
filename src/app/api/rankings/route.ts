@@ -65,11 +65,11 @@ export async function POST(req: Request) {
     const { rankingService } = await import('@/lib/rankings')
     
     // Endpoint para atualizar rankings manualmente (admin)
-    const { action, category, seasonId } = await req.json()
+    const { action, category, seasonId, forceUpdate } = await req.json()
 
     if (action === 'update') {
       if (category) {
-        await rankingService.updateRanking(category as RankingCategory, seasonId)
+        await rankingService.updateRanking(category as RankingCategory, seasonId, forceUpdate)
       } else {
         await rankingService.updateAllRankings()
       }
