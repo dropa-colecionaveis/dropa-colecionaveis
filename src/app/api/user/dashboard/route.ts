@@ -58,8 +58,21 @@ export async function GET() {
       )
     }
 
+    // Atualizar atividade do usuário (incluindo streak) quando acessar o dashboard
+    try {
+      const { userStatsService } = await import('@/lib/user-stats')
+      await userStatsService.updateUserActivity(session.user.id)
+    } catch (error) {
+      console.error('Error updating user activity on dashboard access:', error)
+    }
+
+    // Buscar stats atualizadas após a atualização da atividade
+    const updatedUserStats = await prisma.userStats.findUnique({
+      where: { userId: session.user.id }
+    })
+
     // Se user stats não existe, criar default
-    const finalUserStats = userStats || {
+    const finalUserStats = updatedUserStats || userStats || {
       totalXP: 0,
       level: 1,
       totalPacksOpened: 0,
