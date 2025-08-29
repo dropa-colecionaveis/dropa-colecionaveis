@@ -488,7 +488,7 @@ export default function Rankings() {
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             {/* Logo Section */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <Link href="/dashboard" className="flex items-center">
                 <Image
                   src="/Dropa!.png"
@@ -510,30 +510,33 @@ export default function Rankings() {
             </div>
 
             {/* Stats and Actions */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               {profileLoading || (!userStats && !userProfile) ? (
                 <HeaderStatsSkeleton />
               ) : (
                 <>
-                  {/* Level and XP */}
+                  {/* Level and XP - sempre visível e com tamanho normal */}
                   {userStats && (
-                <div className="bg-gradient-to-r from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-400/30 hover:border-purple-300/50 transition-colors duration-200">
-                  <Link href="/achievements" className="flex items-center space-x-3 group">
-                    <div className="text-center">
-                      <div className="text-purple-300 font-bold text-sm group-hover:text-purple-200 transition-colors">⭐ Nível {userStats.level || 1}</div>
-                      <div className="text-xs text-gray-300 group-hover:text-purple-200 transition-colors">{userStats.totalXP || 0} XP</div>
+                    <div className="bg-gradient-to-r from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl px-3 py-2 sm:px-4 border border-purple-400/30 hover:border-purple-300/50 transition-colors duration-200">
+                      <Link href="/achievements" className="flex items-center space-x-3 group">
+                        <div className="text-center">
+                          <div className="text-purple-300 font-bold text-xs sm:text-sm group-hover:text-purple-200 transition-colors">⭐ Nível {userStats.level || 1}</div>
+                          <div className="text-xs text-gray-300 group-hover:text-purple-200 transition-colors">{userStats.totalXP || 0} XP</div>
+                        </div>
+                      </Link>
                     </div>
-                  </Link>
-                </div>
-              )}
+                  )}
+                  
+                  {/* Container para elementos empilhados no mobile */}
+                  <div className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-4">
 
-              {/* User Ranking */}
-              {bestRanking.position > 0 && (
-                <div className="bg-gradient-to-r from-indigo-600/30 to-cyan-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-indigo-400/30 hover:border-indigo-300/50 transition-colors duration-200">
-                  <Link href="/rankings" className="flex items-center space-x-3 group">
-                    <div className="text-center">
-                      <div className="text-indigo-300 font-bold text-sm flex items-center">
-                        <span className="mr-1">📊</span>
+                    {/* User Ranking */}
+                    {bestRanking.position > 0 && (
+                      <div className="bg-gradient-to-r from-indigo-600/30 to-cyan-600/30 backdrop-blur-sm rounded-xl px-2 py-1 sm:px-4 sm:py-2 border border-indigo-400/30 hover:border-indigo-300/50 transition-colors duration-200">
+                        <Link href="/rankings" className="flex items-center space-x-1 sm:space-x-3 group">
+                          <div className="text-center">
+                            <div className="text-indigo-300 font-bold text-xs sm:text-sm flex items-center justify-center">
+                              <span className="mr-1 text-xs sm:text-sm">📊</span>
                         <span>#{bestRanking.position}</span>
                         <span className="ml-1 text-xs opacity-75">({Math.round(bestRanking.percentage)}%)</span>
                       </div>
@@ -545,15 +548,16 @@ export default function Rankings() {
                 </div>
                   )}
                   
-                  {/* Credits */}
-                  <div className="bg-gradient-to-r from-yellow-600/30 to-orange-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-yellow-400/30 hover:border-yellow-300/50 transition-colors duration-200">
-                    <Link href="/credits/purchase" className="flex items-center space-x-2 group">
-                      <span className="text-yellow-300 text-lg group-hover:scale-110 transition-transform duration-200">💰</span>
-                      <div>
-                        <div className="text-yellow-300 font-bold group-hover:text-yellow-200 transition-colors">{userProfile?.credits || 0}</div>
-                        <div className="text-xs text-yellow-200 group-hover:text-yellow-100 transition-colors">créditos</div>
-                      </div>
-                    </Link>
+                    {/* Credits */}
+                    <div className="bg-gradient-to-r from-yellow-600/30 to-orange-600/30 backdrop-blur-sm rounded-xl px-2 py-1 sm:px-4 sm:py-2 border border-yellow-400/30 hover:border-yellow-300/50 transition-colors duration-200">
+                      <Link href="/credits/purchase" className="flex items-center space-x-1 sm:space-x-2 group">
+                        <span className="text-yellow-300 text-sm sm:text-lg group-hover:scale-110 transition-transform duration-200">💰</span>
+                        <div>
+                          <div className="text-yellow-300 font-bold text-xs sm:text-sm group-hover:text-yellow-200 transition-colors">{userProfile?.credits || 0}</div>
+                          <div className="text-xs text-yellow-200 group-hover:text-yellow-100 transition-colors">créditos</div>
+                        </div>
+                      </Link>
+                    </div>
                   </div>
                 </>
               )}
@@ -717,7 +721,7 @@ export default function Rankings() {
                     <span className="mr-2">🎯</span>
                     Sua Posição Atual
                   </div>
-                  <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2 sm:space-x-4">
                     <span className="text-4xl">{getPositionIcon(userPosition)}</span>
                     <span className="text-3xl font-bold text-white">#{userPosition}</span>
                   </div>
@@ -734,7 +738,7 @@ export default function Rankings() {
                 Sua Posição Global
               </div>
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2 sm:space-x-4">
                   <span className="text-4xl">{getPositionIcon(bestRanking.position)}</span>
                   <div>
                     <div className="text-3xl font-bold text-white">#{bestRanking.position}</div>

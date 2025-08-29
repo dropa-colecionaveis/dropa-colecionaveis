@@ -161,30 +161,33 @@ export function PacksSkeleton() {
 
 export function HeaderStatsSkeleton() {
   return (
-    <div className="flex items-center space-x-4">
-      {/* Level and XP skeleton */}
-      <div className="bg-gradient-to-r from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-400/30">
+    <div className="flex items-center space-x-2 sm:space-x-4">
+      {/* Level and XP skeleton - sempre visível e com tamanho normal */}
+      <div className="bg-gradient-to-r from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl px-3 py-2 sm:px-4 border border-purple-400/30">
         <div className="text-center">
-          <SkeletonLoader width="w-16" height="h-4" className="mb-1" />
-          <SkeletonLoader width="w-12" height="h-3" />
+          <SkeletonLoader width="w-12 sm:w-16" height="h-3 sm:h-4" className="mb-1" />
+          <SkeletonLoader width="w-8 sm:w-12" height="h-2 sm:h-3" />
         </div>
       </div>
 
-      {/* Ranking skeleton */}
-      <div className="bg-gradient-to-r from-indigo-600/30 to-cyan-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-indigo-400/30">
-        <div className="text-center">
-          <SkeletonLoader width="w-20" height="h-4" className="mb-1" />
-          <SkeletonLoader width="w-16" height="h-3" />
+      {/* Container para elementos empilhados no mobile */}
+      <div className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-4">
+        {/* Ranking skeleton */}
+        <div className="bg-gradient-to-r from-indigo-600/30 to-cyan-600/30 backdrop-blur-sm rounded-xl px-2 py-1 sm:px-4 sm:py-2 border border-indigo-400/30">
+          <div className="text-center">
+            <SkeletonLoader width="w-16 sm:w-20" height="h-3 sm:h-4" className="mb-1" />
+            <SkeletonLoader width="w-12 sm:w-16" height="h-2 sm:h-3" />
+          </div>
         </div>
-      </div>
 
-      {/* Credits skeleton */}
-      <div className="bg-gradient-to-r from-yellow-600/30 to-orange-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-yellow-400/30">
-        <div className="flex items-center space-x-2">
-          <SkeletonLoader width="w-6" height="h-6" className="rounded-full" />
-          <div>
-            <SkeletonLoader width="w-12" height="h-4" className="mb-1" />
-            <SkeletonLoader width="w-16" height="h-3" />
+        {/* Credits skeleton */}
+        <div className="bg-gradient-to-r from-yellow-600/30 to-orange-600/30 backdrop-blur-sm rounded-xl px-2 py-1 sm:px-4 sm:py-2 border border-yellow-400/30">
+          <div className="flex items-center space-x-1 sm:space-x-2">
+            <SkeletonLoader width="w-4 sm:w-6" height="h-4 sm:h-6" className="rounded-full" />
+            <div>
+              <SkeletonLoader width="w-8 sm:w-12" height="h-3 sm:h-4" className="mb-1" />
+              <SkeletonLoader width="w-12 sm:w-16" height="h-2 sm:h-3" />
+            </div>
           </div>
         </div>
       </div>

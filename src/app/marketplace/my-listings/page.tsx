@@ -369,7 +369,7 @@ export default function MyMarketplaceListings() {
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             {/* Logo Section */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <Link href="/dashboard" className="flex items-center">
                 <Image
                   src="/Dropa!.png"
@@ -391,30 +391,33 @@ export default function MyMarketplaceListings() {
             </div>
 
             {/* Stats and Actions */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               {(profileLoading || statsLoading || rankingLoading) || (!userStats && !userProfile) ? (
                 <HeaderStatsSkeleton />
               ) : (
                 <>
-                  {/* Level and XP */}
+                  {/* Level and XP - sempre visível e com tamanho normal */}
                   {userStats && (
-                    <div className="bg-gradient-to-r from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-400/30 hover:border-purple-300/50 transition-colors duration-200">
+                    <div className="bg-gradient-to-r from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl px-3 py-2 sm:px-4 border border-purple-400/30 hover:border-purple-300/50 transition-colors duration-200">
                       <Link href="/achievements" className="flex items-center space-x-3 group">
                         <div className="text-center">
-                          <div className="text-purple-300 font-bold text-sm group-hover:text-purple-200 transition-colors">⭐ Nível {userStats.level || 1}</div>
+                          <div className="text-purple-300 font-bold text-xs sm:text-sm group-hover:text-purple-200 transition-colors">⭐ Nível {userStats.level || 1}</div>
                           <div className="text-xs text-gray-300 group-hover:text-purple-200 transition-colors">{userStats.totalXP || 0} XP</div>
                         </div>
                       </Link>
                     </div>
                   )}
+                  
+                  {/* Container para elementos empilhados no mobile */}
+                  <div className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-4">
 
-                  {/* User Ranking */}
-                  {!rankingLoading && bestRanking.position > 0 && (
-                    <div className="bg-gradient-to-r from-indigo-600/30 to-cyan-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-indigo-400/30 hover:border-indigo-300/50 transition-colors duration-200">
-                      <Link href="/rankings" className="flex items-center space-x-3 group">
-                        <div className="text-center">
-                          <div className="text-indigo-300 font-bold text-sm flex items-center">
-                            <span className="mr-1">📊</span>
+                    {/* User Ranking */}
+                    {!rankingLoading && bestRanking.position > 0 && (
+                      <div className="bg-gradient-to-r from-indigo-600/30 to-cyan-600/30 backdrop-blur-sm rounded-xl px-2 py-1 sm:px-4 sm:py-2 border border-indigo-400/30 hover:border-indigo-300/50 transition-colors duration-200">
+                        <Link href="/rankings" className="flex items-center space-x-1 sm:space-x-3 group">
+                          <div className="text-center">
+                            <div className="text-indigo-300 font-bold text-xs sm:text-sm flex items-center justify-center">
+                              <span className="mr-1 text-xs sm:text-sm">📊</span>
                             <span>#{bestRanking.position}</span>
                             <span className="ml-1 text-xs opacity-75">({Math.round(bestRanking.percentage)}%)</span>
                           </div>
@@ -426,15 +429,16 @@ export default function MyMarketplaceListings() {
                     </div>
                   )}
                   
-                  {/* Credits */}
-                  <div className="bg-gradient-to-r from-yellow-600/30 to-orange-600/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-yellow-400/30 hover:border-yellow-300/50 transition-colors duration-200">
-                    <Link href="/credits/purchase" className="flex items-center space-x-2 group">
-                      <span className="text-yellow-300 text-lg group-hover:scale-110 transition-transform duration-200">💰</span>
-                      <div>
-                        <div className="text-yellow-300 font-bold group-hover:text-yellow-200 transition-colors">{userProfile?.credits || 0}</div>
-                        <div className="text-xs text-yellow-200 group-hover:text-yellow-100 transition-colors">créditos</div>
-                      </div>
-                    </Link>
+                    {/* Credits */}
+                    <div className="bg-gradient-to-r from-yellow-600/30 to-orange-600/30 backdrop-blur-sm rounded-xl px-2 py-1 sm:px-4 sm:py-2 border border-yellow-400/30 hover:border-yellow-300/50 transition-colors duration-200">
+                      <Link href="/credits/purchase" className="flex items-center space-x-1 sm:space-x-2 group">
+                        <span className="text-yellow-300 text-sm sm:text-lg group-hover:scale-110 transition-transform duration-200">💰</span>
+                        <div>
+                          <div className="text-yellow-300 font-bold text-xs sm:text-sm group-hover:text-yellow-200 transition-colors">{userProfile?.credits || 0}</div>
+                          <div className="text-xs text-yellow-200 group-hover:text-yellow-100 transition-colors">créditos</div>
+                        </div>
+                      </Link>
+                    </div>
                   </div>
                 </>
               )}
@@ -602,7 +606,7 @@ export default function MyMarketplaceListings() {
                   {Array.from({ length: 3 }, (_, i) => (
                     <div key={i} className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-6 border-2 border-gray-500/30 animate-pulse">
                       <div className="flex flex-col lg:flex-row lg:items-center gap-6">
-                        <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-2 sm:space-x-4">
                           <div className="w-20 h-20 bg-gray-600 rounded-lg"></div>
                           <div>
                             <div className="w-32 h-6 bg-gray-600 rounded mb-2"></div>
@@ -639,7 +643,7 @@ export default function MyMarketplaceListings() {
                 >
                   <div className="flex flex-col lg:flex-row lg:items-center gap-6">
                     {/* Item Info */}
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2 sm:space-x-4">
                       <div className="w-20 h-20 bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
                         {listing.userItem.item.imageUrl && listing.userItem.item.imageUrl !== '/items/default.jpg' ? (
                           <img 
@@ -766,7 +770,7 @@ export default function MyMarketplaceListings() {
                   {Array.from({ length: 3 }, (_, i) => (
                     <div key={i} className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-6 border-2 border-gray-500/30 animate-pulse">
                       <div className="flex flex-col lg:flex-row lg:items-center gap-6">
-                        <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-2 sm:space-x-4">
                           <div className="w-20 h-20 bg-gray-600 rounded-lg"></div>
                           <div>
                             <div className="w-32 h-6 bg-gray-600 rounded mb-2"></div>
@@ -802,7 +806,7 @@ export default function MyMarketplaceListings() {
                 >
                   <div className="flex flex-col lg:flex-row lg:items-center gap-6">
                     {/* Item Info */}
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2 sm:space-x-4">
                       <div className="w-20 h-20 bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
                         {purchase.listing.userItem.item.imageUrl && purchase.listing.userItem.item.imageUrl !== '/items/default.jpg' ? (
                           <img 

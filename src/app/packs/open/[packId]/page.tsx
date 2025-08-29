@@ -284,7 +284,7 @@ export default function OpenPack() {
       <header className="relative z-10 bg-gradient-to-r from-purple-900/50 to-blue-900/50 backdrop-blur-xl border-b border-purple-500/30 shadow-2xl">
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <Link href="/dashboard" className="group">
                 <div className="flex items-center space-x-3 group-hover:scale-105 transition-all duration-300">
                   <img 
@@ -869,7 +869,7 @@ export default function OpenPack() {
                   <span className="text-3xl animate-pulse">🎯</span>
                 </h3>
                 
-                <div className="flex items-center justify-center space-x-4 mb-4">
+                <div className="flex items-center justify-center space-x-2 sm:space-x-4 mb-4">
                   <button
                     onClick={() => adjustQuantity(-1)}
                     disabled={quantity <= 1}
@@ -981,7 +981,7 @@ export default function OpenPack() {
                     onClick={openPack}
                     className="group relative w-full overflow-hidden px-10 py-5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white text-2xl font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl"
                   >
-                    <div className="flex items-center justify-center space-x-4">
+                    <div className="flex items-center justify-center space-x-2 sm:space-x-4">
                       <span className="text-3xl group-hover:animate-spin">🎲</span>
                       <span>Abrir {quantity === 1 ? 'Pacote Épico' : `${quantity} Pacotes Épicos`}</span>
                       <span className="text-3xl group-hover:animate-spin">🎲</span>
