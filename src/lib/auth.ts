@@ -146,6 +146,14 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string
         session.user.email = token.email as string
         session.user.name = (token.name as string) || ''
+        
+        // Update user activity on each session creation/refresh
+        try {
+          const { userStatsService } = await import('./user-stats')
+          await userStatsService.updateUserActivity(session.user.id)
+        } catch (error) {
+          console.error('Error updating user activity on session:', error)
+        }
       }
       return session
     },
