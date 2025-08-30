@@ -57,7 +57,6 @@ export class UserStatsService {
   // Atualizar atividade do usuário
   async updateUserActivity(userId: string): Promise<void> {
     const now = new Date()
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
     
     const userStats = await prisma.userStats.findUnique({
       where: { userId }
@@ -69,52 +68,63 @@ export class UserStatsService {
     }
 
     const lastActivity = userStats.lastActivityAt
-    const wasActiveToday = lastActivity && lastActivity >= today
+    let newStreak = userStats.currentStreak || 0
+    let shouldUpdateStreak = false
 
-    // Verificar se é um usuário recém-criado (criado hoje)
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { createdAt: true }
+    if (lastActivity) {
+      // Converter ambas as datas para horário de Brasília para comparação
+      const lastActivityBrasil = new Date(lastActivity.toLocaleString('en-US', {
+        timeZone: 'America/Sao_Paulo'
+      }))
+      
+      const currentBrasil = new Date(now.toLocaleString('en-US', {
+        timeZone: 'America/Sao_Paulo'
+      }))
+      
+      // Comparar apenas as datas (ano, mês, dia) no fuso de Brasília
+      const lastActivityDate = new Date(lastActivityBrasil.getFullYear(), lastActivityBrasil.getMonth(), lastActivityBrasil.getDate())
+      const currentDate = new Date(currentBrasil.getFullYear(), currentBrasil.getMonth(), currentBrasil.getDate())
+      
+      const timeDiff = currentDate.getTime() - lastActivityDate.getTime()
+      const daysDifference = Math.floor(timeDiff / (24 * 60 * 60 * 1000))
+      
+      if (daysDifference > 0) {
+        // É um dia diferente no fuso de Brasília, atualizar streak
+        shouldUpdateStreak = true
+        
+        if (daysDifference === 1 && newStreak > 0) {
+          // Exatamente 1 dia consecutivo: incrementa o streak
+          newStreak = newStreak + 1
+        } else {
+          // Primeiro login após streak quebrado (currentStreak pode estar em 0)
+          // ou gap > 1 dia: inicia nova sequência
+          newStreak = 1
+        }
+      }
+      // Se daysDifference === 0, é o mesmo dia, não atualizar streak
+    } else {
+      // Primeira atividade do usuário
+      shouldUpdateStreak = true
+      newStreak = 1
+    }
+
+    const longestStreak = Math.max(newStreak, userStats.longestStreak || 0)
+
+    // Sempre atualizar lastActivityAt, e streak apenas se mudou
+    const updateData = { lastActivityAt: now }
+    if (shouldUpdateStreak) {
+      updateData.currentStreak = newStreak
+      updateData.longestStreak = longestStreak
+    }
+
+    await prisma.userStats.update({
+      where: { userId },
+      data: updateData
     })
     
-    const isNewUser = user && user.createdAt >= today
-    
-    // Atualizar streak se não foi ativo hoje
-    if (!wasActiveToday) {
-      const yesterday = new Date(today)
-      yesterday.setDate(yesterday.getDate() - 1)
-      
-      let newStreak = 1
-      
-      // Para usuários novos, manter o streak inicial se já tem um
-      if (isNewUser && userStats.currentStreak > 0) {
-        newStreak = userStats.currentStreak
-      }
-      // Se foi ativo ontem, continua o streak
-      else if (lastActivity && lastActivity >= yesterday) {
-        newStreak = (userStats.currentStreak || 0) + 1
-      }
-
-      // Atualizar longest streak se necessário
-      const longestStreak = Math.max(newStreak, userStats.longestStreak || 0)
-
-      await prisma.userStats.update({
-        where: { userId },
-        data: {
-          currentStreak: newStreak,
-          longestStreak,
-          lastActivityAt: now
-        }
-      })
-      
-      // Invalidar cache se o streak mudou (pode afetar rankings)
+    // Invalidar cache se o streak mudou
+    if (shouldUpdateStreak) {
       await this.invalidateActivityCache()
-    } else {
-      // Apenas atualizar última atividade
-      await prisma.userStats.update({
-        where: { userId },
-        data: { lastActivityAt: now }
-      })
     }
   }
 
