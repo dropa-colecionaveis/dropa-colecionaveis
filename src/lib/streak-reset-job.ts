@@ -109,7 +109,8 @@ export class StreakResetService {
       revalidateTag('rankings-MONTHLY_ACTIVE')
       console.log('🗄️ Rankings cache invalidated')
     } catch (error) {
-      console.log('⚠️ Could not invalidate cache:', error.message)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      console.log('⚠️ Could not invalidate cache:', errorMessage)
     }
   }
   
