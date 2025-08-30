@@ -111,7 +111,7 @@ export class UserStatsService {
     const longestStreak = Math.max(newStreak, userStats.longestStreak || 0)
 
     // Sempre atualizar lastActivityAt, e streak apenas se mudou
-    const updateData = { lastActivityAt: now }
+    const updateData: any = { lastActivityAt: now }
     if (shouldUpdateStreak) {
       updateData.currentStreak = newStreak
       updateData.longestStreak = longestStreak
