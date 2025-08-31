@@ -16,7 +16,7 @@ interface AdminStats {
 export default function AdminPanel() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const { isAdmin, isLoading: adminLoading } = useAdmin()
+  const { isAdmin, loading: adminLoading } = useAdmin()
   const [stats, setStats] = useState<AdminStats>({
     totalUsers: 0,
     totalItems: 0,
@@ -118,6 +118,27 @@ export default function AdminPanel() {
           if (response.ok) {
             const data = await response.json()
             alert(`✅ Backup criado: ${data.filename}`)
+          }
+          break
+          
+        case 'validate-stats':
+          response = await fetch('/api/admin/validate-stats?action=check')
+          if (response.ok) {
+            const data = await response.json()
+            if (data.count === 0) {
+              alert('✅ Nenhuma inconsistência encontrada! Todas as estatísticas estão corretas.')
+            } else {
+              const shouldFix = confirm(`⚠️ ${data.count} inconsistência(s) encontrada(s). Deseja corrigir automaticamente?`)
+              if (shouldFix) {
+                const fixResponse = await fetch('/api/admin/validate-stats?action=fix')
+                if (fixResponse.ok) {
+                  const fixData = await fixResponse.json()
+                  alert(`✅ Correção concluída: ${fixData.fixed} usuários corrigidos, ${fixData.failed} falharam`)
+                }
+              } else {
+                alert(`📋 ${data.count} inconsistência(s) encontrada(s). Acesse o painel de monitoramento para mais detalhes.`)
+              }
+            }
           }
           break
       }
@@ -332,6 +353,54 @@ export default function AdminPanel() {
                   className="block w-full text-center px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition duration-200"
                 >
                   Ver Logs
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Stats Monitoring Section */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-white mb-6">📊 Monitoramento de Estatísticas</h2>
+            <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-gradient-to-br from-blue-900/40 to-indigo-900/40 backdrop-blur-lg rounded-lg p-6 text-white border border-blue-500/30">
+                <div className="text-4xl mb-4">🔍</div>
+                <h3 className="text-xl font-semibold mb-2">Monitoramento de Integridade</h3>
+                <p className="text-gray-300 mb-4">
+                  Sistema automático de detecção e correção de inconsistências nas estatísticas dos usuários
+                </p>
+                <Link
+                  href="/admin/stats-monitoring"
+                  className="block w-full text-center px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition duration-200"
+                >
+                  🚀 Abrir Monitoramento
+                </Link>
+              </div>
+              <div className="bg-gradient-to-br from-green-900/40 to-emerald-900/40 backdrop-blur-lg rounded-lg p-6 text-white border border-green-500/30">
+                <div className="text-4xl mb-4">⚡</div>
+                <h3 className="text-xl font-semibold mb-2">Status do Sistema</h3>
+                <p className="text-gray-300 mb-4">
+                  Visualize métricas em tempo real, histórico de correções e alertas críticos do sistema
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <Link
+                    href="/admin/stats-monitoring"
+                    className="text-center px-3 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition duration-200 text-sm"
+                  >
+                    📈 Dashboard
+                  </Link>
+                  <button
+                    onClick={() => handleQuickAction('validate-stats')}
+                    disabled={loading}
+                    className="px-3 py-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-600 rounded-lg transition duration-200 text-sm"
+                  >
+                    🔧 Validar Agora
+                  </button>
+                </div>
+                <Link
+                  href="/admin/stats-audit"
+                  className="w-full text-center px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition duration-200 text-sm"
+                >
+                  📋 Ver Auditoria Completa
                 </Link>
               </div>
             </div>

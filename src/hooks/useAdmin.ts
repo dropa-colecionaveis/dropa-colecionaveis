@@ -8,19 +8,19 @@ interface AdminInfo {
   role: string | null
 }
 
-export const useAdmin = (): AdminInfo => {
+export const useAdmin = () => {
   const { data: session, status } = useSession()
-  const [adminInfo, setAdminInfo] = useState<AdminInfo>({
+  const [adminInfo, setAdminInfo] = useState({
     isAdmin: false,
     isSuperAdmin: false,
-    isLoading: true,
-    role: null
+    loading: true,
+    role: null as string | null
   })
 
   useEffect(() => {
     const fetchUserRole = async () => {
       if (status === 'loading') {
-        setAdminInfo(prev => ({ ...prev, isLoading: true }))
+        setAdminInfo(prev => ({ ...prev, loading: true }))
         return
       }
 
@@ -28,7 +28,7 @@ export const useAdmin = (): AdminInfo => {
         setAdminInfo({
           isAdmin: false,
           isSuperAdmin: false,
-          isLoading: false,
+          loading: false,
           role: null
         })
         return
@@ -39,7 +39,7 @@ export const useAdmin = (): AdminInfo => {
         setAdminInfo({
           isAdmin: true,
           isSuperAdmin: false,
-          isLoading: false,
+          loading: false,
           role: 'ADMIN'
         })
         return
@@ -50,7 +50,7 @@ export const useAdmin = (): AdminInfo => {
         setAdminInfo({
           isAdmin: true,
           isSuperAdmin: true,
-          isLoading: false,
+          loading: false,
           role: 'SUPER_ADMIN'
         })
         return
@@ -59,6 +59,7 @@ export const useAdmin = (): AdminInfo => {
       try {
         // Fetch user role from API
         const response = await fetch(`/api/user/${session.user.id}`)
+        
         if (response.ok) {
           const userData = await response.json()
           const userRole = userData.role || 'USER'
@@ -69,7 +70,7 @@ export const useAdmin = (): AdminInfo => {
           setAdminInfo({
             isAdmin,
             isSuperAdmin,
-            isLoading: false,
+            loading: false,
             role: userRole
           })
         } else {
@@ -77,7 +78,7 @@ export const useAdmin = (): AdminInfo => {
           setAdminInfo({
             isAdmin: false,
             isSuperAdmin: false,
-            isLoading: false,
+            loading: false,
             role: 'USER'
           })
         }
@@ -86,7 +87,7 @@ export const useAdmin = (): AdminInfo => {
         setAdminInfo({
           isAdmin: false,
           isSuperAdmin: false,
-          isLoading: false,
+          loading: false,
           role: 'USER'
         })
       }

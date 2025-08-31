@@ -103,11 +103,14 @@ export async function POST(req: NextRequest) {
       })
     ])
 
-    // Process stats and achievements in background (non-blocking)
-    setImmediate(async () => {
-      try {
-        // Process stats and achievements in parallel
-        await Promise.allSettled([
+    // Process stats and achievements with integrity protection
+    const { integrityGuard } = await import('@/lib/integrity-guard')
+    
+    const { result: statsResult, integrity } = await integrityGuard.wrapPackOperation(
+      session.user.id,
+      async () => {
+        // Process stats and achievements in parallel but wait for completion
+        const results = await Promise.allSettled([
           userStatsService.trackPackOpening(
             session.user.id,
             freePackGrant.packId,
@@ -140,10 +143,28 @@ export async function POST(req: NextRequest) {
             }
           })
         ])
-      } catch (backgroundError) {
-        console.error('Background processing error:', backgroundError)
-      }
-    })
+        
+        // Check for failures
+        const failedOperations = results.filter(result => result.status === 'rejected')
+        if (failedOperations.length > 0) {
+          console.error('Some free pack operations failed:', failedOperations)
+          throw new Error(`${failedOperations.length} operations failed`)
+        }
+        
+        return { success: true, failedOperations: 0 }
+      },
+      freePackGrant.packId,
+      'FREE_PACK'
+    )
+    
+    // Log integrity status
+    if (integrity.autoFixed) {
+      console.log('✅ Free pack integrity: Auto-fixed inconsistencies')
+    } else if (!integrity.isValid) {
+      console.warn('⚠️ Free pack integrity: Issues detected but not fixed:', integrity.errors)
+    } else {
+      console.log('✅ Free pack integrity: All checks passed')
+    }
 
     return NextResponse.json({
       success: true,

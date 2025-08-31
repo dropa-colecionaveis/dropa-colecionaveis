@@ -240,3 +240,24 @@ export function hasPermission(
   const rolePermissions = ADMIN_PERMISSIONS[role as keyof typeof ADMIN_PERMISSIONS]
   return rolePermissions?.includes(permission as any) || false
 }
+
+/**
+ * Verifica se um usuário é admin (função simples para compatibilidade)
+ */
+export async function isAdmin(userId: string): Promise<boolean> {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true, isActive: true }
+    })
+    
+    if (!user || !user.isActive) {
+      return false
+    }
+    
+    return isAdminRole(user.role)
+  } catch (error) {
+    console.error('Error checking admin status:', error)
+    return false
+  }
+}
