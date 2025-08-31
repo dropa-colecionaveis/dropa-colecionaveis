@@ -48,7 +48,7 @@ interface Theme {
 export default function AdminCollections() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const { isAdmin, isLoading: adminLoading } = useAdmin()
+  const { isAdmin, loading: adminLoading } = useAdmin()
   const [collections, setCollections] = useState<Collection[]>([])
   const [themes, setThemes] = useState<Theme[]>([])
   const [loading, setLoading] = useState(true)

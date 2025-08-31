@@ -21,7 +21,7 @@ interface User {
 export default function AdminUsers() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const { isAdmin, isLoading: adminLoading } = useAdmin()
+  const { isAdmin, loading: adminLoading } = useAdmin()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)

@@ -27,7 +27,7 @@ interface Pack {
 export default function AdminPacks() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const { isAdmin, isLoading: adminLoading } = useAdmin()
+  const { isAdmin, loading: adminLoading } = useAdmin()
   const [packs, setPacks] = useState<Pack[]>([])
   const [loading, setLoading] = useState(true)
   const [editingPack, setEditingPack] = useState<Pack | null>(null)

@@ -40,7 +40,7 @@ const EMOJI_OPTIONS = ['📚', '⚔️', '🧙‍♂️', '💎', '🚀', '🐉'
 export default function AdminThemes() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const { isAdmin, isLoading: adminLoading } = useAdmin()
+  const { isAdmin, loading: adminLoading } = useAdmin()
   const [themes, setThemes] = useState<Theme[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)

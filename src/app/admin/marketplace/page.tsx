@@ -57,7 +57,7 @@ interface MarketplaceRule {
 export default function AdminMarketplace() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const { isAdmin, isLoading: adminLoading } = useAdmin()
+  const { isAdmin, loading: adminLoading } = useAdmin()
   const [marketplaceStats, setMarketplaceStats] = useState<MarketplaceStats | null>(null)
   const [antiFraudStats, setAntiFraudStats] = useState<AntiFreudStats | null>(null)
   const [rules, setRules] = useState<MarketplaceRule[]>([])
