@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useAdmin } from '@/hooks/useAdmin'
+import { ScarcityLevel, ScarcityManager } from '@/lib/scarcity-system'
 
 interface Collection {
   id: string
@@ -25,6 +26,14 @@ interface Collection {
   isActive: boolean
   isLimited: boolean
   createdAt: string
+  // Novos campos do Sistema de Escassez
+  isTemporal: boolean
+  availableFrom: string | null
+  availableUntil: string | null
+  collectionRarity: string | null
+  scarcityLevel: string
+  totalSupply: number | null
+  currentSupply: number
   stats: {
     totalItems: number
     totalUsers: number
@@ -63,7 +72,14 @@ export default function AdminCollections() {
     description: '',
     imageUrl: '',
     maxItems: '',
-    isLimited: false
+    isLimited: false,
+    // Novos campos do Sistema de Escassez
+    isTemporal: false,
+    availableFrom: '',
+    availableUntil: '',
+    scarcityLevel: 'COMMON',
+    totalSupply: '',
+    collectionRarity: ''
   })
 
   useEffect(() => {
@@ -121,7 +137,12 @@ export default function AdminCollections() {
       const submitData = {
         ...formData,
         themeId: selectedThemeId,
-        customTheme: selectedThemeId ? null : themeInput.trim()
+        customTheme: selectedThemeId ? null : themeInput.trim(),
+        // Processar campos do Sistema de Escassez
+        totalSupply: formData.totalSupply ? parseInt(formData.totalSupply) : null,
+        availableFrom: formData.availableFrom ? new Date(formData.availableFrom).toISOString() : null,
+        availableUntil: formData.availableUntil ? new Date(formData.availableUntil).toISOString() : null,
+        collectionRarity: formData.collectionRarity || null
       }
       
       const response = await fetch(url, {
@@ -152,7 +173,14 @@ export default function AdminCollections() {
       description: collection.description || '',
       imageUrl: collection.imageUrl || '',
       maxItems: collection.maxItems.toString(),
-      isLimited: collection.isLimited
+      isLimited: collection.isLimited,
+      // Novos campos do Sistema de Escassez
+      isTemporal: collection.isTemporal || false,
+      availableFrom: collection.availableFrom ? new Date(collection.availableFrom).toISOString().slice(0, 16) : '',
+      availableUntil: collection.availableUntil ? new Date(collection.availableUntil).toISOString().slice(0, 16) : '',
+      scarcityLevel: collection.scarcityLevel || 'COMMON',
+      totalSupply: collection.totalSupply?.toString() || '',
+      collectionRarity: collection.collectionRarity || ''
     })
     
     // Set theme data
@@ -237,7 +265,14 @@ export default function AdminCollections() {
       description: '',
       imageUrl: '',
       maxItems: '',
-      isLimited: false
+      isLimited: false,
+      // Novos campos do Sistema de Escassez
+      isTemporal: false,
+      availableFrom: '',
+      availableUntil: '',
+      scarcityLevel: 'COMMON',
+      totalSupply: '',
+      collectionRarity: ''
     })
     setThemeInput('')
     setSelectedThemeId(null)
@@ -280,6 +315,26 @@ export default function AdminCollections() {
     setThemeInput(theme.displayName)
     setShowThemeDropdown(false)
   }
+
+  // Funções auxiliares para Sistema de Escassez
+  const getScarcityOptions = () => [
+    { value: 'COMMON', label: '⚪ Comum' },
+    { value: 'UNCOMMON', label: '🟢 Incomum' },
+    { value: 'RARE', label: '🔵 Raro' },
+    { value: 'EPIC', label: '🟣 Épico' },
+    { value: 'LEGENDARY', label: '🟡 Lendário' },
+    { value: 'MYTHIC', label: '🔴 Mítico' },
+    { value: 'UNIQUE', label: '🌟 Único' }
+  ]
+
+  const getRarityOptions = () => [
+    { value: '', label: 'Sem raridade específica' },
+    { value: 'COMUM', label: 'Comum' },
+    { value: 'INCOMUM', label: 'Incomum' },
+    { value: 'RARO', label: 'Raro' },
+    { value: 'EPICO', label: 'Épico' },
+    { value: 'LENDARIO', label: 'Lendário' }
+  ]
 
   const filteredThemes = themes.filter(theme => 
     theme.displayName.toLowerCase().includes(themeInput.toLowerCase()) ||
@@ -362,6 +417,16 @@ export default function AdminCollections() {
                           Limitada
                         </span>
                       )}
+                      {collection.isTemporal && (
+                        <span className="px-2 py-1 bg-orange-500/20 text-orange-400 text-xs rounded-full">
+                          ⏰ Temporal
+                        </span>
+                      )}
+                      {collection.scarcityLevel && collection.scarcityLevel !== 'COMMON' && (
+                        <span className={`px-2 py-1 text-xs rounded-full ${ScarcityManager.getScarcityColor(collection.scarcityLevel as any)} bg-white/10`}>
+                          {ScarcityManager.getScarcityEmoji(collection.scarcityLevel as any)} {ScarcityManager.getScarcityName(collection.scarcityLevel as any)}
+                        </span>
+                      )}
                     </div>
                     
                     <div className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-semibold mb-3 bg-gradient-to-r ${getThemeDisplay(collection).colorClass} border ${getThemeDisplay(collection).borderClass}`}>
@@ -401,6 +466,35 @@ export default function AdminCollections() {
                       {collection.stats.completedByUsers} ({collection.stats.completionRate}%)
                     </span>
                   </div>
+
+                  {/* Informações de Escassez */}
+                  {collection.totalSupply && (
+                    <div className="flex justify-between text-gray-300">
+                      <span>Suprimento:</span>
+                      <span className="text-purple-400">
+                        {collection.currentSupply}/{collection.totalSupply}
+                      </span>
+                    </div>
+                  )}
+
+                  {collection.collectionRarity && (
+                    <div className="flex justify-between text-gray-300">
+                      <span>Raridade:</span>
+                      <span className="text-blue-400">{collection.collectionRarity}</span>
+                    </div>
+                  )}
+
+                  {collection.isTemporal && (
+                    <div className="text-xs text-orange-400 mt-2">
+                      ⏰ Disponibilidade Temporal
+                      {collection.availableFrom && (
+                        <div>De: {new Date(collection.availableFrom).toLocaleString('pt-BR')}</div>
+                      )}
+                      {collection.availableUntil && (
+                        <div>Até: {new Date(collection.availableUntil).toLocaleString('pt-BR')}</div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Progress Bar */}
@@ -643,6 +737,111 @@ export default function AdminCollections() {
                 <label htmlFor="isLimited" className="text-gray-300">
                   Coleção Limitada
                 </label>
+              </div>
+
+              {/* Sistema de Escassez Section */}
+              <div className="border-t border-gray-600 pt-4 mt-4">
+                <h4 className="text-lg font-semibold text-white mb-4">🌟 Sistema de Escassez</h4>
+                
+                {/* Nível de Escassez */}
+                <div className="mb-4">
+                  <label className="block text-gray-300 mb-2">Nível de Escassez:</label>
+                  <select
+                    value={formData.scarcityLevel}
+                    onChange={(e) => setFormData({...formData, scarcityLevel: e.target.value})}
+                    className="w-full px-3 py-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  >
+                    {getScarcityOptions().map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="text-xs text-gray-400 mt-1">
+                    Define a raridade e dificuldade de obtenção da coleção
+                  </div>
+                </div>
+
+                {/* Raridade da Coleção */}
+                <div className="mb-4">
+                  <label className="block text-gray-300 mb-2">Raridade Específica da Coleção:</label>
+                  <select
+                    value={formData.collectionRarity}
+                    onChange={(e) => setFormData({...formData, collectionRarity: e.target.value})}
+                    className="w-full px-3 py-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {getRarityOptions().map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="text-xs text-gray-400 mt-1">
+                    Se definida, todos os itens da coleção terão esta raridade
+                  </div>
+                </div>
+
+                {/* Suprimento Total */}
+                <div className="mb-4">
+                  <label className="block text-gray-300 mb-2">Fornecimento Máximo Total:</label>
+                  <input
+                    type="number"
+                    value={formData.totalSupply}
+                    onChange={(e) => setFormData({...formData, totalSupply: e.target.value})}
+                    className="w-full px-3 py-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    min="1"
+                    placeholder="Ex: 1000, 5000... (deixe vazio para ilimitado)"
+                  />
+                  <div className="text-xs text-gray-400 mt-1">
+                    Número máximo total de itens que podem ser coletados desta coleção
+                  </div>
+                </div>
+
+                {/* Disponibilidade Temporal */}
+                <div className="border-t border-gray-500 pt-4">
+                  <div className="flex items-center mb-4">
+                    <input
+                      type="checkbox"
+                      id="isTemporal"
+                      checked={formData.isTemporal}
+                      onChange={(e) => setFormData({...formData, isTemporal: e.target.checked})}
+                      className="mr-3 h-4 w-4 text-orange-600 bg-gray-700 border-gray-600 rounded focus:ring-orange-500 focus:ring-2"
+                    />
+                    <label htmlFor="isTemporal" className="text-gray-300 font-medium">
+                      ⏰ Coleção Temporal (Disponibilidade Limitada)
+                    </label>
+                  </div>
+
+                  {formData.isTemporal && (
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-gray-300 mb-2">Disponível a partir de:</label>
+                        <input
+                          type="datetime-local"
+                          value={formData.availableFrom}
+                          onChange={(e) => setFormData({...formData, availableFrom: e.target.value})}
+                          className="w-full px-3 py-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-gray-300 mb-2">Disponível até:</label>
+                        <input
+                          type="datetime-local"
+                          value={formData.availableUntil}
+                          onChange={(e) => setFormData({...formData, availableUntil: e.target.value})}
+                          className="w-full px-3 py-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
+                  {formData.isTemporal && (
+                    <div className="text-xs text-orange-400 mt-2">
+                      ⚠️ Coleções temporais ficam indisponíveis para novos drops após o prazo
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="flex space-x-3 pt-4">

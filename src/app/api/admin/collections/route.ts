@@ -97,7 +97,11 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { name, description, themeId, customTheme, imageUrl, maxItems, isLimited } = body
+    const { 
+      name, description, themeId, customTheme, imageUrl, maxItems, isLimited,
+      // Novos campos do Sistema de Escassez
+      isTemporal, availableFrom, availableUntil, collectionRarity, scarcityLevel, totalSupply
+    } = body
 
     // Validate required fields
     if (!name || (!themeId && !customTheme) || !maxItems) {
@@ -142,7 +146,15 @@ export async function POST(req: NextRequest) {
         imageUrl,
         maxItems: parseInt(maxItems),
         isLimited: Boolean(isLimited),
-        isActive: true
+        isActive: true,
+        // Novos campos do Sistema de Escassez
+        isTemporal: Boolean(isTemporal),
+        availableFrom: availableFrom ? new Date(availableFrom) : null,
+        availableUntil: availableUntil ? new Date(availableUntil) : null,
+        collectionRarity: collectionRarity || null,
+        scarcityLevel: scarcityLevel || 'COMMON',
+        totalSupply: totalSupply ? parseInt(totalSupply) : null,
+        currentSupply: 0
       },
       include: {
         theme: {

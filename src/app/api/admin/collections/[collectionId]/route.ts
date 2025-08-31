@@ -78,7 +78,11 @@ export async function PUT(
     }
 
     const body = await req.json()
-    const { name, description, themeId, customTheme, imageUrl, maxItems, isLimited, isActive } = body
+    const { 
+      name, description, themeId, customTheme, imageUrl, maxItems, isLimited, isActive,
+      // Novos campos do Sistema de Escassez  
+      isTemporal, availableFrom, availableUntil, collectionRarity, scarcityLevel, totalSupply
+    } = body
 
     // Validate theme exists if themeId is provided
     if (themeId) {
@@ -130,7 +134,14 @@ export async function PUT(
         ...(imageUrl !== undefined && { imageUrl }),
         ...(maxItems && { maxItems: parseInt(maxItems) }),
         ...(isLimited !== undefined && { isLimited: Boolean(isLimited) }),
-        ...(isActive !== undefined && { isActive: Boolean(isActive) })
+        ...(isActive !== undefined && { isActive: Boolean(isActive) }),
+        // Novos campos do Sistema de Escassez
+        ...(isTemporal !== undefined && { isTemporal: Boolean(isTemporal) }),
+        ...(availableFrom !== undefined && { availableFrom: availableFrom ? new Date(availableFrom) : null }),
+        ...(availableUntil !== undefined && { availableUntil: availableUntil ? new Date(availableUntil) : null }),
+        ...(collectionRarity !== undefined && { collectionRarity: collectionRarity || null }),
+        ...(scarcityLevel !== undefined && { scarcityLevel: scarcityLevel || 'COMMON' }),
+        ...(totalSupply !== undefined && { totalSupply: totalSupply ? parseInt(totalSupply) : null })
       },
       include: {
         theme: {

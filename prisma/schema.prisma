@@ -42,6 +42,7 @@ model User {
   userItemProtections     UserItemProtection[]
   userItems               UserItem[]
   userStats               UserStats?
+  uniqueItems             Item[]        @relation("UniqueItems")
 
   @@map("users")
 }
@@ -59,10 +60,19 @@ model Item {
   isLimitedEdition Boolean          @default(false)
   maxEditions      Int?
   currentEditions  Int              @default(0)
+  // Campos para Sistema de Escassez
+  isUnique         Boolean          @default(false) // Item único (1 exemplar mundial)
+  scarcityLevel    ScarcityLevel    @default(COMMON)
+  uniqueOwnerId    String?          // ID do dono atual (para itens únicos)
+  // Metadados temporais
+  isTemporal       Boolean          @default(false)
+  availableFrom    DateTime?
+  availableUntil   DateTime?
   createdAt        DateTime         @default(now())
   collection       Collection?      @relation(fields: [collectionId], references: [id])
   limitedEditions  LimitedEdition[]
   userItems        UserItem[]
+  uniqueOwner      User?            @relation("UniqueItems", fields: [uniqueOwnerId], references: [id])
 
   @@map("items")
 }
@@ -156,6 +166,16 @@ model Collection {
   maxItems        Int
   isActive        Boolean          @default(true)
   isLimited       Boolean          @default(false)
+  // Campos para Coleções Temporais
+  isTemporal      Boolean          @default(false)
+  availableFrom   DateTime?
+  availableUntil  DateTime?
+  // Campos para Coleções com Raridade específica
+  collectionRarity Rarity?
+  // Metadados de escassez
+  scarcityLevel   ScarcityLevel    @default(COMMON)
+  totalSupply     Int?             // Fornecimento máximo total da coleção
+  currentSupply   Int              @default(0)
   createdAt       DateTime         @default(now())
   theme           Theme?           @relation(fields: [themeId], references: [id])
   items           Item[]
@@ -515,6 +535,16 @@ enum PaymentMethod {
   PIX
   CREDIT_CARD
   DEBIT_CARD
+}
+
+enum ScarcityLevel {
+  COMMON      // Comum - disponível em grandes quantidades
+  UNCOMMON    // Incomum - disponibilidade limitada
+  RARE        // Raro - muito limitado
+  EPIC        // Épico - extremamente raro
+  LEGENDARY   // Lendário - quase impossível de obter
+  MYTHIC      // Mítico - apenas alguns exemplares
+  UNIQUE      // Único - apenas 1 exemplar mundial
 }
 
 model StatsMonitoringLog {

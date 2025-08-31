@@ -16,7 +16,11 @@ export async function PUT(req: NextRequest, { params }: { params: { itemId: stri
     }
 
     const body = await req.json()
-    const { name, description, rarity, value, imageUrl, isActive, collectionId, isLimitedEdition, maxEditions } = body
+    const { 
+      name, description, rarity, value, imageUrl, isActive, collectionId, isLimitedEdition, maxEditions,
+      // Novos campos do Sistema de Escassez
+      isUnique, scarcityLevel, isTemporal, availableFrom, availableUntil
+    } = body
     const itemId = params.itemId
 
     if (!name || !rarity || value === undefined) {
@@ -110,7 +114,13 @@ export async function PUT(req: NextRequest, { params }: { params: { itemId: stri
         isLimitedEdition: isLimitedEdition !== undefined ? Boolean(isLimitedEdition) : currentItem.isLimitedEdition,
         maxEditions: isLimitedEdition !== undefined 
           ? (isLimitedEdition && maxEditions ? parseInt(maxEditions) : null)
-          : currentItem.maxEditions
+          : currentItem.maxEditions,
+        // Novos campos do Sistema de Escassez
+        isUnique: isUnique !== undefined ? Boolean(isUnique) : currentItem.isUnique,
+        scarcityLevel: scarcityLevel !== undefined ? scarcityLevel : currentItem.scarcityLevel,
+        isTemporal: isTemporal !== undefined ? Boolean(isTemporal) : currentItem.isTemporal,
+        availableFrom: availableFrom !== undefined ? (availableFrom ? new Date(availableFrom) : null) : currentItem.availableFrom,
+        availableUntil: availableUntil !== undefined ? (availableUntil ? new Date(availableUntil) : null) : currentItem.availableUntil
       },
       include: {
         collection: {

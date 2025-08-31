@@ -406,6 +406,48 @@ export default function AdminPanel() {
             </div>
           </div>
 
+          {/* Scarcity System Section */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-white mb-6">🌟 Sistema de Escassez</h2>
+            <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-gradient-to-br from-pink-900/40 to-purple-900/40 backdrop-blur-lg rounded-lg p-6 text-white border border-pink-500/30">
+                <div className="text-4xl mb-4">🌟</div>
+                <h3 className="text-xl font-semibold mb-2">Dashboard de Escassez</h3>
+                <p className="text-gray-300 mb-4">
+                  Monitore itens únicos, edições limitadas, coleções temporais e níveis de escassez em tempo real
+                </p>
+                <Link
+                  href="/admin/scarcity-dashboard"
+                  className="block w-full text-center px-4 py-2 bg-pink-600 hover:bg-pink-700 rounded-lg transition duration-200"
+                >
+                  📊 Ver Dashboard
+                </Link>
+              </div>
+
+              <div className="bg-gradient-to-br from-orange-900/40 to-red-900/40 backdrop-blur-lg rounded-lg p-6 text-white border border-orange-500/30">
+                <div className="text-4xl mb-4">⏰</div>
+                <h3 className="text-xl font-semibold mb-2">Gestão de Escassez</h3>
+                <p className="text-gray-300 mb-4">
+                  Gerencie disponibilidade temporal, itens únicos, edições limitadas e controle de suprimento
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <Link
+                    href="/admin/items"
+                    className="text-center px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition duration-200 text-sm"
+                  >
+                    🏆 Itens
+                  </Link>
+                  <Link
+                    href="/admin/collections"
+                    className="text-center px-3 py-2 bg-orange-600 hover:bg-orange-700 rounded-lg transition duration-200 text-sm"
+                  >
+                    📚 Coleções
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Quick Actions */}
           <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6">
             <h2 className="text-2xl font-bold text-white mb-6">Ações Rápidas</h2>

@@ -57,7 +57,11 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { name, description, rarity, value, imageUrl, collectionId, isLimitedEdition, maxEditions } = await req.json()
+    const { 
+      name, description, rarity, value, imageUrl, collectionId, isLimitedEdition, maxEditions,
+      // Novos campos do Sistema de Escassez
+      isUnique, scarcityLevel, isTemporal, availableFrom, availableUntil
+    } = await req.json()
 
     if (!name || !rarity || !value) {
       return NextResponse.json(
@@ -121,7 +125,13 @@ export async function POST(req: NextRequest) {
         itemNumber,
         isLimitedEdition: Boolean(isLimitedEdition),
         maxEditions: isLimitedEdition && maxEditions ? parseInt(maxEditions) : null,
-        currentEditions: 0
+        currentEditions: 0,
+        // Novos campos do Sistema de Escassez
+        isUnique: Boolean(isUnique),
+        scarcityLevel: scarcityLevel || 'COMMON',
+        isTemporal: Boolean(isTemporal),
+        availableFrom: availableFrom ? new Date(availableFrom) : null,
+        availableUntil: availableUntil ? new Date(availableUntil) : null
       },
       include: {
         collection: {

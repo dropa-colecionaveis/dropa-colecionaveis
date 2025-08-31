@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { selectRandomRarity, getCachedItemsByRarity } from '@/lib/rarity-system'
 import { userStatsService } from '@/lib/user-stats'
+import PackScarcityIntegration from '@/lib/pack-scarcity-integration'
 
 export async function POST(req: Request) {
   try {
@@ -54,28 +55,51 @@ export async function POST(req: Request) {
       )
     }
 
-    // Select random rarity based on pack probabilities
-    const selectedRarity = selectRandomRarity(pack.probabilities)
-
-    // Get random item of selected rarity (usando cache)
-    const itemsByRarity = await getCachedItemsByRarity()
-    const allItems = itemsByRarity[selectedRarity]
-
-    // Filter items that are available (not sold out for limited editions)
-    const availableItems = allItems.filter(item => {
-      if (!item.isLimitedEdition) return true
-      if (!item.maxEditions) return true // unlimited limited edition
-      return item.currentEditions < item.maxEditions
+    // Usar o novo sistema de escassez para obter itens disponíveis
+    const availableItems = await PackScarcityIntegration.getAvailableItemsForPack({
+      packId: pack.id,
+      userId: session.user.id,
+      packType: pack.type,
+      timestamp: new Date()
     })
 
     if (availableItems.length === 0) {
       return NextResponse.json(
-        { error: 'No items available for selected rarity' },
+        { error: 'No items available at this time. Try again later!' },
         { status: 500 }
       )
     }
 
-    const selectedItem = availableItems[Math.floor(Math.random() * availableItems.length)]
+    // Select random rarity based on pack probabilities
+    const selectedRarity = selectRandomRarity(pack.probabilities)
+
+    // Filter available items by selected rarity
+    const itemsOfSelectedRarity = availableItems.filter(item => item.rarity === selectedRarity)
+
+    if (itemsOfSelectedRarity.length === 0) {
+      // Fallback to any available item if none of selected rarity
+      const fallbackItem = availableItems[Math.floor(Math.random() * availableItems.length)]
+      console.log(`No items of rarity ${selectedRarity} available, using fallback item`)
+    }
+
+    const selectedItemData = itemsOfSelectedRarity.length > 0 
+      ? itemsOfSelectedRarity[Math.floor(Math.random() * itemsOfSelectedRarity.length)]
+      : availableItems[Math.floor(Math.random() * availableItems.length)]
+
+    // Get full item data
+    const selectedItem = await prisma.item.findUnique({
+      where: { id: selectedItemData.id },
+      include: {
+        collection: true
+      }
+    })
+
+    if (!selectedItem) {
+      return NextResponse.json(
+        { error: 'Selected item not found' },
+        { status: 500 }
+      )
+    }
 
     // Process the pack opening in a transaction
     const result = await prisma.$transaction(async (tx) => {
@@ -89,43 +113,24 @@ export async function POST(req: Request) {
         }
       })
 
-      let limitedEditionId = null
-      let limitedEditionInfo = null
-
-      // Handle limited edition items
-      if (selectedItem.isLimitedEdition) {
-        // Update the item's current edition count
-        const updatedItem = await tx.item.update({
-          where: { id: selectedItem.id },
-          data: {
-            currentEditions: {
-              increment: 1
-            }
-          }
-        })
-
-        // Create the limited edition record
-        const limitedEdition = await tx.limitedEdition.create({
-          data: {
-            itemId: selectedItem.id,
-            serialNumber: updatedItem.currentEditions
-          }
-        })
-
-        limitedEditionId = limitedEdition.id
-        limitedEditionInfo = {
-          serialNumber: limitedEdition.serialNumber,
-          maxEditions: selectedItem.maxEditions,
-          mintedAt: limitedEdition.mintedAt
-        }
+      // Usar o novo sistema de processamento de drops
+      const dropResult = await PackScarcityIntegration.processItemDrop(selectedItem.id, session.user.id)
+      
+      if (!dropResult.success) {
+        throw new Error(dropResult.message || 'Failed to process item drop')
       }
 
-      // Add item to user's inventory
-      const userItem = await tx.userItem.create({
-        data: {
+      // Get the created user item for response
+      const userItem = await tx.userItem.findFirst({
+        where: {
           userId: session.user.id,
-          itemId: selectedItem.id,
-          limitedEditionId: limitedEditionId
+          itemId: selectedItem.id
+        },
+        orderBy: {
+          obtainedAt: 'desc'
+        },
+        include: {
+          limitedEdition: true
         }
       })
 
@@ -139,26 +144,39 @@ export async function POST(req: Request) {
       })
 
       // Record transaction
+      const transactionDescription = selectedItem.isUnique 
+        ? `Opened ${pack.name} - Received UNIQUE ${selectedItem.name} 🌟`
+        : selectedItem.isLimitedEdition && userItem?.limitedEdition
+        ? `Opened ${pack.name} - Received ${selectedItem.name} #${userItem.limitedEdition.serialNumber}`
+        : `Opened ${pack.name} - Received ${selectedItem.name}`
+
       await tx.transaction.create({
         data: {
           userId: session.user.id,
           type: 'PACK_PURCHASE',
           amount: -pack.price,
-          description: `Opened ${pack.name} - Received ${selectedItem.name}${limitedEditionInfo ? ` #${limitedEditionInfo.serialNumber}` : ''}`
+          description: transactionDescription
         }
       })
 
       return {
         item: {
           ...selectedItem,
-          limitedEdition: limitedEditionInfo
+          isUnique: selectedItem.isUnique,
+          scarcityLevel: selectedItem.scarcityLevel,
+          limitedEdition: userItem?.limitedEdition ? {
+            serialNumber: userItem.limitedEdition.serialNumber,
+            maxEditions: selectedItem.maxEditions,
+            mintedAt: userItem.limitedEdition.mintedAt
+          } : null
         },
         newBalance: updatedUser.credits,
         pack: {
           id: pack.id,
           name: pack.name,
           price: pack.price
-        }
+        },
+        dropMessage: dropResult.message
       }
     })
 
