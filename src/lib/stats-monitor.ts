@@ -194,9 +194,9 @@ export class StatsMonitor {
       await prisma.adminLog.create({
         data: {
           action: 'STATS_CRITICAL_ALERT',
-          details: alertData,
-          userId: 'system', // Ou ID do admin principal
-          success: false
+          description: `Critical stats inconsistencies detected: ${alertData.totalInconsistencies} users affected`,
+          metadata: alertData,
+          userId: 'system' // Ou ID do admin principal
         }
       })
     } catch (logError) {
