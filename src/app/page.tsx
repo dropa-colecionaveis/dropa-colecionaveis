@@ -204,7 +204,7 @@ export default function Home() {
               <div className="bg-black/20 rounded-xl p-4 border border-purple-500/20">
                 <div className="text-3xl mb-2">🏆</div>
                 <h4 className="text-purple-400 font-bold mb-2">Edições Limitadas</h4>
-                <p className="text-sm text-gray-300">Itens com <span className="text-purple-400">numeração sequencial</span> (#001/050)</p>
+                <p className="text-sm text-gray-300">Itens com <span className="text-purple-400">numeração sequencial</span> (#001/1000)</p>
               </div>
               <div className="bg-black/20 rounded-xl p-4 border border-pink-500/20">
                 <div className="text-3xl mb-2">📊</div>
@@ -216,9 +216,9 @@ export default function Home() {
             <div className="bg-gradient-to-r from-yellow-600/10 to-purple-600/10 rounded-2xl p-6 border border-yellow-500/20 mb-6">
               <h4 className="text-lg font-bold text-white mb-3">🎯 Fornecimento Ultra-Limitado</h4>
               <p className="text-gray-300 text-sm leading-relaxed">
-                Apenas <span className="text-yellow-400 font-bold">1.000 itens</span> da Genesis Collection poderão ser coletados por 
-                TODOS os jogadores do mundo. Quando atingir este limite, <span className="text-red-400 font-semibold">NUNCA MAIS</span> 
-                serão distribuídos novos itens desta coleção histórica.
+                Apenas <span className="text-yellow-400 font-bold">5.005 itens especiais</span> da Genesis Collection poderão ser coletados por 
+                TODOS os jogadores do mundo: <span className="text-pink-400">5 únicos + 5.000 limitados</span>. Quando atingir este limite, <span className="text-red-400 font-semibold">NUNCA MAIS</span> 
+                serão distribuídos novos itens especiais desta coleção histórica.
               </p>
             </div>
 
