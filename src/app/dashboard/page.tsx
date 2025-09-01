@@ -75,8 +75,11 @@ export default function Dashboard() {
     try {
       setProfileLoading(true)
       const response = await fetch('/api/user/profile', {
-        cache: 'force-cache',
-        next: { revalidate: 300 } // Cache 5min with ISR
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
       })
       
       if (response.ok) {

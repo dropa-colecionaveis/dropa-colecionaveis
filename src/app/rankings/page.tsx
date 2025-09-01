@@ -171,7 +171,11 @@ export default function Rankings() {
     try {
       setProfileLoading(true)
       const response = await fetch('/api/user/profile', {
-        headers: { 'Cache-Control': 'max-age=300' } // Cache 5min
+        cache: 'no-store',
+        headers: { 
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
       })
       if (response.ok) {
         const profileData = await response.json()

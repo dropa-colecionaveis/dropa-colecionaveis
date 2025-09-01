@@ -101,7 +101,11 @@ export default function CollectionDetail({ params }: { params: { id: string } })
     try {
       setProfileLoading(true)
       const profileResponse = await fetch('/api/user/profile', {
-        headers: { 'Cache-Control': 'max-age=180' }
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
       })
       
       if (profileResponse.ok) {

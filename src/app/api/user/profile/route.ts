@@ -60,9 +60,10 @@ export async function GET(req: Request) {
       }
     })
 
-    // Add aggressive caching headers
-    response.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=600')
-    response.headers.set('CDN-Cache-Control', 'public, max-age=600')
+    // Add no-cache headers for real-time data
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+    response.headers.set('Pragma', 'no-cache')
+    response.headers.set('Expires', '0')
     
     return response
   } catch (error) {
