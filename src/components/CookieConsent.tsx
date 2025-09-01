@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
 
 interface CookieConsent {
   necessary: boolean
@@ -95,7 +94,7 @@ export default function CookieConsent() {
   if (!showBanner) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50 p-4">
       <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-t-xl w-full max-w-4xl border border-gray-600 shadow-2xl">
         {/* Header */}
         <div className="p-6 border-b border-gray-600">
@@ -118,10 +117,7 @@ export default function CookieConsent() {
           <div className="p-6">
             <p className="text-gray-300 leading-relaxed mb-6">
               Utilizamos cookies para melhorar sua experiência, personalizar conteúdo e analisar o tráfego. 
-              Cookies necessários são sempre ativos para o funcionamento da plataforma. 
-              <Link href="/privacy" className="text-purple-300 hover:text-purple-200 underline ml-1">
-                Saiba mais em nossa Política de Privacidade
-              </Link>.
+              Cookies necessários são sempre ativos para o funcionamento da plataforma.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3">
@@ -261,21 +257,6 @@ export default function CookieConsent() {
             </div>
           </div>
         )}
-
-        {/* Footer */}
-        <div className="px-6 py-4 bg-gray-800/50 rounded-b-xl border-t border-gray-600">
-          <div className="flex flex-col sm:flex-row justify-between items-center text-sm text-gray-400">
-            <p>Você pode alterar suas preferências a qualquer momento nas configurações.</p>
-            <div className="flex space-x-4 mt-2 sm:mt-0">
-              <Link href="/privacy" className="text-purple-300 hover:text-purple-200 underline">
-                Política de Privacidade
-              </Link>
-              <Link href="/cookies" className="text-purple-300 hover:text-purple-200 underline">
-                Sobre Cookies
-              </Link>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   )
