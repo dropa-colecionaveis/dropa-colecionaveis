@@ -9,6 +9,13 @@ export async function GET(request: Request) {
   try {
     // Buscar estatísticas reais do banco de dados com queries detalhadas
     const statsData = await Promise.all([
+      // Total de itens no sistema (todos os itens ativos)
+      prisma.item.count({
+        where: { 
+          isActive: true
+        }
+      }),
+
       // Itens únicos totais
       prisma.item.count({
         where: { 
@@ -52,6 +59,7 @@ export async function GET(request: Request) {
     ])
 
     const [
+      totalItems,
       totalUniqueItems,
       claimedUniqueItems, 
       totalUsers,
@@ -61,6 +69,7 @@ export async function GET(request: Request) {
     ] = statsData
 
     console.log('📊 Raw stats:', {
+      totalItems,
       totalUniqueItems,
       claimedUniqueItems,
       totalUsers,
@@ -84,6 +93,11 @@ export async function GET(request: Request) {
     const availableUniqueItems = totalUniqueItems - claimedUniqueItems
 
     const response = {
+      totalItems: {
+        count: totalItems,
+        formatted: formatNumber(totalItems),
+        label: totalItems === 1 ? 'Item Cadastrado' : 'Itens Cadastrados'
+      },
       uniqueItems: {
         count: availableUniqueItems,
         formatted: formatNumber(availableUniqueItems),
@@ -127,6 +141,11 @@ export async function GET(request: Request) {
     
     // Fallback response
     const fallbackResponse = {
+      totalItems: {
+        count: 100,
+        formatted: '100+',
+        label: 'Itens Cadastrados'
+      },
       uniqueItems: {
         count: 5,
         formatted: '5',

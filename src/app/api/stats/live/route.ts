@@ -7,6 +7,7 @@ export async function GET() {
   try {
     // Buscar dados em tempo real
     const [
+      totalItems,
       totalUniqueItems,
       claimedUniqueItems,
       totalUsers,
@@ -14,6 +15,11 @@ export async function GET() {
       genesisItems,
       limitedEditionItems
     ] = await Promise.all([
+      prisma.item.count({
+        where: { 
+          isActive: true
+        }
+      }),
       prisma.item.count({
         where: { 
           isActive: true,
@@ -54,6 +60,11 @@ export async function GET() {
     }
 
     const response = {
+      totalItems: {
+        count: totalItems,
+        formatted: formatNumber(totalItems),
+        label: totalItems === 1 ? 'Item Cadastrado' : 'Itens Cadastrados'
+      },
       uniqueItems: {
         count: availableUniqueItems,
         formatted: formatNumber(availableUniqueItems),

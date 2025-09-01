@@ -7,6 +7,11 @@ import Link from 'next/link'
 import Image from 'next/image'
 
 interface PublicStats {
+  totalItems: {
+    count: number
+    formatted: string
+    label: string
+  }
   uniqueItems: {
     count: number
     formatted: string
@@ -56,6 +61,7 @@ export default function Home() {
           console.error('Failed to fetch stats:', response.status)
           // Set fallback data instead of leaving stats null
           setStats({
+            totalItems: { count: 100, formatted: '100+', label: 'Itens Cadastrados' },
             uniqueItems: { count: 0, formatted: '0', label: 'Itens Únicos' },
             totalUsers: { count: 0, formatted: '0', label: 'Jogadores Ativos' },
             packOpenings: { count: 0, formatted: '0', label: 'Pacotes Abertos' }
@@ -65,6 +71,7 @@ export default function Home() {
         console.error('Network error fetching stats:', error)
         // Set fallback data on network error
         setStats({
+          totalItems: { count: 100, formatted: '100+', label: 'Itens Cadastrados' },
           uniqueItems: { count: 0, formatted: '0', label: 'Itens Únicos' },
           totalUsers: { count: 0, formatted: '0', label: 'Jogadores Ativos' },
           packOpenings: { count: 0, formatted: '0', label: 'Pacotes Abertos' }
@@ -578,7 +585,30 @@ export default function Home() {
         </div>
 
         {/* Stats Section - Real Data with Enhanced Skeleton Loading */}
-        <div className="grid md:grid-cols-3 gap-8 mb-16 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-4 gap-6 mb-16 max-w-6xl mx-auto">
+          {/* Total de Itens Cadastrados */}
+          <div className="text-center bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:border-green-400/50 transition-all duration-300 group">
+            <div className="text-4xl font-bold text-green-400 mb-2 min-h-[48px] flex items-center justify-center">
+              {statsLoading ? (
+                <div className="relative">
+                  <div className="animate-pulse bg-gradient-to-r from-green-300/20 via-green-300/40 to-green-300/20 h-12 w-20 rounded-lg">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-300/30 to-transparent animate-shimmer"></div>
+                  </div>
+                </div>
+              ) : (
+                <span className="animate-fade-in group-hover:scale-110 transition-transform duration-300">
+                  {stats?.totalItems?.formatted || '100+'}
+                </span>
+              )}
+            </div>
+            <div className="text-gray-300 group-hover:text-green-300 transition-colors duration-300">
+              {statsLoading ? (
+                <div className="animate-pulse bg-gray-300/20 h-4 w-28 rounded mx-auto"></div>
+              ) : (
+                <p>{stats?.totalItems?.label || 'Itens Cadastrados'}</p>
+              )}
+            </div>
+          </div>
           {/* Items Únicos */}
           <div className="text-center bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:border-purple-400/50 transition-all duration-300 group">
             <div className="text-4xl font-bold text-purple-400 mb-2 min-h-[48px] flex items-center justify-center">
