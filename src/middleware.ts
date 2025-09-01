@@ -23,7 +23,8 @@ export default withAuth(
         }
 
         // Allow access to public stats API
-        if (req.nextUrl.pathname.startsWith('/api/stats/public')) {
+        if (req.nextUrl.pathname.startsWith('/api/stats/public') || 
+            req.nextUrl.pathname.startsWith('/api/stats/live')) {
           return true
         }
 
