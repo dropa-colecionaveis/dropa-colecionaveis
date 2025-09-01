@@ -53,7 +53,7 @@ export default function Home() {
             'Pragma': 'no-cache'
           }
         })
-        
+
         if (response.ok) {
           const data = await response.json()
           setStats(data)
@@ -82,10 +82,10 @@ export default function Home() {
     }
 
     fetchStats()
-    
+
     // Auto-refresh stats every 30 seconds
     const interval = setInterval(fetchStats, 30000)
-    
+
     return () => clearInterval(interval)
   }, [])
 
@@ -100,7 +100,7 @@ export default function Home() {
       {status === 'loading' && (
         <div className="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-blue-500 animate-pulse z-50"></div>
       )}
-      
+
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-20 left-10 text-purple-300/20 text-6xl animate-pulse">⚡</div>
@@ -190,11 +190,11 @@ export default function Home() {
               GENESIS COLLECTION - A PRIMEIRA ERA
             </h2>
             <p className="text-xl text-gray-300 mb-6 leading-relaxed max-w-3xl mx-auto">
-              O marco zero dos colecionáveis digitais chegou! A <span className="text-yellow-400 font-semibold">Genesis Collection</span> é 
-              a primeira coleção oficial da plataforma, apresentando um <span className="text-purple-400 font-semibold">sistema revolucionário 
+              O marco zero dos colecionáveis digitais chegou! A <span className="text-yellow-400 font-semibold">Genesis Collection</span> é
+              a primeira coleção oficial da plataforma, apresentando um <span className="text-purple-400 font-semibold">sistema revolucionário
               de escassez multi-camadas</span> nunca visto antes.
             </p>
-            
+
             <div className="grid md:grid-cols-3 gap-6 mb-6">
               <div className="bg-black/20 rounded-xl p-4 border border-yellow-500/20">
                 <div className="text-3xl mb-2">🌟</div>
@@ -216,8 +216,8 @@ export default function Home() {
             <div className="bg-gradient-to-r from-yellow-600/10 to-purple-600/10 rounded-2xl p-6 border border-yellow-500/20 mb-6">
               <h4 className="text-lg font-bold text-white mb-3">🎯 Fornecimento Ultra-Limitado</h4>
               <p className="text-gray-300 text-sm leading-relaxed">
-                Apenas <span className="text-yellow-400 font-bold">5.005 itens especiais</span> da Genesis Collection poderão ser coletados por 
-                TODOS os jogadores do mundo: <span className="text-pink-400">5 únicos + 5.000 limitados</span>. Quando atingir este limite, <span className="text-red-400 font-semibold">NUNCA MAIS</span> 
+                Apenas <span className="text-yellow-400 font-bold">5.005 itens especiais</span> da Genesis Collection poderão ser coletados por
+                TODOS os jogadores do mundo: <span className="text-pink-400">5 únicos + 5.000 limitados</span>. Quando atingir este limite, <span className="text-red-400 font-semibold">NUNCA MAIS</span>
                 serão distribuídos novos itens especiais desta coleção histórica.
               </p>
             </div>
@@ -236,8 +236,8 @@ export default function Home() {
           <h2 className="text-4xl font-bold text-white mb-8">⚡ Sistema de Escassez Revolucionário</h2>
           <div className="max-w-6xl mx-auto">
             <p className="text-xl text-gray-300 mb-12 leading-relaxed">
-              Diferente de qualquer plataforma existente, o <span className="text-purple-400 font-semibold">Dropa!</span> implementa 
-              um <span className="text-blue-400 font-semibold">sistema multi-camadas de escassez</span> que combina raridade tradicional 
+              Diferente de qualquer plataforma existente, o <span className="text-purple-400 font-semibold">Dropa!</span> implementa
+              um <span className="text-blue-400 font-semibold">sistema multi-camadas de escassez</span> que combina raridade tradicional
               com escassez real, criando uma economia digital única.
             </p>
 
@@ -286,7 +286,7 @@ export default function Home() {
                 <div className="text-5xl mb-4">🌟</div>
                 <h3 className="text-xl font-bold text-pink-400 mb-3">Itens Únicos</h3>
                 <p className="text-gray-300 text-sm leading-relaxed">
-                  Apenas <span className="text-pink-400 font-semibold">1 exemplar mundial</span> existe. 
+                  Apenas <span className="text-pink-400 font-semibold">1 exemplar mundial</span> existe.
                   Quando alguém o obtém, <span className="text-red-400">NUNCA MAIS</span> pode ser encontrado por outros jogadores.
                 </p>
               </div>
@@ -295,7 +295,7 @@ export default function Home() {
                 <div className="text-5xl mb-4">🏆</div>
                 <h3 className="text-xl font-bold text-purple-400 mb-3">Edições Limitadas</h3>
                 <p className="text-gray-300 text-sm leading-relaxed">
-                  Itens com <span className="text-purple-400 font-semibold">numeração sequencial</span> (#001/100). 
+                  Itens com <span className="text-purple-400 font-semibold">numeração sequencial</span> (#001/100).
                   Cada edição tem seu número único e quando esgotar, <span className="text-red-400">nunca mais</span> será criada.
                 </p>
               </div>
@@ -304,7 +304,7 @@ export default function Home() {
                 <div className="text-5xl mb-4">⏰</div>
                 <h3 className="text-xl font-bold text-orange-400 mb-3">Temporalidade</h3>
                 <p className="text-gray-300 text-sm leading-relaxed">
-                  Algumas coleções têm <span className="text-orange-400 font-semibold">prazo de validade</span>. 
+                  Algumas coleções têm <span className="text-orange-400 font-semibold">prazo de validade</span>.
                   Quando o tempo acabar, <span className="text-red-400">desaparecem para sempre</span> e nunca mais podem ser obtidas.
                 </p>
               </div>
@@ -313,7 +313,7 @@ export default function Home() {
                 <div className="text-5xl mb-4">📊</div>
                 <h3 className="text-xl font-bold text-blue-400 mb-3">Fornecimento Controlado</h3>
                 <p className="text-gray-300 text-sm leading-relaxed">
-                  Cada coleção tem um <span className="text-blue-400 font-semibold">limite máximo</span> de itens que podem ser coletados. 
+                  Cada coleção tem um <span className="text-blue-400 font-semibold">limite máximo</span> de itens que podem ser coletados.
                   Esgotou? <span className="text-red-400">Fim da história</span>.
                 </p>
               </div>
@@ -330,8 +330,8 @@ export default function Home() {
                 <div className="text-6xl mb-4">💳</div>
                 <h3 className="text-2xl font-bold text-green-400 mb-4">1. Compre Créditos</h3>
                 <p className="text-gray-300 leading-relaxed">
-                  Adquira créditos com <span className="text-green-400 font-semibold">dinheiro real</span> através de PIX, 
-                  cartão ou PayPal. Seus créditos são a moeda do universo Dropa!
+                  Adquira créditos com <span className="text-green-400 font-semibold">dinheiro real</span> através de PIX e
+                  cartão. Seus créditos são a moeda do universo Dropa!
                 </p>
               </div>
 
@@ -339,7 +339,7 @@ export default function Home() {
                 <div className="text-6xl mb-4">📦</div>
                 <h3 className="text-2xl font-bold text-purple-400 mb-4">2. Abra Pacotes</h3>
                 <p className="text-gray-300 leading-relaxed">
-                  Use seus créditos para abrir <span className="text-purple-400 font-semibold">pacotes místicos</span>. 
+                  Use seus créditos para abrir <span className="text-purple-400 font-semibold">pacotes místicos</span>.
                   Cada pacote tem probabilidades diferentes e pode conter desde itens comuns até únicos!
                 </p>
               </div>
@@ -348,7 +348,7 @@ export default function Home() {
                 <div className="text-6xl mb-4">🏆</div>
                 <h3 className="text-2xl font-bold text-blue-400 mb-4">3. Colecione & Trade</h3>
                 <p className="text-gray-300 leading-relaxed">
-                  Construa sua <span className="text-blue-400 font-semibold">coleção épica</span>, 
+                  Construa sua <span className="text-blue-400 font-semibold">coleção épica</span>,
                   complete sets, troque no marketplace e torne-se uma <span className="text-yellow-400">lenda</span>!
                 </p>
               </div>
@@ -416,7 +416,7 @@ export default function Home() {
             </div>
           </div>
           <p className="text-gray-300 mt-6 text-sm">
-            💡 <span className="text-yellow-400 font-semibold">Dica:</span> Pacotes mais caros têm maior chance de itens raros, 
+            💡 <span className="text-yellow-400 font-semibold">Dica:</span> Pacotes mais caros têm maior chance de itens raros,
             mas mesmo no Bronze você pode encontrar itens <span className="text-pink-400">únicos</span>!
           </p>
         </div>
@@ -425,7 +425,7 @@ export default function Home() {
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-white mb-8">👑 Itens Únicos da Genesis Collection</h2>
           <p className="text-gray-300 mb-12 max-w-3xl mx-auto">
-            Conheça os <span className="text-pink-400 font-semibold">5 itens únicos</span> da Genesis Collection. 
+            Conheça os <span className="text-pink-400 font-semibold">5 itens únicos</span> da Genesis Collection.
             Apenas <span className="text-yellow-400 font-bold">1 pessoa no mundo inteiro</span> poderá possuir cada um destes tesouros lendários:
           </p>
 
@@ -528,8 +528,8 @@ export default function Home() {
           <div className="bg-gradient-to-r from-red-900/30 to-pink-900/30 backdrop-blur-lg rounded-2xl p-6 border border-red-500/20 mt-8 max-w-4xl mx-auto">
             <h4 className="text-xl font-bold text-red-400 mb-3">⚠️ ATENÇÃO: Escassez Real</h4>
             <p className="text-gray-300 text-sm leading-relaxed mb-4">
-              Estes itens são <span className="text-red-400 font-semibold">verdadeiramente únicos</span>. Quando alguém obtém um item único, 
-              ele <span className="text-yellow-400 font-bold">desaparece permanentemente</span> do pool de drops. 
+              Estes itens são <span className="text-red-400 font-semibold">verdadeiramente únicos</span>. Quando alguém obtém um item único,
+              ele <span className="text-yellow-400 font-bold">desaparece permanentemente</span> do pool de drops.
               <span className="text-pink-400 font-semibold">Não há como criar duplicatas</span> ou "resetar" o item.
             </p>
             <p className="text-yellow-300 text-sm font-semibold">
@@ -546,8 +546,8 @@ export default function Home() {
               A CORRIDA PELOS ÚNICOS JÁ COMEÇOU!
             </h2>
             <p className="text-xl text-gray-300 mb-8 leading-relaxed">
-              Outros jogadores já estão se cadastrando e comprando créditos para serem os primeiros a abrir pacotes. 
-              <span className="text-red-400 font-semibold">Cada segundo que passa é uma chance perdida</span> de ser o único proprietário 
+              Outros jogadores já estão se cadastrando e comprando créditos para serem os primeiros a abrir pacotes.
+              <span className="text-red-400 font-semibold">Cada segundo que passa é uma chance perdida</span> de ser o único proprietário
               de um tesouro digital histórico.
             </p>
 

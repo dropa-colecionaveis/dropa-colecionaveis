@@ -38,17 +38,17 @@ export default function PurchaseCredits() {
     try {
       setProfileLoading(true)
       setStatsLoading(true)
-      
+
       const [profileResponse, statsResponse] = await Promise.all([
         fetch('/api/user/profile'),
         fetch('/api/user/stats')
       ])
-      
+
       if (profileResponse.ok) {
         const profileData = await profileResponse.json()
         setUserProfile(profileData)
       }
-      
+
       if (statsResponse.ok) {
         const statsData = await statsResponse.json()
         setUserStats(statsData)
@@ -68,9 +68,9 @@ export default function PurchaseCredits() {
 
   const handlePIXPayment = async () => {
     if (!selectedPaymentMethod) return
-    
+
     setLoading(true)
-    
+
     try {
       const response = await fetch('/api/payments/mercadopago/pix', {
         method: 'POST',
@@ -103,7 +103,7 @@ export default function PurchaseCredits() {
 
   const handleCardPayment = async (cardData: any) => {
     setLoading(true)
-    
+
     try {
       const response = await fetch('/api/payments/mercadopago/card', {
         method: 'POST',
@@ -121,7 +121,7 @@ export default function PurchaseCredits() {
 
       if (data.success) {
         setPaymentResponse(data)
-        
+
         if (data.status === 'APPROVED') {
           // Payment approved immediately
           alert(data.message || 'Pagamento aprovado! Créditos adicionados à sua conta.')
@@ -162,7 +162,7 @@ export default function PurchaseCredits() {
       try {
         const response = await fetch(`/api/payments/status?paymentId=${paymentId}`)
         const payment = await response.json()
-        
+
         if (payment.status === 'APPROVED') {
           clearInterval(pollInterval)
           alert('Pagamento aprovado! Créditos adicionados à sua conta.')
@@ -200,7 +200,7 @@ export default function PurchaseCredits() {
       {status === 'loading' && (
         <div className="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-blue-500 animate-pulse z-50"></div>
       )}
-      
+
       {/* Header */}
       <header className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 backdrop-blur-lg border-b border-purple-500/30 shadow-xl">
         <div className="container mx-auto px-4 py-3">
@@ -217,7 +217,7 @@ export default function PurchaseCredits() {
                   priority
                 />
               </Link>
-              
+
               {/* Page Title */}
               <div className="hidden md:block">
                 <div className="text-white font-medium">
@@ -244,7 +244,7 @@ export default function PurchaseCredits() {
                       </Link>
                     </div>
                   )}
-                  
+
                   {/* Container para elementos empilhados no mobile */}
                   <div className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-4">
 
@@ -265,7 +265,7 @@ export default function PurchaseCredits() {
                         </Link>
                       </div>
                     )}
-                  
+
                     {/* Credits */}
                     <div className="bg-gradient-to-r from-yellow-600/30 to-orange-600/30 backdrop-blur-sm rounded-xl px-2 py-1 sm:px-4 sm:py-2 border border-yellow-400/30 hover:border-yellow-300/50 transition-colors duration-200">
                       <Link href="/credits/purchase" className="flex items-center space-x-1 sm:space-x-2 group">
@@ -279,7 +279,7 @@ export default function PurchaseCredits() {
                   </div>
                 </>
               )}
-              
+
               {/* Quick Actions */}
               <div className="flex items-center space-x-2">
                 {/* Admin Link */}
@@ -292,7 +292,7 @@ export default function PurchaseCredits() {
                     🔧
                   </Link>
                 )}
-                
+
                 <button
                   onClick={() => setShowLogoutModal(true)}
                   className="p-2 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white rounded-lg transition-all duration-200 font-medium shadow-lg hover:shadow-xl hover:scale-105"
@@ -334,7 +334,7 @@ export default function PurchaseCredits() {
                     </span>
                   </div>
                 )}
-                
+
                 <div className="text-3xl font-bold text-white mb-2">
                   {pkg.credits}
                 </div>
@@ -376,8 +376,75 @@ export default function PurchaseCredits() {
               >
                 <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">💳</div>
                 <div className="font-semibold">Cartão de Crédito</div>
-                <div className="text-sm text-gray-300 mt-1">Até 12x sem juros</div>
+                <div className="text-sm text-gray-300 mt-1">Até 3x sem juros</div>
               </button>
+            </div>
+          </div>
+
+          {/* Security & Trust Section */}
+          <div className="bg-gradient-to-r from-green-900/20 to-blue-900/20 backdrop-blur-lg rounded-2xl p-6 border border-green-500/20 mb-8">
+            <div className="text-center mb-6">
+              <div className="text-4xl mb-3">🛡️</div>
+              <h3 className="text-2xl font-bold text-white mb-4">Pagamento 100% Seguro</h3>
+              <p className="text-gray-300 text-sm leading-relaxed max-w-2xl mx-auto">
+                Seus dados e transações estão protegidos pelos mais altos padrões de segurança da indústria.
+                Utilizamos tecnologia de ponta para garantir que seu pagamento seja processado com total segurança.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <div className="bg-black/20 rounded-xl p-4 text-center border border-green-500/20">
+                <div className="text-3xl mb-2">🔒</div>
+                <h4 className="text-green-400 font-semibold mb-1">SSL 256-bit</h4>
+                <p className="text-xs text-gray-300">Certificado de segurança avançado</p>
+              </div>
+              
+              <div className="bg-black/20 rounded-xl p-4 text-center border border-blue-500/20">
+                <div className="text-3xl mb-2">🏦</div>
+                <h4 className="text-blue-400 font-semibold mb-1">MercadoPago</h4>
+                <p className="text-xs text-gray-300">Processamento seguro e confiável</p>
+              </div>
+
+              <div className="bg-black/20 rounded-xl p-4 text-center border border-purple-500/20">
+                <div className="text-3xl mb-2">🛡️</div>
+                <h4 className="text-purple-400 font-semibold mb-1">PCI DSS</h4>
+                <p className="text-xs text-gray-300">Padrão de segurança da indústria</p>
+              </div>
+
+              <div className="bg-black/20 rounded-xl p-4 text-center border border-yellow-500/20">
+                <div className="text-3xl mb-2">⚡</div>
+                <h4 className="text-yellow-400 font-semibold mb-1">PIX Instantâneo</h4>
+                <p className="text-xs text-gray-300">Pagamento aprovado em segundos</p>
+              </div>
+            </div>
+
+            <div className="bg-black/30 rounded-xl p-4 border border-gray-600/30">
+              <div className="flex flex-col md:flex-row items-center justify-center space-y-3 md:space-y-0 md:space-x-8 text-sm text-gray-300">
+                <div className="flex items-center space-x-2">
+                  <span className="text-green-400">✓</span>
+                  <span>Dados criptografados</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-green-400">✓</span>
+                  <span>Não armazenamos cartões</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-green-400">✓</span>
+                  <span>Transações monitoradas</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-green-400">✓</span>
+                  <span>Suporte 24/7</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="text-center mt-4">
+              <p className="text-xs text-gray-400">
+                🔐 Todos os pagamentos são processados através de conexão segura com certificado SSL.
+                <br />
+                Seus dados pessoais e financeiros estão protegidos e nunca são compartilhados com terceiros.
+              </p>
             </div>
           </div>
 
@@ -402,7 +469,7 @@ export default function PurchaseCredits() {
                 <h3 className="text-xl font-bold text-white mb-4 flex items-center">
                   📱 <span className="ml-2">Pagamento PIX</span>
                 </h3>
-                
+
                 {!paymentResponse ? (
                   <div>
                     <div className="bg-gradient-to-r from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl p-4 mb-6 border border-purple-400/30">
@@ -411,7 +478,7 @@ export default function PurchaseCredits() {
                         <div className="text-2xl font-bold text-green-400">R$ {selectedPackage.price}</div>
                       </div>
                     </div>
-                    
+
                     <div className="flex space-x-3">
                       <button
                         onClick={() => setShowPaymentModal(false)}
@@ -435,17 +502,17 @@ export default function PurchaseCredits() {
                       <h4 className="text-lg font-semibold text-white mb-2">Escaneie o QR Code</h4>
                       <p className="text-gray-300 text-sm">Use o app do seu banco para pagar</p>
                     </div>
-                    
+
                     {paymentResponse.pixQrCodeBase64 && (
                       <div className="bg-white p-4 rounded-lg mb-4 text-center">
-                        <img 
+                        <img
                           src={`data:image/png;base64,${paymentResponse.pixQrCodeBase64}`}
                           alt="PIX QR Code"
                           className="mx-auto max-w-48 max-h-48"
                         />
                       </div>
                     )}
-                    
+
                     {paymentResponse.pixCopyPaste && (
                       <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -467,13 +534,13 @@ export default function PurchaseCredits() {
                         </div>
                       </div>
                     )}
-                    
+
                     <div className="text-center text-gray-300 text-sm mb-4">
                       Aguardando pagamento... ⏳
                       <br />
                       <span className="text-yellow-400">PIX expira em 15 minutos</span>
                     </div>
-                    
+
                     <button
                       onClick={() => {setShowPaymentModal(false); setPaymentResponse(null)}}
                       className="w-full px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200"
@@ -489,14 +556,14 @@ export default function PurchaseCredits() {
                 <h3 className="text-xl font-bold text-white mb-4 flex items-center">
                   💳 <span className="ml-2">Cartão de Crédito</span>
                 </h3>
-                
+
                 <div className="bg-gradient-to-r from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl p-4 mb-6 border border-purple-400/30">
                   <div className="text-white text-center">
                     <div className="text-lg font-semibold mb-2">{selectedPackage.credits} créditos</div>
                     <div className="text-2xl font-bold text-green-400">R$ {selectedPackage.price}</div>
                   </div>
                 </div>
-                
+
                 <CardPaymentForm
                   amount={selectedPackage.price}
                   credits={selectedPackage.credits}
