@@ -1,0 +1,41 @@
+{
+  "name": "Dropa! - Colecionáveis Digitais",
+  "short_name": "Dropa!",
+  "description": "Plataforma de colecionáveis digitais gamificada com sistema revolucionário de escassez",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#9333ea",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["games", "entertainment", "lifestyle"],
+  "lang": "pt-BR",
+  "scope": "/",
+  "id": "/",
+  "dir": "ltr"
+}
