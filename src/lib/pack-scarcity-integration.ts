@@ -335,8 +335,10 @@ export class PackScarcityIntegration {
         }),
         prisma.item.aggregate({
           where: { isLimitedEdition: true, isActive: true },
-          _sum: { currentEditions: true },
-          _sum: { maxEditions: true }
+          _sum: { 
+            currentEditions: true,
+            maxEditions: true 
+          }
         }),
 
         // Coleções temporais
