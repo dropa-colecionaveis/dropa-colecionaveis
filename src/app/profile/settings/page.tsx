@@ -266,9 +266,9 @@ export default function ProfileSettingsPage() {
               {/* Current Profile Picture */}
               <div className="relative">
                 <div className="w-32 h-32 rounded-full overflow-hidden bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-6xl font-bold text-white shadow-lg">
-                  {profile.profileImage || session?.user?.image ? (
+                  {profile.profileImage ? (
                     <Image
-                      src={profile.profileImage || session?.user?.image || ''}
+                      src={profile.profileImage}
                       alt={profile.name || 'Profile'}
                       width={128}
                       height={128}
