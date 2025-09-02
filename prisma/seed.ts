@@ -88,6 +88,7 @@ async function main() {
       name: 'Pacote Bronze',
       description: 'Um pacote básico com boa chance de itens comuns e incomuns',
       price: 25,
+      isActive: true,
     },
   })
 
@@ -97,6 +98,7 @@ async function main() {
       name: 'Pacote Prata',
       description: 'Um pacote intermediário com boas chances de itens',
       price: 40,
+      isActive: true,
     },
   })
 
@@ -106,6 +108,7 @@ async function main() {
       name: 'Pacote Ouro',
       description: 'Um pacote premium com maiores chances de itens raros',
       price: 75,
+      isActive: true,
     },
   })
 
@@ -115,6 +118,7 @@ async function main() {
       name: 'Pacote Platina',
       description: 'Um pacote luxuoso com excelentes chances',
       price: 150,
+      isActive: true,
     },
   })
 
@@ -124,6 +128,7 @@ async function main() {
       name: 'Pacote Diamante',
       description: 'O pacote supremo com as melhores chances',
       price: 300,
+      isActive: true,
     },
   })
 
