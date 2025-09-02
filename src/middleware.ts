@@ -17,6 +17,12 @@ export default withAuth(
           return true
         }
 
+        // Allow access to public profile pages (but not settings)
+        if (req.nextUrl.pathname.startsWith('/profile/') && 
+            !req.nextUrl.pathname.startsWith('/profile/settings')) {
+          return true
+        }
+
         // Allow access to API routes that don't require auth
         if (req.nextUrl.pathname.startsWith('/api/auth/')) {
           return true
@@ -25,6 +31,11 @@ export default withAuth(
         // Allow access to public stats API
         if (req.nextUrl.pathname.startsWith('/api/stats/public') || 
             req.nextUrl.pathname.startsWith('/api/stats/live')) {
+          return true
+        }
+
+        // Allow access to public profile API
+        if (req.nextUrl.pathname.startsWith('/api/profile/') || req.nextUrl.pathname.startsWith('/api/profile-simple/')) {
           return true
         }
 

@@ -23,6 +23,7 @@ export async function GET(req: Request) {
         email: true,
         name: true,
         credits: true,
+        profileVisibility: true,
         createdAt: true,
         _count: {
           select: {
@@ -68,6 +69,67 @@ export async function GET(req: Request) {
     return response
   } catch (error) {
     console.error('Profile fetch error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function PATCH(req: Request) {
+  try {
+    const { authOptions } = await import('@/lib/auth')
+    const { prisma } = await import('@/lib/prisma')
+    
+    const session = await getServerSession(authOptions)
+    
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    const body = await req.json()
+    const { profileVisibility } = body
+
+    // Validate profileVisibility
+    if (profileVisibility && !['PUBLIC', 'FRIENDS_ONLY', 'PRIVATE'].includes(profileVisibility)) {
+      return NextResponse.json(
+        { error: 'Invalid profile visibility option' },
+        { status: 400 }
+      )
+    }
+
+    // Update user profile
+    const updatedUser = await prisma.user.update({
+      where: { id: session.user.id },
+      data: {
+        ...(profileVisibility && { profileVisibility })
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        profileVisibility: true,
+        credits: true,
+        createdAt: true
+      }
+    })
+
+    const response = NextResponse.json({
+      success: true,
+      user: updatedUser
+    })
+
+    // Clear cache after update
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+    response.headers.set('Pragma', 'no-cache')
+    response.headers.set('Expires', '0')
+    
+    return response
+  } catch (error) {
+    console.error('Profile update error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

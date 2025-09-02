@@ -578,6 +578,15 @@ export default function Rankings() {
                     {isSuperAdmin ? '👑' : '🔧'}
                   </Link>
                 )}
+
+                {/* Profile Link */}
+                <Link
+                  href={`/profile/${session?.user?.id}`}
+                  className="p-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg transition-all duration-200 text-sm font-medium shadow-lg hover:shadow-xl hover:scale-105"
+                  title="Ver Meu Profile"
+                >
+                  👤
+                </Link>
                 
                 <button
                   onClick={() => setShowLogoutModal(true)}
@@ -802,7 +811,12 @@ export default function Rankings() {
                         
                         <div>
                           <div className={`font-bold text-lg ${entry.userId === session?.user?.id ? 'text-purple-400' : 'text-white'}`}>
-                            {entry.username}
+                            <Link 
+                              href={`/profile/${entry.userId}`}
+                              className="hover:text-purple-300 transition-colors duration-200 hover:underline"
+                            >
+                              {entry.username}
+                            </Link>
                             {entry.userId === session?.user?.id && (
                               <span className="ml-3 text-xs bg-gradient-to-r from-purple-600 to-indigo-600 px-3 py-1 rounded-full text-white font-semibold animate-pulse">Você</span>
                             )}
@@ -913,7 +927,12 @@ export default function Rankings() {
                       
                       <div>
                         <div className={`font-bold text-lg ${entry.userId === session?.user?.id ? 'text-blue-400' : 'text-white'}`}>
-                          {entry.username}
+                          <Link 
+                            href={`/profile/${entry.userId}`}
+                            className="hover:text-cyan-300 transition-colors duration-200 hover:underline"
+                          >
+                            {entry.username}
+                          </Link>
                           {entry.userId === session?.user?.id && (
                             <span className="ml-3 text-xs bg-gradient-to-r from-blue-600 to-cyan-600 px-3 py-1 rounded-full text-white font-semibold animate-pulse">Você</span>
                           )}
