@@ -16,6 +16,7 @@ export async function GET(
       select: {
         id: true,
         name: true,
+        profileImage: true,
         profileVisibility: true,
         createdAt: true,
         userStats: {
@@ -134,6 +135,7 @@ export async function GET(
     const publicProfile = {
       id: targetUser.id,
       name: targetUser.name || 'Anonymous User',
+      profileImage: targetUser.profileImage,
       memberSince: targetUser.createdAt,
       stats: {
         level: targetUser.userStats?.level || 1,

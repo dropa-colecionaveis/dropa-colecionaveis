@@ -23,6 +23,7 @@ export async function GET(req: Request) {
         email: true,
         name: true,
         credits: true,
+        profileImage: true,
         profileVisibility: true,
         createdAt: true,
         _count: {
@@ -111,6 +112,7 @@ export async function PATCH(req: Request) {
         id: true,
         email: true,
         name: true,
+        profileImage: true,
         profileVisibility: true,
         credits: true,
         createdAt: true

@@ -25,6 +25,7 @@ model User {
   updatedAt               DateTime                 @updatedAt
   provider                String?
   providerAccountId       String?
+  profileImage            String?
   profileVisibility       ProfileVisibility        @default(PUBLIC)
   adminLogs               AdminLog[]
   autoSellConfig          AutoSellConfig?

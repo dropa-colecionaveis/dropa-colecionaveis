@@ -76,10 +76,6 @@ export async function GET(
     // Processar dados das coleções
     const processedCollections = await Promise.all(collections.map(async (collection) => {
       const userCollection = collection.userCollections[0]
-      const itemsOwned = userCollection?.itemsOwned || 0
-      const totalItems = collection.maxItems
-      const isCompleted = userCollection?.completedAt !== null
-      const completionPercentage = totalItems > 0 ? Math.round((itemsOwned / totalItems) * 100) : 0
 
       // Buscar itens específicos que o usuário possui desta coleção
       const userItems = await prisma.userItem.findMany({
@@ -106,6 +102,13 @@ export async function GET(
           { item: { name: 'asc' } }
         ]
       })
+
+      // Contar itens únicos possuídos pelo usuário
+      const uniqueItemIds = new Set(userItems.map(ui => ui.itemId))
+      const itemsOwned = uniqueItemIds.size
+      const totalItems = collection.maxItems
+      const isCompleted = userCollection?.completedAt !== null
+      const completionPercentage = totalItems > 0 ? Math.round((itemsOwned / totalItems) * 100) : 0
 
       return {
         id: collection.id,

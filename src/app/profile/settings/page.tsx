@@ -2,7 +2,7 @@
 
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import LoadingSpinner from '@/components/LoadingSpinner'
@@ -13,17 +13,22 @@ interface UserProfile {
   id: string
   name: string
   email: string
+  profileImage?: string
   profileVisibility: ProfileVisibility
 }
 
 export default function ProfileSettingsPage() {
-  const { data: session, status } = useSession()
+  const { data: session, status, update } = useSession()
   const router = useRouter()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [selectedVisibility, setSelectedVisibility] = useState<ProfileVisibility>('PUBLIC')
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [uploadSuccess, setUploadSuccess] = useState(false)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -80,6 +85,74 @@ export default function ProfileSettingsPage() {
     } finally {
       setSaving(false)
     }
+  }
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+    if (!validTypes.includes(file.type)) {
+      setUploadError('Tipo de arquivo inválido. Apenas JPEG, PNG e WebP são permitidos.')
+      return
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024
+    if (file.size > maxSize) {
+      setUploadError('Arquivo muito grande. Tamanho máximo é 5MB.')
+      return
+    }
+
+    setUploading(true)
+    setUploadError(null)
+    setUploadSuccess(false)
+
+    try {
+      const formData = new FormData()
+      formData.append('image', file)
+
+      const response = await fetch('/api/profile/upload-image', {
+        method: 'POST',
+        body: formData
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Erro ao fazer upload')
+      }
+
+      // Update session with new profile image
+      await update({
+        ...session,
+        user: {
+          ...session?.user,
+          image: result.imageUrl
+        }
+      })
+
+      // Update profile state
+      setProfile(prev => prev ? { ...prev, profileImage: result.imageUrl } : null)
+
+      setUploadSuccess(true)
+      setTimeout(() => setUploadSuccess(false), 3000)
+
+    } catch (error: any) {
+      console.error('Upload error:', error)
+      setUploadError(error.message || 'Erro ao fazer upload da imagem')
+    } finally {
+      setUploading(false)
+      // Clear file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click()
   }
 
   const handleLogout = () => {
@@ -180,6 +253,90 @@ export default function ProfileSettingsPage() {
             <p className="text-gray-300 text-lg">
               Controle quem pode ver seu profile público
             </p>
+          </div>
+
+          {/* Profile Picture Section */}
+          <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-8 mb-8 border border-white/20 shadow-xl">
+            <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
+              <span className="mr-3">📸</span>
+              Foto do Profile
+            </h2>
+
+            <div className="flex flex-col md:flex-row items-center space-y-6 md:space-y-0 md:space-x-8">
+              {/* Current Profile Picture */}
+              <div className="relative">
+                <div className="w-32 h-32 rounded-full overflow-hidden bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-6xl font-bold text-white shadow-lg">
+                  {profile.profileImage || session?.user?.image ? (
+                    <Image
+                      src={profile.profileImage || session?.user?.image || ''}
+                      alt={profile.name || 'Profile'}
+                      width={128}
+                      height={128}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    profile.name?.charAt(0).toUpperCase() || '?'
+                  )}
+                </div>
+                
+                {uploading && (
+                  <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                  </div>
+                )}
+              </div>
+
+              {/* Upload Section */}
+              <div className="flex-1 text-center md:text-left">
+                <button
+                  onClick={triggerFileInput}
+                  disabled={uploading}
+                  className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none mb-3"
+                >
+                  {uploading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                      Fazendo upload...
+                    </>
+                  ) : (
+                    <>
+                      <span className="mr-2">📷</span>
+                      Escolher Nova Foto
+                    </>
+                  )}
+                </button>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+
+                <p className="text-gray-400 text-sm mb-4">
+                  Formatos suportados: JPEG, PNG, WebP • Tamanho máximo: 5MB
+                </p>
+
+                {/* Success Message */}
+                {uploadSuccess && (
+                  <div className="bg-gradient-to-r from-green-600/20 to-emerald-600/20 border border-green-500/30 rounded-xl p-3 mb-3">
+                    <div className="text-green-400 font-medium text-sm">
+                      ✅ Foto de profile atualizada com sucesso!
+                    </div>
+                  </div>
+                )}
+
+                {/* Error Message */}
+                {uploadError && (
+                  <div className="bg-gradient-to-r from-red-600/20 to-red-500/20 border border-red-500/30 rounded-xl p-3">
+                    <div className="text-red-400 font-medium text-sm">
+                      ❌ {uploadError}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Current Profile Info */}

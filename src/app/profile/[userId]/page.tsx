@@ -56,6 +56,7 @@ interface Ranking {
 interface UserProfile {
   id: string
   name: string
+  profileImage?: string
   memberSince: string
   stats: {
     level: number
@@ -297,8 +298,18 @@ export default function PublicProfilePage() {
           {/* Profile Header */}
           <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-8 mb-8 border border-white/20 shadow-xl">
             <div className="flex items-center space-x-6 mb-6">
-              <div className="w-24 h-24 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-full flex items-center justify-center text-4xl font-bold text-white shadow-lg">
-                {profile.name.charAt(0).toUpperCase()}
+              <div className="w-24 h-24 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-full flex items-center justify-center text-4xl font-bold text-white shadow-lg overflow-hidden">
+                {profile.profileImage ? (
+                  <Image
+                    src={profile.profileImage}
+                    alt={profile.name}
+                    width={96}
+                    height={96}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  profile.name.charAt(0).toUpperCase()
+                )}
               </div>
               <div>
                 <h1 className="text-4xl font-bold text-white mb-2">{profile.name}</h1>
@@ -391,12 +402,12 @@ export default function PublicProfilePage() {
             )}
 
             {/* Rare Items */}
-            {profile.rareItems.length > 0 && (
-              <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/20 shadow-xl">
-                <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
-                  <span className="mr-3">💎</span>
-                  Itens Raros
-                </h2>
+            <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/20 shadow-xl">
+              <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
+                <span className="mr-3">💎</span>
+                Itens Raros
+              </h2>
+              {profile.rareItems.length > 0 ? (
                 <div className="grid grid-cols-2 gap-4">
                   {profile.rareItems.slice(0, 8).map((item) => (
                     <div key={item.id} className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-xl p-4 border border-gray-600/30 hover:border-gray-500/50 transition-colors">
@@ -418,8 +429,16 @@ export default function PublicProfilePage() {
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4 opacity-50">💎</div>
+                  <p className="text-gray-400 text-lg mb-2">Ainda não possui itens raros</p>
+                  <p className="text-gray-500 text-sm">
+                    Abra mais pacotes para encontrar itens de raridade RARO, ÉPICO ou LENDÁRIO
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* User Collections */}
