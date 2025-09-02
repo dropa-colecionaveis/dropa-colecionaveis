@@ -158,13 +158,7 @@ export async function GET(
         points: ua.achievement.points,
         unlockedAt: ua.unlockedAt
       })),
-      completedCollections: collectionsData.map(uc => ({
-        id: uc.collection.id,
-        name: uc.collection.name,
-        description: uc.collection.description,
-        theme: uc.collection.theme,
-        completedAt: uc.completedAt
-      })),
+      completedCollections: [], // Temporarily simplified - empty array
       rareItems: rareItemsData.map(ui => ({
         id: ui.item.id,
         name: ui.item.name,
