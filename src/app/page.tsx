@@ -331,7 +331,7 @@ export default function Home() {
                 <h3 className="text-2xl font-bold text-green-400 mb-4">1. Compre Créditos</h3>
                 <p className="text-gray-300 leading-relaxed">
                   Adquira créditos com <span className="text-green-400 font-semibold">dinheiro real</span> através de PIX e
-                  cartão. Seus créditos são a moeda do universo Dropa!
+                  cartão de crédito. Seus créditos são a moeda do universo Dropa!
                 </p>
               </div>
 
