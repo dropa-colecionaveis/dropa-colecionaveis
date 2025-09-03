@@ -204,7 +204,7 @@ export default function StatsMonitoring() {
         const data = await response.json()
         showMessage('success', `${data.summary.fixedCount} usuários tiveram XP corrigido`)
         setXpInconsistencies([])
-        await fetchInconsistencies() // Recarregar dados
+        await checkInconsistencies() // Recarregar dados
       } else {
         showMessage('error', 'Erro ao corrigir XP de todos os usuários')
       }
