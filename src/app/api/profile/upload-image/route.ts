@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { writeFile, mkdir } from 'fs/promises'
-import { join } from 'path'
-import { existsSync } from 'fs'
+import cloudinary from '@/lib/cloudinary'
 
 export async function POST(req: NextRequest) {
   try {
@@ -45,25 +43,23 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Create uploads directory if it doesn't exist
-    const uploadsDir = join(process.cwd(), 'public', 'uploads', 'profiles')
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true })
-    }
-
-    // Generate unique filename
-    const timestamp = Date.now()
-    const fileExtension = file.name.split('.').pop()
-    const fileName = `${session.user.id}-${timestamp}.${fileExtension}`
-    const filePath = join(uploadsDir, fileName)
-
-    // Convert file to buffer and save
+    // Convert file to base64 for Cloudinary upload
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
-    await writeFile(filePath, buffer)
+    const base64 = `data:${file.type};base64,${buffer.toString('base64')}`
 
-    // Generate public URL
-    const imageUrl = `/uploads/profiles/${fileName}`
+    // Upload to Cloudinary
+    const uploadResult = await cloudinary.uploader.upload(base64, {
+      folder: 'profiles',
+      public_id: `profile_${session.user.id}_${Date.now()}`,
+      resource_type: 'image',
+      transformation: [
+        { width: 400, height: 400, crop: 'fill', gravity: 'face' },
+        { quality: 'auto', fetch_format: 'auto' }
+      ]
+    })
+
+    const imageUrl = uploadResult.secure_url
 
     // Update user profile in database
     await prisma.user.update({
