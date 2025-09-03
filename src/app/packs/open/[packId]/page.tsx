@@ -91,10 +91,12 @@ export default function OpenPack() {
     } else if (status === 'authenticated' && packId) {
       fetchPackDetails()
       fetchUserProfile()
+      // Ensure auto-progress is disabled on page load/reload
+      setAutoProgress(false)
     }
   }, [status, router, packId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-progress in suspense mode for faster experience
+  // Auto-progress in suspense mode (only when explicitly enabled by user)
   useEffect(() => {
     if (autoProgress && displayMode === 'suspense' && multipleOpenResult && currentItemIndex < multipleOpenResult.items.length - 1) {
       const timer = setTimeout(() => {
@@ -192,9 +194,7 @@ export default function OpenPack() {
             setShowResult(true)
             // Reset to first item for suspense mode
             setCurrentItemIndex(0)
-            if (displayMode === 'suspense') {
-              setAutoProgress(true) // Start auto-progress for suspense mode
-            }
+            // Note: Auto-progress is disabled by default - user must click to reveal each item
             scrollToResult() // Scroll to result after animation
           }, 800) // Fast animation for better UX
         } else {
@@ -954,7 +954,7 @@ export default function OpenPack() {
                       onClick={() => {
                         setDisplayMode('suspense')
                         setCurrentItemIndex(0) // Reset to first item when switching to suspense
-                        setAutoProgress(false) // Reset auto-progress
+                        setAutoProgress(false) // Ensure auto-progress is disabled for manual control
                       }}
                       className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg transition duration-200 text-sm sm:text-base ${
                         displayMode === 'suspense'
