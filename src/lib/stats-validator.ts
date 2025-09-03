@@ -255,8 +255,12 @@ export class StatsValidator {
           missingAchievements.push(...await this.findMissingAchievements(user.id, userStats, unlockedAchievementNames))
         }
 
-        // Se há diferença significativa ou conquistas faltando, adicionar à lista
-        if (Math.abs(xpDifference) > 0 || missingAchievements.length > 0) {
+        // Só adicionar à lista se há diferença de XP OU conquistas realmente faltando
+        // (não considerar inconsistência apenas por conquistas "faltando" se o XP está correto)
+        const hasRealXPInconsistency = Math.abs(xpDifference) > 0
+        const hasCriticalMissingAchievements = missingAchievements.length > 0 && hasRealXPInconsistency
+        
+        if (hasRealXPInconsistency || hasCriticalMissingAchievements) {
           inconsistencies.push({
             userId: user.id,
             userName: user.name,

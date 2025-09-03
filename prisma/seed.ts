@@ -69,21 +69,25 @@ async function main() {
 
   console.log('Creating items...')
   // Clear existing items first
-  await prisma.item.deleteMany({})
+  // await prisma.item.deleteMany({}) // Commented to preserve existing themed collections
   
   for (const itemData of items) {
-    await prisma.item.create({
-      data: itemData,
+    await prisma.item.upsert({
+      where: { name: itemData.name },
+      update: {},
+      create: itemData,
     })
   }
 
   // Create packs
   console.log('Creating packs...')
   // Clear existing packs first
-  await prisma.pack.deleteMany({})
+  // await prisma.pack.deleteMany({}) // Commented to preserve existing packs
   
-  const bronzePack = await prisma.pack.create({
-    data: {
+  const bronzePack = await prisma.pack.upsert({
+    where: { type: PackType.BRONZE },
+    update: { isActive: true },
+    create: {
       type: PackType.BRONZE,
       name: 'Pacote Bronze',
       description: 'Um pacote básico com boa chance de itens comuns e incomuns',
@@ -92,8 +96,10 @@ async function main() {
     },
   })
 
-  const silverPack = await prisma.pack.create({
-    data: {
+  const silverPack = await prisma.pack.upsert({
+    where: { type: PackType.SILVER },
+    update: { isActive: true },
+    create: {
       type: PackType.SILVER,
       name: 'Pacote Prata',
       description: 'Um pacote intermediário com boas chances de itens',
@@ -102,8 +108,10 @@ async function main() {
     },
   })
 
-  const goldPack = await prisma.pack.create({
-    data: {
+  const goldPack = await prisma.pack.upsert({
+    where: { type: PackType.GOLD },
+    update: { isActive: true },
+    create: {
       type: PackType.GOLD,
       name: 'Pacote Ouro',
       description: 'Um pacote premium com maiores chances de itens raros',
@@ -112,8 +120,10 @@ async function main() {
     },
   })
 
-  const platinumPack = await prisma.pack.create({
-    data: {
+  const platinumPack = await prisma.pack.upsert({
+    where: { type: PackType.PLATINUM },
+    update: { isActive: true },
+    create: {
       type: PackType.PLATINUM,
       name: 'Pacote Platina',
       description: 'Um pacote luxuoso com excelentes chances',
@@ -122,8 +132,10 @@ async function main() {
     },
   })
 
-  const diamondPack = await prisma.pack.create({
-    data: {
+  const diamondPack = await prisma.pack.upsert({
+    where: { type: PackType.DIAMOND },
+    update: { isActive: true },
+    create: {
       type: PackType.DIAMOND,
       name: 'Pacote Diamante',
       description: 'O pacote supremo com as melhores chances',

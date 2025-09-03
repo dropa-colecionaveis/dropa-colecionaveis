@@ -196,6 +196,26 @@ export default function StatsMonitoring() {
     }
   }
 
+  const fixAllXPInconsistencies = async () => {
+    try {
+      setFixingAll(true)
+      const response = await fetch('/api/admin/recalculate-all-xp', { method: 'POST' })
+      if (response.ok) {
+        const data = await response.json()
+        showMessage('success', `${data.summary.fixedCount} usuários tiveram XP corrigido`)
+        setXpInconsistencies([])
+        await fetchInconsistencies() // Recarregar dados
+      } else {
+        showMessage('error', 'Erro ao corrigir XP de todos os usuários')
+      }
+    } catch (error) {
+      console.error('Error fixing all XP:', error)
+      showMessage('error', 'Erro ao corrigir XP de todos os usuários')
+    } finally {
+      setFixingAll(false)
+    }
+  }
+
   const runManualCheck = async () => {
     try {
       setRunningCheck(true)
@@ -429,6 +449,15 @@ export default function StatsMonitoring() {
                 className="px-6 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-800 disabled:opacity-50 text-white rounded-lg transition-colors"
               >
                 {fixingAll ? 'Corrigindo Todos...' : `🔧 Corrigir Todos Stats (${inconsistencies.length})`}
+              </button>
+            )}
+            {activeTab === 'xp' && (
+              <button
+                onClick={fixAllXPInconsistencies}
+                disabled={fixingAll}
+                className="px-6 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-800 disabled:opacity-50 text-white rounded-lg transition-colors"
+              >
+                {fixingAll ? 'Recalculando XP...' : `🏆 Recalcular XP de Todos Usuários`}
               </button>
             )}
           </div>

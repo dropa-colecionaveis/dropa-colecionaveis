@@ -657,60 +657,59 @@ export class AchievementEngine {
 
     if (!achievement) return
 
-    // Criar ou atualizar UserAchievement
-    await prisma.userAchievement.upsert({
-      where: {
-        userId_achievementId: {
+    // Usar transação para garantir atomicidade entre UserAchievement e UserStats
+    await prisma.$transaction(async (tx) => {
+      // Criar ou atualizar UserAchievement
+      await tx.userAchievement.upsert({
+        where: {
+          userId_achievementId: {
+            userId,
+            achievementId
+          }
+        },
+        update: {
+          isCompleted: true,
+          unlockedAt: new Date()
+        },
+        create: {
           userId,
-          achievementId
+          achievementId,
+          isCompleted: true,
+          progress: 100
         }
-      },
-      update: {
-        isCompleted: true,
-        unlockedAt: new Date()
-      },
-      create: {
-        userId,
-        achievementId,
-        isCompleted: true,
-        progress: 100
+      })
+
+      // Adicionar XP ao usuário na mesma transação
+      const userStats = await tx.userStats.upsert({
+        where: { userId },
+        update: {
+          totalXP: { increment: achievement.points },
+          updatedAt: new Date()
+        },
+        create: {
+          userId,
+          totalXP: achievement.points,
+          level: 1,
+          lastActivityAt: new Date()
+        }
+      })
+
+      // Calcular novo nível baseado em XP
+      const newLevel = this.calculateLevel(userStats.totalXP + achievement.points)
+      
+      if (newLevel > userStats.level) {
+        await tx.userStats.update({
+          where: { userId },
+          data: { level: newLevel }
+        })
       }
     })
-
-    // Adicionar XP ao usuário
-    await this.addXP(userId, achievement.points)
 
     console.log(`🏆 Achievement unlocked: ${achievement.name} (+${achievement.points} XP) for user ${userId}`)
   }
 
-  // Adicionar XP e atualizar nível
-  async addXP(userId: string, points: number): Promise<void> {
-    const userStats = await prisma.userStats.upsert({
-      where: { userId },
-      update: {
-        totalXP: { increment: points },
-        updatedAt: new Date()
-      },
-      create: {
-        userId,
-        totalXP: points,
-        level: 1,
-        lastActivityAt: new Date()
-      }
-    })
-
-    // Calcular novo nível baseado em XP
-    const newLevel = this.calculateLevel(userStats.totalXP + points)
-    
-    if (newLevel > userStats.level) {
-      await prisma.userStats.update({
-        where: { userId },
-        data: { level: newLevel }
-      })
-      
-      console.log(`📈 Level up! User ${userId} reached level ${newLevel}`)
-    }
-  }
+  // FUNÇÃO REMOVIDA: addXP agora está integrada na transação do unlockAchievement
+  // para garantir atomicidade e evitar duplicação de XP
 
   private calculateLevel(totalXP: number): number {
     // Fórmula: Level = sqrt(XP / 100) + 1
@@ -749,6 +748,52 @@ export class AchievementEngine {
     })
 
     return userAchievement?.progress || 0
+  }
+
+  // Validar e corrigir inconsistências de XP
+  async validateAndFixXPConsistency(userId: string): Promise<{
+    wasInconsistent: boolean;
+    correctedXP?: number;
+    previousXP?: number;
+  }> {
+    const userAchievements = await prisma.userAchievement.findMany({
+      where: { userId, isCompleted: true },
+      include: { achievement: true }
+    })
+
+    const userStats = await prisma.userStats.findUnique({
+      where: { userId }
+    })
+
+    if (!userStats) {
+      return { wasInconsistent: false }
+    }
+
+    const expectedXP = userAchievements.reduce((total, ua) => total + ua.achievement.points, 0)
+    const currentXP = userStats.totalXP
+
+    if (currentXP !== expectedXP) {
+      const newLevel = this.calculateLevel(expectedXP)
+      
+      await prisma.userStats.update({
+        where: { userId },
+        data: {
+          totalXP: expectedXP,
+          level: newLevel,
+          updatedAt: new Date()
+        }
+      })
+
+      console.log(`🔧 XP inconsistency fixed for user ${userId}: ${currentXP} -> ${expectedXP}`)
+
+      return {
+        wasInconsistent: true,
+        correctedXP: expectedXP,
+        previousXP: currentXP
+      }
+    }
+
+    return { wasInconsistent: false }
   }
 }
 
