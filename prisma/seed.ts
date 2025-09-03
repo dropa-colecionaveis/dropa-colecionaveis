@@ -72,11 +72,18 @@ async function main() {
   // await prisma.item.deleteMany({}) // Commented to preserve existing themed collections
   
   for (const itemData of items) {
-    await prisma.item.upsert({
-      where: { name: itemData.name },
-      update: {},
-      create: itemData,
+    const existingItem = await prisma.item.findFirst({
+      where: { name: itemData.name }
     })
+    
+    if (!existingItem) {
+      await prisma.item.create({
+        data: itemData
+      })
+      console.log(`Created item: ${itemData.name}`)
+    } else {
+      console.log(`Item already exists: ${itemData.name}`)
+    }
   }
 
   // Create packs
@@ -84,154 +91,259 @@ async function main() {
   // Clear existing packs first
   // await prisma.pack.deleteMany({}) // Commented to preserve existing packs
   
-  const bronzePack = await prisma.pack.upsert({
-    where: { type: PackType.BRONZE },
-    update: { isActive: true },
-    create: {
-      type: PackType.BRONZE,
-      name: 'Pacote Bronze',
-      description: 'Um pacote básico com boa chance de itens comuns e incomuns',
-      price: 25,
-      isActive: true,
-    },
+  let bronzePack = await prisma.pack.findFirst({
+    where: { type: PackType.BRONZE }
   })
+  
+  if (!bronzePack) {
+    bronzePack = await prisma.pack.create({
+      data: {
+        type: PackType.BRONZE,
+        name: 'Pacote Bronze',
+        description: 'Um pacote básico com boa chance de itens comuns e incomuns',
+        price: 25,
+        isActive: true,
+      }
+    })
+    console.log('Created Bronze pack')
+  } else {
+    await prisma.pack.update({
+      where: { id: bronzePack.id },
+      data: { isActive: true }
+    })
+    console.log('Bronze pack already exists, updated isActive')
+  }
 
-  const silverPack = await prisma.pack.upsert({
-    where: { type: PackType.SILVER },
-    update: { isActive: true },
-    create: {
-      type: PackType.SILVER,
-      name: 'Pacote Prata',
-      description: 'Um pacote intermediário com boas chances de itens',
-      price: 40,
-      isActive: true,
-    },
+  let silverPack = await prisma.pack.findFirst({
+    where: { type: PackType.SILVER }
   })
+  
+  if (!silverPack) {
+    silverPack = await prisma.pack.create({
+      data: {
+        type: PackType.SILVER,
+        name: 'Pacote Prata',
+        description: 'Um pacote intermediário com boas chances de itens',
+        price: 40,
+        isActive: true,
+      }
+    })
+    console.log('Created Silver pack')
+  } else {
+    await prisma.pack.update({
+      where: { id: silverPack.id },
+      data: { isActive: true }
+    })
+    console.log('Silver pack already exists, updated isActive')
+  }
 
-  const goldPack = await prisma.pack.upsert({
-    where: { type: PackType.GOLD },
-    update: { isActive: true },
-    create: {
-      type: PackType.GOLD,
-      name: 'Pacote Ouro',
-      description: 'Um pacote premium com maiores chances de itens raros',
-      price: 75,
-      isActive: true,
-    },
+  let goldPack = await prisma.pack.findFirst({
+    where: { type: PackType.GOLD }
   })
+  
+  if (!goldPack) {
+    goldPack = await prisma.pack.create({
+      data: {
+        type: PackType.GOLD,
+        name: 'Pacote Ouro',
+        description: 'Um pacote premium com maiores chances de itens raros',
+        price: 75,
+        isActive: true,
+      }
+    })
+    console.log('Created Gold pack')
+  } else {
+    await prisma.pack.update({
+      where: { id: goldPack.id },
+      data: { isActive: true }
+    })
+    console.log('Gold pack already exists, updated isActive')
+  }
 
-  const platinumPack = await prisma.pack.upsert({
-    where: { type: PackType.PLATINUM },
-    update: { isActive: true },
-    create: {
-      type: PackType.PLATINUM,
-      name: 'Pacote Platina',
-      description: 'Um pacote luxuoso com excelentes chances',
-      price: 150,
-      isActive: true,
-    },
+  let platinumPack = await prisma.pack.findFirst({
+    where: { type: PackType.PLATINUM }
   })
+  
+  if (!platinumPack) {
+    platinumPack = await prisma.pack.create({
+      data: {
+        type: PackType.PLATINUM,
+        name: 'Pacote Platina',
+        description: 'Um pacote luxuoso com excelentes chances',
+        price: 150,
+        isActive: true,
+      }
+    })
+    console.log('Created Platinum pack')
+  } else {
+    await prisma.pack.update({
+      where: { id: platinumPack.id },
+      data: { isActive: true }
+    })
+    console.log('Platinum pack already exists, updated isActive')
+  }
 
-  const diamondPack = await prisma.pack.upsert({
-    where: { type: PackType.DIAMOND },
-    update: { isActive: true },
-    create: {
-      type: PackType.DIAMOND,
-      name: 'Pacote Diamante',
-      description: 'O pacote supremo com as melhores chances',
-      price: 300,
-      isActive: true,
-    },
+  let diamondPack = await prisma.pack.findFirst({
+    where: { type: PackType.DIAMOND }
   })
+  
+  if (!diamondPack) {
+    diamondPack = await prisma.pack.create({
+      data: {
+        type: PackType.DIAMOND,
+        name: 'Pacote Diamante',
+        description: 'O pacote supremo com as melhores chances',
+        price: 300,
+        isActive: true,
+      }
+    })
+    console.log('Created Diamond pack')
+  } else {
+    await prisma.pack.update({
+      where: { id: diamondPack.id },
+      data: { isActive: true }
+    })
+    console.log('Diamond pack already exists, updated isActive')
+  }
 
   // Create pack probabilities for Bronze pack
   console.log('Creating Bronze pack probabilities...')
-  await prisma.packProbability.create({
-    data: { packId: bronzePack.id, rarity: Rarity.COMUM, percentage: 60 },
+  await prisma.packProbability.upsert({
+    where: { packId_rarity: { packId: bronzePack.id, rarity: Rarity.COMUM } },
+    update: { percentage: 60 },
+    create: { packId: bronzePack.id, rarity: Rarity.COMUM, percentage: 60 }
   })
-  await prisma.packProbability.create({
-    data: { packId: bronzePack.id, rarity: Rarity.INCOMUM, percentage: 25 },
+  await prisma.packProbability.upsert({
+    where: { packId_rarity: { packId: bronzePack.id, rarity: Rarity.INCOMUM } },
+    update: { percentage: 25 },
+    create: { packId: bronzePack.id, rarity: Rarity.INCOMUM, percentage: 25 }
   })
-  await prisma.packProbability.create({
-    data: { packId: bronzePack.id, rarity: Rarity.RARO, percentage: 10 },
+  await prisma.packProbability.upsert({
+    where: { packId_rarity: { packId: bronzePack.id, rarity: Rarity.RARO } },
+    update: { percentage: 10 },
+    create: { packId: bronzePack.id, rarity: Rarity.RARO, percentage: 10 }
   })
-  await prisma.packProbability.create({
-    data: { packId: bronzePack.id, rarity: Rarity.EPICO, percentage: 4 },
+  await prisma.packProbability.upsert({
+    where: { packId_rarity: { packId: bronzePack.id, rarity: Rarity.EPICO } },
+    update: { percentage: 4 },
+    create: { packId: bronzePack.id, rarity: Rarity.EPICO, percentage: 4 }
   })
-  await prisma.packProbability.create({
-    data: { packId: bronzePack.id, rarity: Rarity.LENDARIO, percentage: 1 },
+  await prisma.packProbability.upsert({
+    where: { packId_rarity: { packId: bronzePack.id, rarity: Rarity.LENDARIO } },
+    update: { percentage: 1 },
+    create: { packId: bronzePack.id, rarity: Rarity.LENDARIO, percentage: 1 }
   })
 
   // Create pack probabilities for Gold pack
   console.log('Creating Gold pack probabilities...')
-  await prisma.packProbability.create({
-    data: { packId: goldPack.id, rarity: Rarity.COMUM, percentage: 40 },
+  await prisma.packProbability.upsert({
+    where: { packId_rarity: { packId: goldPack.id, rarity: Rarity.COMUM } },
+    update: { percentage: 40 },
+    create: { packId: goldPack.id, rarity: Rarity.COMUM, percentage: 40 }
   })
-  await prisma.packProbability.create({
-    data: { packId: goldPack.id, rarity: Rarity.INCOMUM, percentage: 30 },
+  await prisma.packProbability.upsert({
+    where: { packId_rarity: { packId: goldPack.id, rarity: Rarity.INCOMUM } },
+    update: { percentage: 30 },
+    create: { packId: goldPack.id, rarity: Rarity.INCOMUM, percentage: 30 }
   })
-  await prisma.packProbability.create({
-    data: { packId: goldPack.id, rarity: Rarity.RARO, percentage: 20 },
+  await prisma.packProbability.upsert({
+    where: { packId_rarity: { packId: goldPack.id, rarity: Rarity.RARO } },
+    update: { percentage: 20 },
+    create: { packId: goldPack.id, rarity: Rarity.RARO, percentage: 20 }
   })
-  await prisma.packProbability.create({
-    data: { packId: goldPack.id, rarity: Rarity.EPICO, percentage: 8 },
+  await prisma.packProbability.upsert({
+    where: { packId_rarity: { packId: goldPack.id, rarity: Rarity.EPICO } },
+    update: { percentage: 8 },
+    create: { packId: goldPack.id, rarity: Rarity.EPICO, percentage: 8 }
   })
-  await prisma.packProbability.create({
-    data: { packId: goldPack.id, rarity: Rarity.LENDARIO, percentage: 2 },
+  await prisma.packProbability.upsert({
+    where: { packId_rarity: { packId: goldPack.id, rarity: Rarity.LENDARIO } },
+    update: { percentage: 2 },
+    create: { packId: goldPack.id, rarity: Rarity.LENDARIO, percentage: 2 }
   })
 
   // Create pack probabilities for Silver pack
   console.log('Creating Silver pack probabilities...')
-  await prisma.packProbability.create({
-    data: { packId: silverPack.id, rarity: Rarity.COMUM, percentage: 50 },
+  await prisma.packProbability.upsert({
+    where: { packId_rarity: { packId: silverPack.id, rarity: Rarity.COMUM } },
+    update: { percentage: 50 },
+    create: { packId: silverPack.id, rarity: Rarity.COMUM, percentage: 50 }
   })
-  await prisma.packProbability.create({
-    data: { packId: silverPack.id, rarity: Rarity.INCOMUM, percentage: 28 },
+  await prisma.packProbability.upsert({
+    where: { packId_rarity: { packId: silverPack.id, rarity: Rarity.INCOMUM } },
+    update: { percentage: 28 },
+    create: { packId: silverPack.id, rarity: Rarity.INCOMUM, percentage: 28 }
   })
-  await prisma.packProbability.create({
-    data: { packId: silverPack.id, rarity: Rarity.RARO, percentage: 15 },
+  await prisma.packProbability.upsert({
+    where: { packId_rarity: { packId: silverPack.id, rarity: Rarity.RARO } },
+    update: { percentage: 15 },
+    create: { packId: silverPack.id, rarity: Rarity.RARO, percentage: 15 }
   })
-  await prisma.packProbability.create({
-    data: { packId: silverPack.id, rarity: Rarity.EPICO, percentage: 5 },
+  await prisma.packProbability.upsert({
+    where: { packId_rarity: { packId: silverPack.id, rarity: Rarity.EPICO } },
+    update: { percentage: 5 },
+    create: { packId: silverPack.id, rarity: Rarity.EPICO, percentage: 5 }
   })
-  await prisma.packProbability.create({
-    data: { packId: silverPack.id, rarity: Rarity.LENDARIO, percentage: 2 },
+  await prisma.packProbability.upsert({
+    where: { packId_rarity: { packId: silverPack.id, rarity: Rarity.LENDARIO } },
+    update: { percentage: 2 },
+    create: { packId: silverPack.id, rarity: Rarity.LENDARIO, percentage: 2 }
   })
 
   // Create pack probabilities for Platinum pack
   console.log('Creating Platinum pack probabilities...')
-  await prisma.packProbability.create({
-    data: { packId: platinumPack.id, rarity: Rarity.COMUM, percentage: 25 },
+  await prisma.packProbability.upsert({
+    where: { packId_rarity: { packId: platinumPack.id, rarity: Rarity.COMUM } },
+    update: { percentage: 25 },
+    create: { packId: platinumPack.id, rarity: Rarity.COMUM, percentage: 25 }
   })
-  await prisma.packProbability.create({
-    data: { packId: platinumPack.id, rarity: Rarity.INCOMUM, percentage: 35 },
+  await prisma.packProbability.upsert({
+    where: { packId_rarity: { packId: platinumPack.id, rarity: Rarity.INCOMUM } },
+    update: { percentage: 35 },
+    create: { packId: platinumPack.id, rarity: Rarity.INCOMUM, percentage: 35 }
   })
-  await prisma.packProbability.create({
-    data: { packId: platinumPack.id, rarity: Rarity.RARO, percentage: 25 },
+  await prisma.packProbability.upsert({
+    where: { packId_rarity: { packId: platinumPack.id, rarity: Rarity.RARO } },
+    update: { percentage: 25 },
+    create: { packId: platinumPack.id, rarity: Rarity.RARO, percentage: 25 }
   })
-  await prisma.packProbability.create({
-    data: { packId: platinumPack.id, rarity: Rarity.EPICO, percentage: 10 },
+  await prisma.packProbability.upsert({
+    where: { packId_rarity: { packId: platinumPack.id, rarity: Rarity.EPICO } },
+    update: { percentage: 10 },
+    create: { packId: platinumPack.id, rarity: Rarity.EPICO, percentage: 10 }
   })
-  await prisma.packProbability.create({
-    data: { packId: platinumPack.id, rarity: Rarity.LENDARIO, percentage: 5 },
+  await prisma.packProbability.upsert({
+    where: { packId_rarity: { packId: platinumPack.id, rarity: Rarity.LENDARIO } },
+    update: { percentage: 5 },
+    create: { packId: platinumPack.id, rarity: Rarity.LENDARIO, percentage: 5 }
   })
 
   // Create pack probabilities for Diamond pack
   console.log('Creating Diamond pack probabilities...')
-  await prisma.packProbability.create({
-    data: { packId: diamondPack.id, rarity: Rarity.COMUM, percentage: 15 },
+  await prisma.packProbability.upsert({
+    where: { packId_rarity: { packId: diamondPack.id, rarity: Rarity.COMUM } },
+    update: { percentage: 15 },
+    create: { packId: diamondPack.id, rarity: Rarity.COMUM, percentage: 15 }
   })
-  await prisma.packProbability.create({
-    data: { packId: diamondPack.id, rarity: Rarity.INCOMUM, percentage: 30 },
+  await prisma.packProbability.upsert({
+    where: { packId_rarity: { packId: diamondPack.id, rarity: Rarity.INCOMUM } },
+    update: { percentage: 30 },
+    create: { packId: diamondPack.id, rarity: Rarity.INCOMUM, percentage: 30 }
   })
-  await prisma.packProbability.create({
-    data: { packId: diamondPack.id, rarity: Rarity.RARO, percentage: 30 },
+  await prisma.packProbability.upsert({
+    where: { packId_rarity: { packId: diamondPack.id, rarity: Rarity.RARO } },
+    update: { percentage: 30 },
+    create: { packId: diamondPack.id, rarity: Rarity.RARO, percentage: 30 }
   })
-  await prisma.packProbability.create({
-    data: { packId: diamondPack.id, rarity: Rarity.EPICO, percentage: 15 },
+  await prisma.packProbability.upsert({
+    where: { packId_rarity: { packId: diamondPack.id, rarity: Rarity.EPICO } },
+    update: { percentage: 15 },
+    create: { packId: diamondPack.id, rarity: Rarity.EPICO, percentage: 15 }
   })
-  await prisma.packProbability.create({
-    data: { packId: diamondPack.id, rarity: Rarity.LENDARIO, percentage: 10 },
+  await prisma.packProbability.upsert({
+    where: { packId_rarity: { packId: diamondPack.id, rarity: Rarity.LENDARIO } },
+    update: { percentage: 10 },
+    create: { packId: diamondPack.id, rarity: Rarity.LENDARIO, percentage: 10 }
   })
 
   console.log('Seed completed successfully!')
