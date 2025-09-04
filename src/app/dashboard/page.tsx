@@ -437,8 +437,21 @@ export default function Dashboard() {
         </div>
 
         {/* Secondary Actions Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6 mb-12">
           
+          {/* User Profile */}
+          <div className="group bg-gradient-to-br from-violet-800/40 to-purple-800/40 backdrop-blur-lg rounded-xl p-6 border border-violet-500/30 hover:border-violet-400/50 transition-all duration-300 hover:transform hover:scale-105">
+            <div className="text-4xl mb-4 group-hover:animate-pulse">👤</div>
+            <h3 className="text-lg font-bold text-white mb-2">Meu Perfil</h3>
+            <p className="text-gray-300 text-sm mb-4">Configure sua conta, foto e informações pessoais.</p>
+            <Link
+              href="/profile/settings"
+              className="inline-block w-full text-center px-4 py-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-200"
+            >
+              Ver Perfil
+            </Link>
+          </div>
+
           {/* Collections */}
           <div className="group bg-gradient-to-br from-orange-800/40 to-red-800/40 backdrop-blur-lg rounded-xl p-6 border border-orange-500/30 hover:border-orange-400/50 transition-all duration-300 hover:transform hover:scale-105">
             <div className="text-4xl mb-4 group-hover:animate-bounce">📚</div>

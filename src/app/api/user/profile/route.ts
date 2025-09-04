@@ -92,7 +92,7 @@ export async function PATCH(req: Request) {
     }
 
     const body = await req.json()
-    const { profileVisibility } = body
+    const { profileVisibility, name } = body
 
     // Validate profileVisibility
     if (profileVisibility && !['PUBLIC', 'FRIENDS_ONLY', 'PRIVATE'].includes(profileVisibility)) {
@@ -102,11 +102,37 @@ export async function PATCH(req: Request) {
       )
     }
 
+    // Validate name
+    if (name !== undefined) {
+      if (!name || typeof name !== 'string') {
+        return NextResponse.json(
+          { error: 'Nome é obrigatório' },
+          { status: 400 }
+        )
+      }
+
+      const trimmedName = name.trim()
+      if (trimmedName.length < 2) {
+        return NextResponse.json(
+          { error: 'Nome deve ter pelo menos 2 caracteres' },
+          { status: 400 }
+        )
+      }
+
+      if (trimmedName.length > 50) {
+        return NextResponse.json(
+          { error: 'Nome deve ter no máximo 50 caracteres' },
+          { status: 400 }
+        )
+      }
+    }
+
     // Update user profile
     const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
       data: {
-        ...(profileVisibility && { profileVisibility })
+        ...(profileVisibility && { profileVisibility }),
+        ...(name !== undefined && { name: name.trim() })
       },
       select: {
         id: true,

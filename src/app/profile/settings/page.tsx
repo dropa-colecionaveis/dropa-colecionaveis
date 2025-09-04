@@ -29,6 +29,11 @@ export default function ProfileSettingsPage() {
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [uploadSuccess, setUploadSuccess] = useState(false)
+  const [isEditingName, setIsEditingName] = useState(false)
+  const [newDisplayName, setNewDisplayName] = useState('')
+  const [nameSaving, setNameSaving] = useState(false)
+  const [nameError, setNameError] = useState<string | null>(null)
+  const [nameSuccess, setNameSuccess] = useState(false)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -153,6 +158,78 @@ export default function ProfileSettingsPage() {
 
   const triggerFileInput = () => {
     fileInputRef.current?.click()
+  }
+
+  const startEditingName = () => {
+    setNewDisplayName(profile?.name || '')
+    setIsEditingName(true)
+    setNameError(null)
+    setNameSuccess(false)
+  }
+
+  const cancelEditingName = () => {
+    setIsEditingName(false)
+    setNewDisplayName('')
+    setNameError(null)
+  }
+
+  const handleNameUpdate = async () => {
+    if (!newDisplayName.trim()) {
+      setNameError('Nome não pode estar vazio')
+      return
+    }
+
+    if (newDisplayName.trim().length < 2) {
+      setNameError('Nome deve ter pelo menos 2 caracteres')
+      return
+    }
+
+    if (newDisplayName.trim().length > 50) {
+      setNameError('Nome deve ter no máximo 50 caracteres')
+      return
+    }
+
+    try {
+      setNameSaving(true)
+      setNameError(null)
+
+      const response = await fetch('/api/user/profile', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: newDisplayName.trim()
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Erro ao atualizar nome')
+      }
+
+      // Update session with new name
+      await update({
+        ...session,
+        user: {
+          ...session?.user,
+          name: newDisplayName.trim()
+        }
+      })
+
+      // Update profile state
+      setProfile(prev => prev ? { ...prev, name: newDisplayName.trim() } : null)
+
+      setIsEditingName(false)
+      setNameSuccess(true)
+      setTimeout(() => setNameSuccess(false), 3000)
+
+    } catch (error: any) {
+      console.error('Name update error:', error)
+      setNameError(error.message || 'Erro ao atualizar nome')
+    } finally {
+      setNameSaving(false)
+    }
   }
 
   const handleLogout = () => {
@@ -347,12 +424,82 @@ export default function ProfileSettingsPage() {
             </h2>
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <div className="text-gray-300 text-sm mb-2">Nome</div>
-                <div className="text-white font-medium text-lg">{profile.name}</div>
+                <div className="text-gray-300 text-sm mb-2">Nome de Exibição</div>
+                {isEditingName ? (
+                  <div className="space-y-3">
+                    <div>
+                      <input
+                        type="text"
+                        value={newDisplayName}
+                        onChange={(e) => setNewDisplayName(e.target.value)}
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white font-medium text-lg focus:outline-none focus:border-purple-500 focus:bg-white/15 transition-all duration-200"
+                        placeholder="Digite seu nome..."
+                        maxLength={50}
+                        disabled={nameSaving}
+                      />
+                      <div className="text-gray-400 text-xs mt-1">
+                        {newDisplayName.length}/50 caracteres
+                      </div>
+                    </div>
+                    
+                    {nameError && (
+                      <div className="bg-gradient-to-r from-red-600/20 to-red-500/20 border border-red-500/30 rounded-xl p-3">
+                        <div className="text-red-400 font-medium text-sm">
+                          ❌ {nameError}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex space-x-3">
+                      <button
+                        onClick={handleNameUpdate}
+                        disabled={nameSaving || !newDisplayName.trim()}
+                        className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {nameSaving ? (
+                          <div className="flex items-center space-x-2">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            <span>Salvando...</span>
+                          </div>
+                        ) : (
+                          '✅ Salvar'
+                        )}
+                      </button>
+                      <button
+                        onClick={cancelEditingName}
+                        disabled={nameSaving}
+                        className="px-4 py-2 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white rounded-lg transition-all duration-200 font-medium disabled:opacity-50"
+                      >
+                        ❌ Cancelar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-4">
+                    <div className="text-white font-medium text-lg">{profile.name}</div>
+                    <button
+                      onClick={startEditingName}
+                      className="px-3 py-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg transition-all duration-200 text-sm font-medium"
+                    >
+                      ✏️ Editar
+                    </button>
+                  </div>
+                )}
+
+                {nameSuccess && (
+                  <div className="mt-3 bg-gradient-to-r from-green-600/20 to-emerald-600/20 border border-green-500/30 rounded-xl p-3">
+                    <div className="text-green-400 font-medium text-sm">
+                      ✅ Nome atualizado com sucesso!
+                    </div>
+                  </div>
+                )}
               </div>
               <div>
                 <div className="text-gray-300 text-sm mb-2">Email</div>
                 <div className="text-white font-medium text-lg">{profile.email}</div>
+                <div className="text-gray-400 text-xs mt-1">
+                  O email não pode ser alterado
+                </div>
               </div>
             </div>
             <div className="mt-6 p-4 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/40 rounded-xl">

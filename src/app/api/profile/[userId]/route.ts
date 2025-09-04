@@ -176,8 +176,19 @@ export async function GET(
       profile: publicProfile
     })
 
-    // Cache public profiles for 5 minutes
-    response.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=600')
+    // Check if user is viewing their own profile
+    const session = await getServerSession(authOptions)
+    const isOwnProfile = session?.user?.id === params.userId
+
+    if (isOwnProfile) {
+      // No cache for own profile to ensure fresh data after updates
+      response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+      response.headers.set('Pragma', 'no-cache')
+      response.headers.set('Expires', '0')
+    } else {
+      // Cache other user profiles for 5 minutes
+      response.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=600')
+    }
     
     return response
   } catch (error) {

@@ -90,15 +90,21 @@ export default function PublicProfilePage() {
   useEffect(() => {
     fetchProfile()
     fetchCollections()
-  }, [userId])
+  }, [userId, session]) // Add session dependency to refetch when session updates
 
   const fetchProfile = async () => {
     try {
       setLoading(true)
       setError(null)
 
+      // Check if viewing own profile to disable cache
+      const isOwnProfile = session?.user?.id === userId
+      
       const response = await fetch(`/api/profile/${userId}`, {
-        headers: {
+        headers: isOwnProfile ? {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        } : {
           'Cache-Control': 'max-age=300'
         }
       })
@@ -296,8 +302,42 @@ export default function PublicProfilePage() {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           {/* Profile Header */}
-          <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-8 mb-8 border border-white/20 shadow-xl">
-            <div className="flex items-center space-x-6 mb-6">
+          <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-6 md:p-8 mb-8 border border-white/20 shadow-xl">
+            {/* Mobile Layout - Centered */}
+            <div className="block md:hidden text-center mb-6">
+              <div className="w-24 h-24 mx-auto bg-gradient-to-br from-purple-600 to-indigo-600 rounded-full flex items-center justify-center text-4xl font-bold text-white shadow-lg overflow-hidden mb-4">
+                {profile.profileImage ? (
+                  <Image
+                    src={profile.profileImage}
+                    alt={profile.name}
+                    width={96}
+                    height={96}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  profile.name.charAt(0).toUpperCase()
+                )}
+              </div>
+              <h1 className="text-3xl font-bold text-white mb-3">{profile.name}</h1>
+              <div className="space-y-2 text-gray-300">
+                <div className="flex items-center justify-center space-x-2">
+                  <span>⭐</span>
+                  <span>Nível {profile.stats.level}</span>
+                </div>
+                <div className="flex items-center justify-center space-x-2">
+                  <span>📅</span>
+                  <span>Membro desde {new Date(profile.memberSince).toLocaleDateString('pt-BR')}</span>
+                </div>
+                {isOwnProfile && (
+                  <div className="mt-3">
+                    <span className="bg-gradient-to-r from-blue-600 to-cyan-600 px-3 py-1 rounded-full text-white text-sm font-semibold">Seu Profile</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Desktop Layout - Horizontal */}
+            <div className="hidden md:flex items-center space-x-6 mb-6">
               <div className="w-24 h-24 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-full flex items-center justify-center text-4xl font-bold text-white shadow-lg overflow-hidden">
                 {profile.profileImage ? (
                   <Image
@@ -542,71 +582,75 @@ export default function PublicProfilePage() {
       {showCollectionModal && selectedCollection && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowCollectionModal(false)}>
           <div className="bg-gradient-to-br from-gray-900/95 to-gray-800/95 backdrop-blur-lg rounded-2xl max-w-6xl w-full max-h-[95vh] overflow-hidden border border-white/20 flex flex-col" onClick={(e) => e.stopPropagation()}>
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-white/10">
-              <div className="flex items-center space-x-4">
+            {/* Compact Modal Header */}
+            <div className="flex items-center justify-between p-4 border-b border-white/10 flex-shrink-0">
+              <div className="flex items-center space-x-3">
                 {selectedCollection.collection.imageUrl && (
-                  <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-700/50">
+                  <div className="w-8 h-8 rounded-lg overflow-hidden bg-gray-700/50">
                     <Image
                       src={selectedCollection.collection.imageUrl}
                       alt={selectedCollection.collection.name}
-                      width={48}
-                      height={48}
+                      width={32}
+                      height={32}
                       className="w-full h-full object-cover"
                     />
                   </div>
                 )}
                 <div>
-                  <h3 className="text-2xl font-bold text-white">{selectedCollection.collection.name}</h3>
-                  <p className="text-gray-400">{selectedCollection.collection.description}</p>
+                  <h3 className="text-xl font-bold text-white">{selectedCollection.collection.name}</h3>
+                  <p className="text-sm text-gray-400 line-clamp-1">{selectedCollection.collection.description}</p>
                 </div>
               </div>
               <button 
                 onClick={() => setShowCollectionModal(false)}
-                className="text-gray-400 hover:text-white text-2xl w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
+                className="text-gray-400 hover:text-white text-xl w-6 h-6 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
               >
                 ×
               </button>
             </div>
 
-            {/* Collection Stats */}
-            <div className="p-6 border-b border-white/10 flex-shrink-0">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                <div className="bg-gradient-to-br from-blue-600/20 to-cyan-600/20 rounded-xl p-4 text-center border border-blue-500/30">
-                  <div className="text-2xl font-bold text-blue-400">{selectedCollection.collection.itemsOwned}</div>
-                  <div className="text-sm text-gray-300">Possuídos</div>
+            {/* Compact Stats Bar */}
+            <div className="p-3 border-b border-white/10 flex-shrink-0">
+              <div className="flex items-center justify-center space-x-4 mb-3">
+                <div className="text-center">
+                  <div className="text-lg font-bold text-blue-400">{selectedCollection.collection.itemsOwned}</div>
+                  <div className="text-xs text-gray-400">Possuídos</div>
                 </div>
-                <div className="bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-xl p-4 text-center border border-purple-500/30">
-                  <div className="text-2xl font-bold text-purple-400">{selectedCollection.collection.totalItems}</div>
-                  <div className="text-sm text-gray-300">Total</div>
+                <div className="w-px h-6 bg-gray-600"></div>
+                <div className="text-center">
+                  <div className="text-lg font-bold text-purple-400">{selectedCollection.collection.totalItems}</div>
+                  <div className="text-xs text-gray-400">Total</div>
                 </div>
-                <div className="bg-gradient-to-br from-green-600/20 to-emerald-600/20 rounded-xl p-4 text-center border border-green-500/30">
-                  <div className="text-2xl font-bold text-green-400">{selectedCollection.collection.completionPercentage}%</div>
-                  <div className="text-sm text-gray-300">Completo</div>
+                <div className="w-px h-6 bg-gray-600"></div>
+                <div className="text-center">
+                  <div className="text-lg font-bold text-green-400">{selectedCollection.collection.completionPercentage}%</div>
+                  <div className="text-xs text-gray-400">Completo</div>
                 </div>
-                <div className="bg-gradient-to-br from-yellow-600/20 to-orange-600/20 rounded-xl p-4 text-center border border-yellow-500/30">
-                  <div className="text-2xl font-bold text-yellow-400">{selectedCollection.stats.missingItems}</div>
-                  <div className="text-sm text-gray-300">Faltando</div>
+                <div className="w-px h-6 bg-gray-600"></div>
+                <div className="text-center">
+                  <div className="text-lg font-bold text-yellow-400">{selectedCollection.stats.missingItems}</div>
+                  <div className="text-xs text-gray-400">Faltando</div>
                 </div>
               </div>
               
-              {/* Progress Bar */}
-              <div className="w-full bg-gray-700/50 rounded-full h-3 mb-2">
+              {/* Compact Progress Bar */}
+              <div className="w-full bg-gray-700/50 rounded-full h-2">
                 <div 
-                  className="h-3 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 transition-all duration-500"
+                  className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 transition-all duration-500"
                   style={{ width: `${selectedCollection.collection.completionPercentage}%` }}
                 ></div>
               </div>
             </div>
 
-            {/* Items Grid */}
-            <div className="p-6 overflow-y-auto flex-1 min-h-0">
+            {/* Items Grid - Maximized Space */}
+            <div className="p-4 overflow-y-auto flex-1 min-h-0">
               {selectedCollection.itemsByRarity && (
-                <div className="space-y-6 pb-6">
+                <div className="space-y-5">
                   {selectedCollection.rarityStats.map((rarityGroup: any) => (
                     <div key={rarityGroup.rarity} className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h4 className={`text-lg font-bold flex items-center space-x-2 ${getRarityColor(rarityGroup.rarity)}`}>
+                      {/* Compact Rarity Header */}
+                      <div className="flex items-center justify-between bg-white/5 rounded-lg px-3 py-2">
+                        <h4 className={`text-base font-bold flex items-center space-x-2 ${getRarityColor(rarityGroup.rarity)}`}>
                           <span>{rarityGroup.rarity}</span>
                           <span className="text-sm text-gray-400">({rarityGroup.owned}/{rarityGroup.total})</span>
                         </h4>
@@ -615,45 +659,50 @@ export default function PublicProfilePage() {
                         </div>
                       </div>
                       
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                      {/* Improved Items Grid */}
+                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3">
                         {selectedCollection.itemsByRarity[rarityGroup.rarity].map((item: any) => (
                           <div 
                             key={item.id} 
-                            className={`relative rounded-xl p-3 border transition-all duration-300 ${
+                            className={`relative rounded-lg p-2 border transition-all duration-300 hover:scale-105 ${
                               item.owned 
                                 ? 'bg-gradient-to-br from-green-600/20 to-emerald-600/20 border-green-500/30'
                                 : 'bg-gradient-to-br from-gray-600/20 to-gray-700/20 border-gray-500/30 opacity-60'
                             }`}
                           >
                             {item.owned && (
-                              <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+                              <div className="absolute -top-1 -right-1 bg-green-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full font-bold">
                                 ✓
                               </div>
                             )}
                             
-                            <div className="aspect-square bg-gray-700/50 rounded-lg mb-2 flex items-center justify-center overflow-hidden">
+                            {/* Larger Item Image */}
+                            <div className="aspect-square bg-gray-700/50 rounded-md mb-2 flex items-center justify-center overflow-hidden">
                               <Image
                                 src={item.imageUrl || '/placeholder-item.png'}
                                 alt={item.name}
-                                width={60}
-                                height={60}
-                                className="object-cover rounded-lg"
+                                width={80}
+                                height={80}
+                                className="object-cover rounded-md"
                               />
                             </div>
                             
+                            {/* Compact Item Info */}
                             <div className="text-center">
-                              <div className="text-white font-medium text-xs mb-1 line-clamp-2">{item.name}</div>
+                              <div className="text-white font-medium text-xs mb-1 line-clamp-2 leading-tight" title={item.name}>
+                                {item.name}
+                              </div>
                               <div className={`text-xs font-bold ${getRarityColor(item.rarity)}`}>
                                 #{item.itemNumber}
                               </div>
                               {item.owned && item.obtainedAt && (
                                 <div className="text-green-300 text-xs mt-1">
-                                  {new Date(item.obtainedAt).toLocaleDateString('pt-BR')}
+                                  {new Date(item.obtainedAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
                                 </div>
                               )}
                               {item.isLimitedEdition && item.limitedEdition && (
                                 <div className="text-yellow-300 text-xs mt-1">
-                                  Serial: {item.limitedEdition.serialNumber}
+                                  #{item.limitedEdition.serialNumber}
                                 </div>
                               )}
                             </div>
