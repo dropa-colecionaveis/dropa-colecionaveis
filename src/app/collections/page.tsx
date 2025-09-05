@@ -44,6 +44,8 @@ export default function Collections() {
   const [userProfile, setUserProfile] = useState<any>(null)
   const [userStats, setUserStats] = useState<any>(null)
   const [showLogoutModal, setShowLogoutModal] = useState(false)
+  const [showUserMenu, setShowUserMenu] = useState(false)
+  const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 })
   const { bestRanking, loading: rankingLoading } = useUserRankings()
   const { isAdmin, isSuperAdmin } = useAdmin()
 
@@ -56,6 +58,34 @@ export default function Collections() {
       fetchUserProfile()
     }
   }, [status, router])
+
+  // Close user menu when clicking outside or scrolling
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showUserMenu) {
+        const target = event.target as HTMLElement
+        if (!target.closest('[data-user-menu]') && !target.closest('[data-menu-item]')) {
+          setShowUserMenu(false)
+        }
+      }
+    }
+
+    const handleScroll = () => {
+      if (showUserMenu) {
+        setShowUserMenu(false)
+      }
+    }
+
+    if (showUserMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+      window.addEventListener('scroll', handleScroll, { passive: true })
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      window.removeEventListener('scroll', handleScroll)
+    }
+  }, [showUserMenu])
 
   const fetchCollections = async () => {
     try {
@@ -255,13 +285,37 @@ export default function Collections() {
                   </Link>
                 )}
                 
-                <button
-                  onClick={() => setShowLogoutModal(true)}
-                  className="p-2 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white rounded-lg transition-all duration-200 font-medium shadow-lg hover:shadow-xl hover:scale-105"
-                  title="Sair"
-                >
-                  ✕
-                </button>
+                {/* User Menu */}
+                <div data-user-menu>
+                  <button
+                    onClick={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect()
+                      setMenuPosition({
+                        top: rect.bottom + 8 + window.scrollY,
+                        right: window.innerWidth - rect.right
+                      })
+                      setShowUserMenu(!showUserMenu)
+                    }}
+                    className="flex items-center space-x-2 p-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg transition-all duration-200 font-medium shadow-lg hover:shadow-xl hover:scale-105"
+                    title="Menu do usuário"
+                  >
+                    {/* User Avatar */}
+                    <div className="w-6 h-6 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-full flex items-center justify-center text-sm font-bold text-white overflow-hidden">
+                      {userProfile?.profileImage ? (
+                        <Image
+                          src={userProfile.profileImage}
+                          alt={session?.user?.name || 'User'}
+                          width={24}
+                          height={24}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        session?.user?.name?.charAt(0).toUpperCase() || '?'
+                      )}
+                    </div>
+                    <span className="text-sm">☰</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -483,7 +537,197 @@ export default function Collections() {
         </div>
       </main>
 
-      {/* Logout Confirmation Modal */}
+      {/* User Menu Dropdown */}
+      {showUserMenu && (
+        <div 
+          className="absolute w-64 bg-gradient-to-br from-gray-900/95 to-gray-800/95 backdrop-blur-lg rounded-xl border border-white/20 shadow-2xl z-[99999] overflow-hidden animate-in slide-in-from-top-2 fade-in-0 duration-200"
+          style={{ 
+            top: menuPosition.top, 
+            right: menuPosition.right 
+          }}
+          data-user-dropdown
+        >
+          {/* Menu Header */}
+          <div className="p-4 border-b border-white/10">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-full flex items-center justify-center text-lg font-bold text-white overflow-hidden">
+                {userProfile?.profileImage ? (
+                  <Image
+                    src={userProfile.profileImage}
+                    alt={session?.user?.name || 'User'}
+                    width={40}
+                    height={40}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  session?.user?.name?.charAt(0).toUpperCase() || '?'
+                )}
+              </div>
+              <div>
+                <div className="text-white font-medium">{session?.user?.name || 'Usuário'}</div>
+                <div className="text-gray-400 text-sm">{userProfile?.credits || 0} créditos</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Menu Items */}
+          <div className="p-2">
+            {/* Profile */}
+            <button
+              data-menu-item
+              onClick={(e) => {
+                e.stopPropagation()
+                window.location.href = '/profile/settings'
+              }}
+              className="block w-full text-left px-3 py-2.5 hover:bg-white/10 rounded-lg transition-colors duration-200 text-gray-300 hover:text-white cursor-pointer"
+            >
+              <div className="flex items-center space-x-3">
+                <span className="text-lg w-5 flex justify-center">👤</span>
+                <span>Meu Perfil</span>
+              </div>
+            </button>
+
+            {/* Buy Credits */}
+            <button
+              data-menu-item
+              onClick={(e) => {
+                e.stopPropagation()
+                window.location.href = '/credits/purchase'
+              }}
+              className="block w-full text-left px-3 py-2.5 hover:bg-white/10 rounded-lg transition-colors duration-200 text-gray-300 hover:text-white cursor-pointer"
+            >
+              <div className="flex items-center space-x-3">
+                <span className="text-lg w-5 flex justify-center">💰</span>
+                <span>Comprar Créditos</span>
+              </div>
+            </button>
+
+            {/* Pack Store */}
+            <button
+              data-menu-item
+              onClick={(e) => {
+                e.stopPropagation()
+                window.location.href = '/packs'
+              }}
+              className="block w-full text-left px-3 py-2.5 hover:bg-white/10 rounded-lg transition-colors duration-200 text-gray-300 hover:text-white cursor-pointer"
+            >
+              <div className="flex items-center space-x-3">
+                <span className="text-lg w-5 flex justify-center">📦</span>
+                <span>Loja de Pacotes</span>
+              </div>
+            </button>
+
+            {/* Inventory */}
+            <button
+              data-menu-item
+              onClick={(e) => {
+                e.stopPropagation()
+                window.location.href = '/inventory'
+              }}
+              className="block w-full text-left px-3 py-2.5 hover:bg-white/10 rounded-lg transition-colors duration-200 text-gray-300 hover:text-white cursor-pointer"
+            >
+              <div className="flex items-center space-x-3">
+                <span className="text-lg w-5 flex justify-center">🎒</span>
+                <span>Inventário</span>
+              </div>
+            </button>
+
+            {/* Collections */}
+            <button
+              data-menu-item
+              onClick={(e) => {
+                e.stopPropagation()
+                window.location.href = '/collections'
+              }}
+              className="block w-full text-left px-3 py-2.5 hover:bg-white/10 rounded-lg transition-colors duration-200 text-gray-300 hover:text-white cursor-pointer"
+            >
+              <div className="flex items-center space-x-3">
+                <span className="text-lg w-5 flex justify-center">📚</span>
+                <span>Coleções</span>
+              </div>
+            </button>
+
+            {/* Marketplace */}
+            <button
+              data-menu-item
+              onClick={(e) => {
+                e.stopPropagation()
+                window.location.href = '/marketplace'
+              }}
+              className="block w-full text-left px-3 py-2.5 hover:bg-white/10 rounded-lg transition-colors duration-200 text-gray-300 hover:text-white cursor-pointer"
+            >
+              <div className="flex items-center space-x-3">
+                <span className="text-lg w-5 flex justify-center">🛒</span>
+                <span>Marketplace</span>
+              </div>
+            </button>
+
+            {/* Rankings */}
+            <button
+              data-menu-item
+              onClick={(e) => {
+                e.stopPropagation()
+                window.location.href = '/rankings'
+              }}
+              className="block w-full text-left px-3 py-2.5 hover:bg-white/10 rounded-lg transition-colors duration-200 text-gray-300 hover:text-white cursor-pointer"
+            >
+              <div className="flex items-center space-x-3">
+                <span className="text-lg w-5 flex justify-center">📊</span>
+                <span>Rankings</span>
+              </div>
+            </button>
+
+            {/* Achievements */}
+            <button
+              data-menu-item
+              onClick={(e) => {
+                e.stopPropagation()
+                window.location.href = '/achievements'
+              }}
+              className="block w-full text-left px-3 py-2.5 hover:bg-white/10 rounded-lg transition-colors duration-200 text-gray-300 hover:text-white cursor-pointer"
+            >
+              <div className="flex items-center space-x-3">
+                <span className="text-lg w-5 flex justify-center">🏆</span>
+                <span>Conquistas</span>
+              </div>
+            </button>
+
+            {/* Dashboard */}
+            <button
+              data-menu-item
+              onClick={(e) => {
+                e.stopPropagation()
+                window.location.href = '/dashboard'
+              }}
+              className="block w-full text-left px-3 py-2.5 hover:bg-white/10 rounded-lg transition-colors duration-200 text-gray-300 hover:text-white cursor-pointer"
+            >
+              <div className="flex items-center space-x-3">
+                <span className="text-lg w-5 flex justify-center">🏠</span>
+                <span>Dashboard</span>
+              </div>
+            </button>
+
+            {/* Divider */}
+            <div className="my-2 border-t border-white/10"></div>
+
+            {/* Logout */}
+            <button
+              data-menu-item
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowUserMenu(false)
+                setShowLogoutModal(true)
+              }}
+              className="w-full flex items-center space-x-3 px-3 py-2.5 hover:bg-red-600/20 rounded-lg transition-colors duration-200 text-red-400 hover:text-red-300 text-left"
+            >
+              <span className="text-lg w-5 flex justify-center">🚪</span>
+              <span>Sair</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Logout Confirmation Modal */
       {showLogoutModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 max-w-md w-full mx-4 border border-gray-700 shadow-2xl">
