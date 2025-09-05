@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import { ProfileSettingsSkeleton } from '@/components/SkeletonLoader'
 
 type ProfileVisibility = 'PUBLIC' | 'FRIENDS_ONLY' | 'PRIVATE'
 
@@ -294,7 +295,7 @@ export default function ProfileSettingsPage() {
   }
 
   if (status === 'loading' || loading) {
-    return <LoadingSpinner />
+    return <ProfileSettingsSkeleton />
   }
 
   if (status === 'unauthenticated') {
@@ -303,7 +304,7 @@ export default function ProfileSettingsPage() {
   }
 
   if (!profile) {
-    return <LoadingSpinner />
+    return <ProfileSettingsSkeleton />
   }
 
   return (

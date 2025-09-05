@@ -456,3 +456,275 @@ export const AchievementsGridSkeleton = memo(() => {
   )
 })
 AchievementsGridSkeleton.displayName = 'AchievementsGridSkeleton'
+
+export const ProfileSettingsSkeleton = memo(() => {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+      {/* Header */}
+      <header className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 backdrop-blur-lg border-b border-purple-500/30 shadow-xl">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <SkeletonLoader width="w-30" height="h-15" />
+              <div className="hidden md:block">
+                <SkeletonLoader width="w-48" height="h-6" className="mb-2" />
+                <SkeletonLoader width="w-64" height="h-4" />
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-4">
+              <SkeletonLoader width="w-32" height="h-10" className="rounded-lg" />
+              <SkeletonLoader width="w-10" height="h-10" className="rounded-lg" />
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          {/* Title Section */}
+          <div className="text-center mb-12">
+            <SkeletonLoader width="w-96" height="h-10" className="mx-auto mb-4" />
+            <SkeletonLoader width="w-80" height="h-6" className="mx-auto" />
+          </div>
+
+          {/* Profile Picture Section */}
+          <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-8 mb-8 border border-white/20 shadow-xl">
+            <div className="flex items-center mb-6">
+              <SkeletonLoader width="w-8" height="h-8" className="rounded-full mr-3" />
+              <SkeletonLoader width="w-40" height="h-8" />
+            </div>
+
+            <div className="flex flex-col items-center mb-6">
+              <SkeletonLoader width="w-32" height="h-32" className="rounded-full mb-4" />
+              <SkeletonLoader width="w-48" height="h-6" className="mb-2" />
+              <SkeletonLoader width="w-64" height="h-4" />
+            </div>
+
+            <div className="flex justify-center space-x-4">
+              <SkeletonLoader width="w-32" height="h-12" className="rounded-lg" />
+              <SkeletonLoader width="w-28" height="h-12" className="rounded-lg" />
+            </div>
+          </div>
+
+          {/* Display Name Section */}
+          <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-8 mb-8 border border-white/20 shadow-xl">
+            <div className="flex items-center mb-6">
+              <SkeletonLoader width="w-8" height="h-8" className="rounded-full mr-3" />
+              <SkeletonLoader width="w-40" height="h-8" />
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <SkeletonLoader width="w-32" height="h-5" className="mb-2" />
+                <div className="flex items-center space-x-4">
+                  <SkeletonLoader width="w-64" height="h-12" className="rounded-lg" />
+                  <SkeletonLoader width="w-20" height="h-12" className="rounded-lg" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Privacy Settings Section */}
+          <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/20 shadow-xl">
+            <div className="flex items-center mb-6">
+              <SkeletonLoader width="w-8" height="h-8" className="rounded-full mr-3" />
+              <SkeletonLoader width="w-48" height="h-8" />
+            </div>
+
+            <SkeletonLoader width="w-full" height="h-5" className="mb-6" />
+
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="p-4 rounded-xl bg-white/5 border border-white/10">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <SkeletonLoader width="w-8" height="h-8" className="rounded-full" />
+                      <div>
+                        <SkeletonLoader width="w-24" height="h-6" className="mb-1" />
+                        <SkeletonLoader width="w-80" height="h-4" />
+                      </div>
+                    </div>
+                    <SkeletonLoader width="w-6" height="h-6" className="rounded-full" />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-8 flex justify-end">
+              <SkeletonLoader width="w-32" height="h-12" className="rounded-lg" />
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  )
+})
+ProfileSettingsSkeleton.displayName = 'ProfileSettingsSkeleton'
+
+export const PublicProfileSkeleton = memo(() => {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+      {/* Header */}
+      <header className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 backdrop-blur-lg border-b border-purple-500/30 shadow-xl">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <SkeletonLoader width="w-30" height="h-15" />
+              <div className="hidden md:block">
+                <SkeletonLoader width="w-40" height="h-6" className="mb-2" />
+                <SkeletonLoader width="w-32" height="h-4" />
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-4">
+              <SkeletonLoader width="w-28" height="h-10" className="rounded-lg" />
+              <SkeletonLoader width="w-24" height="h-10" className="rounded-lg" />
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="container mx-auto px-4 py-8">
+        <div className="max-w-6xl mx-auto">
+          {/* Profile Header */}
+          <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-6 md:p-8 mb-8 border border-white/20 shadow-xl">
+            {/* Mobile Layout */}
+            <div className="block md:hidden text-center mb-6">
+              <SkeletonLoader width="w-24" height="h-24" className="rounded-full mx-auto mb-4" />
+              <SkeletonLoader width="w-48" height="h-8" className="mx-auto mb-3" />
+              <div className="space-y-2">
+                <SkeletonLoader width="w-32" height="h-5" className="mx-auto" />
+                <SkeletonLoader width="w-40" height="h-5" className="mx-auto" />
+                <SkeletonLoader width="w-36" height="h-5" className="mx-auto" />
+              </div>
+            </div>
+
+            {/* Desktop Layout */}
+            <div className="hidden md:flex items-start space-x-8">
+              <SkeletonLoader width="w-32" height="h-32" className="rounded-full flex-shrink-0" />
+              <div className="flex-1">
+                <SkeletonLoader width="w-64" height="h-10" className="mb-6" />
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="text-center">
+                      <SkeletonLoader width="w-16" height="h-8" className="mx-auto mb-2" />
+                      <SkeletonLoader width="w-20" height="h-5" className="mx-auto" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Rankings Section */}
+          <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-8 mb-8 border border-white/20 shadow-xl">
+            <div className="flex items-center mb-6">
+              <SkeletonLoader width="w-8" height="h-8" className="rounded-full mr-3" />
+              <SkeletonLoader width="w-32" height="h-8" />
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="bg-gradient-to-r from-purple-600/20 to-indigo-600/20 rounded-xl p-4 border border-purple-500/30">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <SkeletonLoader width="w-24" height="h-5" className="mb-1" />
+                      <SkeletonLoader width="w-20" height="h-4" />
+                    </div>
+                    <div className="text-right">
+                      <SkeletonLoader width="w-8" height="h-8" className="mb-1 ml-auto rounded-full" />
+                      <SkeletonLoader width="w-12" height="h-5" className="ml-auto" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* Recent Achievements */}
+            <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/20 shadow-xl">
+              <div className="flex items-center mb-6">
+                <SkeletonLoader width="w-8" height="h-8" className="rounded-full mr-3" />
+                <SkeletonLoader width="w-40" height="h-8" />
+              </div>
+              <div className="space-y-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="bg-gradient-to-r from-purple-600/20 to-indigo-600/20 rounded-xl p-4 border border-purple-500/30">
+                    <div className="flex items-center space-x-4">
+                      <SkeletonLoader width="w-12" height="h-12" className="rounded-full" />
+                      <div className="flex-1">
+                        <SkeletonLoader width="w-32" height="h-5" className="mb-2" />
+                        <SkeletonLoader width="w-48" height="h-4" className="mb-1" />
+                        <SkeletonLoader width="w-24" height="h-3" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Rare Items */}
+            <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/20 shadow-xl">
+              <div className="flex items-center mb-6">
+                <SkeletonLoader width="w-8" height="h-8" className="rounded-full mr-3" />
+                <SkeletonLoader width="w-24" height="h-8" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-xl p-4 border border-gray-600/30">
+                    <SkeletonLoader width="w-full" height="h-20" className="rounded-lg mb-3" />
+                    <div className="text-center">
+                      <SkeletonLoader width="w-16" height="h-4" className="mx-auto mb-1" />
+                      <SkeletonLoader width="w-12" height="h-3" className="mx-auto" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Collections Section */}
+          <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-8 mt-8 border border-white/20 shadow-xl">
+            <div className="flex items-center mb-6">
+              <SkeletonLoader width="w-8" height="h-8" className="rounded-full mr-3" />
+              <SkeletonLoader width="w-32" height="h-8" />
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="bg-gradient-to-br from-gray-500/20 to-slate-500/20 backdrop-blur-lg rounded-lg p-6 border border-gray-500/30">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center space-x-2">
+                      <SkeletonLoader width="w-8" height="h-8" className="rounded-full" />
+                      <div>
+                        <SkeletonLoader width="w-24" height="h-6" className="mb-2" />
+                        <SkeletonLoader width="w-16" height="h-4" />
+                      </div>
+                    </div>
+                    <SkeletonLoader width="w-16" height="h-6" className="rounded-full" />
+                  </div>
+                  
+                  <SkeletonLoader width="w-full" height="h-10" className="mb-4" />
+                  
+                  <div className="mb-4">
+                    <div className="flex justify-between text-sm mb-2">
+                      <SkeletonLoader width="w-16" height="h-4" />
+                      <SkeletonLoader width="w-12" height="h-4" />
+                    </div>
+                    <SkeletonLoader width="w-full" height="h-3" className="rounded-full" />
+                    <SkeletonLoader width="w-12" height="h-3" className="ml-auto mt-1" />
+                  </div>
+                  
+                  <div className="text-center">
+                    <SkeletonLoader width="w-24" height="h-4" className="mx-auto" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  )
+})
+PublicProfileSkeleton.displayName = 'PublicProfileSkeleton'

@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import Image from 'next/image'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import { PublicProfileSkeleton, CollectionCardSkeleton } from '@/components/SkeletonLoader'
 
 interface Achievement {
   id: string
@@ -225,7 +226,7 @@ export default function PublicProfilePage() {
   }
 
   if (loading) {
-    return <LoadingSpinner />
+    return <PublicProfileSkeleton />
   }
 
   if (error) {
@@ -249,7 +250,7 @@ export default function PublicProfilePage() {
   }
 
   if (!profile) {
-    return <LoadingSpinner />
+    return <PublicProfileSkeleton />
   }
 
   const isOwnProfile = session?.user?.id === userId
@@ -490,9 +491,10 @@ export default function PublicProfilePage() {
               </h2>
               
               {collectionsLoading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto"></div>
-                  <p className="text-gray-400 mt-2">Carregando coleções...</p>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <CollectionCardSkeleton key={i} />
+                  ))}
                 </div>
               ) : (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
