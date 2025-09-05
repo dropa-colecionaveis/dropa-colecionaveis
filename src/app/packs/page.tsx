@@ -23,6 +23,7 @@ interface Pack {
 
 interface UserProfile {
   credits: number
+  profileImage?: string
 }
 
 export default function PackStore() {
