@@ -370,7 +370,7 @@ export class RankingService {
       username: ranking.user.name || ranking.user.email || 'Unknown',
       position: ranking.position,
       value: ranking.value,
-      profileImage: ranking.user.profileImage
+      profileImage: ranking.user.profileImage ?? undefined
     }))
     })
   }
@@ -528,7 +528,8 @@ export class RankingService {
             id: true,
             name: true,
             email: true,
-            role: true
+            role: true,
+            profileImage: true
           }
         }
       },
@@ -540,7 +541,7 @@ export class RankingService {
       username: ranking.user.name || ranking.user.email || 'Unknown',
       position: ranking.position,
       value: ranking.value,
-      profileImage: ranking.user.profileImage
+      profileImage: ranking.user.profileImage ?? undefined
     }))
   }
 
