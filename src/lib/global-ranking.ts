@@ -241,7 +241,7 @@ export class GlobalRankingService {
         globalPercentage,
         categoryBreakdown,
         totalCategories: userRankings.length,
-        profileImage: userRankings[0].user.profileImage
+        profileImage: userRankings[0].user.profileImage ?? undefined
       })
     }
 
