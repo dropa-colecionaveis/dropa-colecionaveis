@@ -15,6 +15,7 @@ interface RankingEntry {
   username: string
   position: number
   value: number
+  profileImage?: string
 }
 
 interface RankingCategory {
@@ -38,6 +39,7 @@ interface GlobalRankingEntry {
   globalPercentage: number
   categoryBreakdown: CategoryBreakdown[]
   totalCategories: number
+  profileImage?: string
 }
 
 interface CategoryBreakdown {
@@ -855,20 +857,37 @@ export default function Rankings() {
                           {getPositionIcon(entry.position)}
                         </div>
                         
-                        <div>
-                          <div className={`font-bold text-lg ${entry.userId === session?.user?.id ? 'text-purple-400' : 'text-white'}`}>
-                            <Link 
-                              href={`/profile/${entry.userId}`}
-                              className="hover:text-purple-300 transition-colors duration-200 hover:underline"
-                            >
-                              {entry.username}
-                            </Link>
-                            {entry.userId === session?.user?.id && (
-                              <span className="ml-3 text-xs bg-gradient-to-r from-purple-600 to-indigo-600 px-3 py-1 rounded-full text-white font-semibold animate-pulse">Você</span>
+                        <div className="flex items-center space-x-4">
+                          {/* Profile Image */}
+                          <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-full flex items-center justify-center text-lg font-bold text-white overflow-hidden flex-shrink-0">
+                            {entry.profileImage ? (
+                              <Image
+                                src={entry.profileImage}
+                                alt={entry.username}
+                                width={40}
+                                height={40}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              entry.username.charAt(0).toUpperCase()
                             )}
                           </div>
-                          <div className="text-gray-400 text-sm">
-                            {entry.totalCategories} categoria{entry.totalCategories !== 1 ? 's' : ''}
+                          
+                          <div>
+                            <div className={`font-bold text-lg ${entry.userId === session?.user?.id ? 'text-purple-400' : 'text-white'}`}>
+                              <Link 
+                                href={`/profile/${entry.userId}`}
+                                className="hover:text-purple-300 transition-colors duration-200 hover:underline"
+                              >
+                                {entry.username}
+                              </Link>
+                              {entry.userId === session?.user?.id && (
+                                <span className="ml-3 text-xs bg-gradient-to-r from-purple-600 to-indigo-600 px-3 py-1 rounded-full text-white font-semibold animate-pulse">Você</span>
+                              )}
+                            </div>
+                            <div className="text-gray-400 text-sm">
+                              {entry.totalCategories} categoria{entry.totalCategories !== 1 ? 's' : ''}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -971,17 +990,34 @@ export default function Rankings() {
                         {getPositionIcon(entry.position)}
                       </div>
                       
-                      <div>
-                        <div className={`font-bold text-lg ${entry.userId === session?.user?.id ? 'text-blue-400' : 'text-white'}`}>
-                          <Link 
-                            href={`/profile/${entry.userId}`}
-                            className="hover:text-cyan-300 transition-colors duration-200 hover:underline"
-                          >
-                            {entry.username}
-                          </Link>
-                          {entry.userId === session?.user?.id && (
-                            <span className="ml-3 text-xs bg-gradient-to-r from-blue-600 to-cyan-600 px-3 py-1 rounded-full text-white font-semibold animate-pulse">Você</span>
+                      <div className="flex items-center space-x-4">
+                        {/* Profile Image */}
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-full flex items-center justify-center text-lg font-bold text-white overflow-hidden flex-shrink-0">
+                          {entry.profileImage ? (
+                            <Image
+                              src={entry.profileImage}
+                              alt={entry.username}
+                              width={40}
+                              height={40}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            entry.username.charAt(0).toUpperCase()
                           )}
+                        </div>
+                        
+                        <div>
+                          <div className={`font-bold text-lg ${entry.userId === session?.user?.id ? 'text-blue-400' : 'text-white'}`}>
+                            <Link 
+                              href={`/profile/${entry.userId}`}
+                              className="hover:text-cyan-300 transition-colors duration-200 hover:underline"
+                            >
+                              {entry.username}
+                            </Link>
+                            {entry.userId === session?.user?.id && (
+                              <span className="ml-3 text-xs bg-gradient-to-r from-blue-600 to-cyan-600 px-3 py-1 rounded-full text-white font-semibold animate-pulse">Você</span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>

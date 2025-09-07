@@ -356,7 +356,8 @@ export class RankingService {
         user: {
           select: {
             name: true,
-            email: true
+            email: true,
+            profileImage: true
           }
         }
       },
@@ -368,7 +369,8 @@ export class RankingService {
       userId: ranking.userId,
       username: ranking.user.name || ranking.user.email || 'Unknown',
       position: ranking.position,
-      value: ranking.value
+      value: ranking.value,
+      profileImage: ranking.user.profileImage
     }))
     })
   }
@@ -537,7 +539,8 @@ export class RankingService {
       userId: ranking.userId,
       username: ranking.user.name || ranking.user.email || 'Unknown',
       position: ranking.position,
-      value: ranking.value
+      value: ranking.value,
+      profileImage: ranking.user.profileImage
     }))
   }
 
@@ -643,7 +646,7 @@ export class RankingService {
       orderBy: { totalXP: 'desc' },
       include: {
         user: {
-          select: { name: true, email: true, role: true }
+          select: { name: true, email: true, role: true, profileImage: true }
         }
       }
     })
@@ -660,7 +663,7 @@ export class RankingService {
       orderBy: { totalItemsCollected: 'desc' },
       include: {
         user: {
-          select: { name: true, email: true, role: true }
+          select: { name: true, email: true, role: true, profileImage: true }
         }
       }
     })

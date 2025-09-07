@@ -77,9 +77,12 @@ export function RankingsSkeleton() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-6">
               <SkeletonLoader width="w-12" height="h-12" className="rounded-full" />
-              <div>
-                <SkeletonLoader width="w-32" height="h-6" className="mb-2" />
-                <SkeletonLoader width="w-24" height="h-4" />
+              <div className="flex items-center space-x-4">
+                <SkeletonLoader width="w-10" height="h-10" className="rounded-full flex-shrink-0" />
+                <div>
+                  <SkeletonLoader width="w-32" height="h-6" className="mb-2" />
+                  <SkeletonLoader width="w-24" height="h-4" />
+                </div>
               </div>
             </div>
             <div className="text-right">

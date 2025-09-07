@@ -10,6 +10,7 @@ export interface GlobalRankingEntry {
   globalPercentage: number
   categoryBreakdown: CategoryBreakdown[]
   totalCategories: number
+  profileImage?: string
 }
 
 export interface CategoryBreakdown {
@@ -139,7 +140,7 @@ export class GlobalRankingService {
         position: true,
         value: true,
         user: {
-          select: { name: true, email: true, role: true }
+          select: { name: true, email: true, role: true, profileImage: true }
         }
       },
       orderBy: { userId: 'asc' }
@@ -239,7 +240,8 @@ export class GlobalRankingService {
         globalScore,
         globalPercentage,
         categoryBreakdown,
-        totalCategories: userRankings.length
+        totalCategories: userRankings.length,
+        profileImage: userRankings[0].user.profileImage
       })
     }
 
