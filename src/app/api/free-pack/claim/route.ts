@@ -30,7 +30,8 @@ export async function POST(req: NextRequest) {
       include: {
         pack: {
           include: {
-            probabilities: true
+            probabilities: true,
+            customType: true
           }
         }
       }
@@ -128,7 +129,7 @@ export async function POST(req: NextRequest) {
             userId: session.user.id,
             data: {
               packId: freePackGrant.packId,
-              packType: freePackGrant.pack.type,
+              packType: freePackGrant.pack.customType ? freePackGrant.pack.customType.name : freePackGrant.pack.type || 'UNKNOWN',
               isFirstPack,
               items: [randomItem]
             }

@@ -40,11 +40,12 @@ export async function POST(req: Request) {
       )
     }
 
-    // Get pack details with probabilities
+    // Get pack details with probabilities and custom type
     const pack = await prisma.pack.findUnique({
       where: { id: packId, isActive: true },
       include: {
-        probabilities: true
+        probabilities: true,
+        customType: true
       }
     })
 
@@ -261,7 +262,7 @@ export async function POST(req: Request) {
             userId: session.user.id,
             data: {
               packId: pack.id,
-              packType: pack.type,
+              packType: pack.customType ? pack.customType.name : pack.type || 'UNKNOWN',
               isFirstPack,
               itemId: item.id,
               itemRarity: item.rarity,

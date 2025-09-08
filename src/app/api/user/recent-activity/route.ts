@@ -56,7 +56,13 @@ export async function GET(req: Request) {
       orderBy: { createdAt: 'desc' },
       include: {
         pack: {
-          select: { name: true, type: true }
+          select: { 
+            name: true, 
+            type: true, 
+            customType: {
+              select: { name: true }
+            }
+          }
         }
       }
     })
@@ -89,7 +95,7 @@ export async function GET(req: Request) {
           data: {
             pack: {
               name: opening.pack.name,
-              type: opening.pack.type
+              type: opening.pack.customType ? opening.pack.customType.name : opening.pack.type || 'UNKNOWN'
             },
             item: {
               name: item.name,

@@ -27,11 +27,12 @@ export async function POST(req: Request) {
       )
     }
 
-    // Get pack details with probabilities
+    // Get pack details with probabilities and custom type
     const pack = await prisma.pack.findUnique({
       where: { id: packId, isActive: true },
       include: {
-        probabilities: true
+        probabilities: true,
+        customType: true
       }
     })
 
@@ -55,11 +56,14 @@ export async function POST(req: Request) {
       )
     }
 
+    // Get effective pack type (custom type name or legacy enum)
+    const effectivePackType = pack.customType ? pack.customType.name : pack.type || 'UNKNOWN'
+
     // Usar o novo sistema de escassez para obter itens disponíveis
     const availableItems = await PackScarcityIntegration.getAvailableItemsForPack({
       packId: pack.id,
       userId: session.user.id,
-      packType: pack.type,
+      packType: effectivePackType,
       timestamp: new Date()
     })
 
@@ -211,7 +215,7 @@ export async function POST(req: Request) {
             userId: session.user.id,
             data: {
               packId: pack.id,
-              packType: pack.type,
+              packType: effectivePackType,
               isFirstPack,
               itemId: selectedItem.id,
               itemRarity: selectedItem.rarity,
