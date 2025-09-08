@@ -6,17 +6,19 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useUserRankings } from '@/hooks/useUserRankings'
-import { CREDIT_PACKAGES, getCreditPackage } from '@/lib/mercadopago'
+// Removido import direto - vamos usar API route
 import type { PaymentMethod, PaymentResponse, CreditPackage } from '@/types/payments'
 import CardPaymentForm from '@/components/payments/CardPaymentForm'
-import { HeaderStatsSkeleton } from '@/components/SkeletonLoader'
+import { HeaderStatsSkeleton, CreditPackagesSkeleton } from '@/components/SkeletonLoader'
 
 export default function PurchaseCredits() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [selectedPackage, setSelectedPackage] = useState<CreditPackage>(CREDIT_PACKAGES[1])
+  const [creditPackages, setCreditPackages] = useState<CreditPackage[]>([])
+  const [selectedPackage, setSelectedPackage] = useState<CreditPackage | null>(null)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | null>(null)
   const [loading, setLoading] = useState(false)
+  const [packagesLoading, setPackagesLoading] = useState(true)
   const [userProfile, setUserProfile] = useState<any>(null)
   const [userStats, setUserStats] = useState<any>(null)
   const [profileLoading, setProfileLoading] = useState(false)
@@ -33,8 +35,55 @@ export default function PurchaseCredits() {
       router.push('/auth/signin')
     } else if (status === 'authenticated') {
       fetchUserProfile()
+      loadCreditPackages()
     }
   }, [status, router])
+
+  const loadCreditPackages = async () => {
+    try {
+      setPackagesLoading(true)
+      const response = await fetch('/api/credit-packages')
+      
+      if (response.ok) {
+        const data = await response.json()
+        const packages = data.packages || []
+        setCreditPackages(packages)
+        
+        // Selecionar o segundo pacote (popular) por padrão, se existir
+        if (packages.length > 1) {
+          setSelectedPackage(packages[1])
+        } else if (packages.length > 0) {
+          setSelectedPackage(packages[0])
+        }
+      } else {
+        console.error('Failed to load credit packages')
+        // Fallback para pacotes fixos em caso de erro
+        const fallbackPackages = [
+          { id: 1, credits: 100, price: 10, popular: false },
+          { id: 2, credits: 250, price: 20, popular: true },
+          { id: 3, credits: 500, price: 35, popular: false },
+          { id: 4, credits: 1000, price: 60, popular: false },
+          { id: 5, credits: 2500, price: 120, popular: false }
+        ]
+        setCreditPackages(fallbackPackages)
+        setSelectedPackage(fallbackPackages[1])
+      }
+    } catch (error) {
+      console.error('Error loading credit packages:', error)
+      // Fallback para pacotes fixos em caso de erro
+      const fallbackPackages = [
+        { id: 1, credits: 100, price: 10, popular: false },
+        { id: 2, credits: 250, price: 20, popular: true },
+        { id: 3, credits: 500, price: 35, popular: false },
+        { id: 4, credits: 1000, price: 60, popular: false },
+        { id: 5, credits: 2500, price: 120, popular: false }
+      ]
+      setCreditPackages(fallbackPackages)
+      setSelectedPackage(fallbackPackages[1])
+    } finally {
+      setPackagesLoading(false)
+    }
+  }
 
   // Close user menu when clicking outside or scrolling
   useEffect(() => {
@@ -108,7 +157,7 @@ export default function PurchaseCredits() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          packageId: selectedPackage.id,
+          packageId: selectedPackage?.id,
           method: selectedPaymentMethod,
         }),
       })
@@ -141,7 +190,7 @@ export default function PurchaseCredits() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          packageId: selectedPackage.id,
+          packageId: selectedPackage?.id,
           method: selectedPaymentMethod,
           ...cardData,
         }),
@@ -370,24 +419,27 @@ export default function PurchaseCredits() {
           </div>
 
           {/* Credit Packages */}
-          <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-            {CREDIT_PACKAGES.map((pkg) => (
-              <div
-                key={pkg.id}
-                onClick={() => setSelectedPackage(pkg)}
-                className={`relative cursor-pointer rounded-lg p-6 text-center transition duration-200 ${
-                  selectedPackage.id === pkg.id
-                    ? 'bg-purple-600/30 border-2 border-purple-400'
-                    : 'bg-white/10 border-2 border-transparent hover:bg-white/20'
-                }`}
-              >
-                {pkg.popular && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-green-500 text-white px-3 py-1 rounded-full text-sm">
-                      Popular
-                    </span>
-                  </div>
-                )}
+          {packagesLoading ? (
+            <CreditPackagesSkeleton />
+          ) : (
+            <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+              {creditPackages.map((pkg) => (
+                <div
+                  key={pkg.id}
+                  onClick={() => setSelectedPackage(pkg)}
+                  className={`relative cursor-pointer rounded-lg p-6 text-center transition duration-200 ${
+                    selectedPackage?.id === pkg.id
+                      ? 'bg-purple-600/30 border-2 border-purple-400'
+                      : 'bg-white/10 border-2 border-transparent hover:bg-white/20'
+                  }`}
+                >
+                  {pkg.popular && (
+                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                      <span className="bg-green-500 text-white px-3 py-1 rounded-full text-sm">
+                        Popular
+                      </span>
+                    </div>
+                  )}
 
                 <div className="text-3xl font-bold text-white mb-2">
                   {pkg.credits}
@@ -399,18 +451,21 @@ export default function PurchaseCredits() {
               </div>
             ))}
           </div>
+          )}
 
           {/* Selected Package Details */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 mb-8">
-            <h3 className="text-xl font-semibold text-white mb-4">Resumo da Compra</h3>
-            <div className="flex justify-between items-center text-white mb-4">
-              <span>{selectedPackage.credits} créditos</span>
-              <span className="font-semibold">R$ {selectedPackage.price}</span>
+          {selectedPackage && (
+            <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 mb-8">
+              <h3 className="text-xl font-semibold text-white mb-4">Resumo da Compra</h3>
+              <div className="flex justify-between items-center text-white mb-4">
+                <span>{selectedPackage.credits} créditos</span>
+                <span className="font-semibold">R$ {selectedPackage.price}</span>
+              </div>
+              <div className="text-gray-300 text-sm mb-4">
+                Taxa de conversão: 1 real = {(selectedPackage.credits / selectedPackage.price).toFixed(1)} créditos
+              </div>
             </div>
-            <div className="text-gray-300 text-sm mb-4">
-              Taxa de conversão: 1 real = {Math.round(selectedPackage.credits / selectedPackage.price)} créditos
-            </div>
-          </div>
+          )}
 
           {/* Payment Methods */}
           <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 mb-8">
@@ -718,8 +773,8 @@ export default function PurchaseCredits() {
                   <div>
                     <div className="bg-gradient-to-r from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl p-4 mb-6 border border-purple-400/30">
                       <div className="text-white text-center">
-                        <div className="text-lg font-semibold mb-2">{selectedPackage.credits} créditos</div>
-                        <div className="text-2xl font-bold text-green-400">R$ {selectedPackage.price}</div>
+                        <div className="text-lg font-semibold mb-2">{selectedPackage?.credits} créditos</div>
+                        <div className="text-2xl font-bold text-green-400">R$ {selectedPackage?.price}</div>
                       </div>
                     </div>
 
@@ -803,19 +858,21 @@ export default function PurchaseCredits() {
 
                 <div className="bg-gradient-to-r from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl p-4 mb-6 border border-purple-400/30">
                   <div className="text-white text-center">
-                    <div className="text-lg font-semibold mb-2">{selectedPackage.credits} créditos</div>
-                    <div className="text-2xl font-bold text-green-400">R$ {selectedPackage.price}</div>
+                    <div className="text-lg font-semibold mb-2">{selectedPackage?.credits} créditos</div>
+                    <div className="text-2xl font-bold text-green-400">R$ {selectedPackage?.price}</div>
                   </div>
                 </div>
 
-                <CardPaymentForm
-                  amount={selectedPackage.price}
-                  credits={selectedPackage.credits}
-                  packageId={selectedPackage.id}
-                  onPayment={handleCardPayment}
-                  onCancel={() => setShowPaymentModal(false)}
-                  loading={loading}
-                />
+                {selectedPackage && (
+                  <CardPaymentForm
+                    amount={selectedPackage.price}
+                    credits={selectedPackage.credits}
+                    packageId={selectedPackage.id}
+                    onPayment={handleCardPayment}
+                    onCancel={() => setShowPaymentModal(false)}
+                    loading={loading}
+                  />
+                )}
               </div>
             )}
           </div>

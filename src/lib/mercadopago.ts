@@ -213,17 +213,78 @@ export function mapMercadoPagoStatus(status: string): 'PENDING' | 'APPROVED' | '
   }
 }
 
-// Credit package configurations
-export const CREDIT_PACKAGES = [
-  { id: 1, credits: 100, price: 10, popular: false },
-  { id: 2, credits: 250, price: 20, popular: true },
-  { id: 3, credits: 500, price: 35, popular: false },
-  { id: 4, credits: 1000, price: 60, popular: false },
-  { id: 5, credits: 2500, price: 120, popular: false },
-] as const
+// Cache para pacotes de crédito
+let cachedPackages: any[] | null = null
+let cacheExpiry = 0
+const CACHE_DURATION = 1 * 60 * 1000 // 1 minuto
 
-export function getCreditPackage(packageId: number) {
-  return CREDIT_PACKAGES.find(pkg => pkg.id === packageId)
+// Função para buscar pacotes do banco de dados
+export async function getCreditPackages() {
+  // Verificar cache primeiro
+  if (cachedPackages && Date.now() < cacheExpiry) {
+    return cachedPackages
+  }
+
+  try {
+    // Importação dinâmica do Prisma para evitar problemas de inicialização
+    const { prisma } = await import('./prisma')
+    
+    const packages = await prisma.creditPackage.findMany({
+      where: {
+        isActive: true
+      },
+      orderBy: [
+        { displayOrder: 'asc' },
+        { createdAt: 'asc' }
+      ],
+      select: {
+        id: true,
+        credits: true,
+        price: true,
+        isPopular: true,
+        displayOrder: true
+      }
+    })
+
+    // Mapear para o formato esperado pelo sistema existente
+    const formattedPackages = packages.map((pkg, index) => ({
+      id: index + 1, // Manter compatibilidade com IDs numéricos
+      dbId: pkg.id, // ID real do banco para referência
+      credits: pkg.credits,
+      price: pkg.price,
+      popular: pkg.isPopular
+    }))
+
+    // Atualizar cache
+    cachedPackages = formattedPackages
+    cacheExpiry = Date.now() + CACHE_DURATION
+
+    return formattedPackages
+  } catch (error) {
+    console.error('Error fetching credit packages from database:', error)
+    
+    // Fallback para os pacotes fixos se houver erro
+    return [
+      { id: 1, credits: 100, price: 10, popular: false },
+      { id: 2, credits: 250, price: 20, popular: true },
+      { id: 3, credits: 500, price: 35, popular: false },
+      { id: 4, credits: 1000, price: 60, popular: false },
+      { id: 5, credits: 2500, price: 120, popular: false },
+    ]
+  }
+}
+
+// Manter compatibilidade com código existente - será inicializado dinamicamente
+
+export async function getCreditPackage(packageId: number) {
+  const packages = await getCreditPackages()
+  return packages.find(pkg => pkg.id === packageId)
+}
+
+// Função para limpar cache (útil para admin)
+export function clearCreditPackagesCache() {
+  cachedPackages = null
+  cacheExpiry = 0
 }
 
 export default client

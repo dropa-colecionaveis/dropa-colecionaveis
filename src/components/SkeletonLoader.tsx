@@ -731,3 +731,32 @@ export const PublicProfileSkeleton = memo(() => {
   )
 })
 PublicProfileSkeleton.displayName = 'PublicProfileSkeleton'
+
+export const CreditPackagesSkeleton = memo(() => {
+  return (
+    <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div
+          key={i}
+          className="relative bg-white/10 border-2 border-transparent rounded-lg p-6 text-center"
+        >
+          {/* Credits number */}
+          <div className="mb-2">
+            <SkeletonLoader width="w-16" height="h-8" className="mx-auto" />
+          </div>
+          
+          {/* Credits text */}
+          <div className="mb-3">
+            <SkeletonLoader width="w-20" height="h-5" className="mx-auto" />
+          </div>
+          
+          {/* Price */}
+          <div>
+            <SkeletonLoader width="w-14" height="h-6" className="mx-auto" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+})
+CreditPackagesSkeleton.displayName = 'CreditPackagesSkeleton'

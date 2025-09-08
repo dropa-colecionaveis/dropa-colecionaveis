@@ -13,14 +13,7 @@ const client = new MercadoPagoConfig({
 
 const payment = new Payment(client)
 
-// Credit packages defined locally to avoid import issues
-const CREDIT_PACKAGES = [
-  { id: 1, credits: 100, price: 10, popular: false },
-  { id: 2, credits: 250, price: 20, popular: true },
-  { id: 3, credits: 500, price: 35, popular: false },
-  { id: 4, credits: 1000, price: 60, popular: false },
-  { id: 5, credits: 2500, price: 120, popular: false },
-]
+// Credit packages now loaded dynamically from database
 
 export async function POST(req: Request) {
   try {
@@ -52,9 +45,31 @@ export async function POST(req: Request) {
       )
     }
 
-    // Get credit package details
+    // Get credit package details from database
     console.log('🎁 Looking for package ID:', body.packageId)
-    const creditPackage = CREDIT_PACKAGES.find(pkg => pkg.id === body.packageId)
+    
+    let creditPackage = null
+    
+    // Se for um ID numérico, buscar por ordem (compatibilidade)
+    if (typeof body.packageId === 'number') {
+      const packages = await prisma.creditPackage.findMany({
+        where: { isActive: true },
+        orderBy: [
+          { displayOrder: 'asc' },
+          { createdAt: 'asc' }
+        ]
+      })
+      creditPackage = packages[body.packageId - 1] // Index baseado em 1
+    } else {
+      // Se for string, buscar por ID direto
+      creditPackage = await prisma.creditPackage.findUnique({
+        where: { 
+          id: body.packageId,
+          isActive: true 
+        }
+      })
+    }
+    
     if (!creditPackage) {
       console.log('❌ Invalid package ID:', body.packageId)
       return NextResponse.json(
@@ -133,7 +148,8 @@ export async function POST(req: Request) {
         method: 'PIX',
         amount: creditPackage.price,
         credits: creditPackage.credits,
-        packageId: creditPackage.id,
+        packageId: body.packageId, // Manter compatibilidade
+        creditPackageId: creditPackage.id, // Novo campo para referência
         pixQrCode: pixPayment.qrCode,
         pixQrCodeBase64: pixPayment.qrCodeBase64,
         pixCopyPaste: pixPayment.copyPasteCode,

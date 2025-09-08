@@ -210,7 +210,7 @@ export default function AdminPanel() {
           </div>
 
           {/* Management Cards */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
             <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 text-white">
               <div className="text-4xl mb-4">👥</div>
               <h2 className="text-xl font-semibold mb-2">Gerenciar Usuários</h2>
@@ -278,6 +278,20 @@ export default function AdminPanel() {
                 className="block w-full text-center px-4 py-2 bg-teal-600 hover:bg-teal-700 rounded-lg transition duration-200"
               >
                 Gerenciar
+              </Link>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 text-white">
+              <div className="text-4xl mb-4">💰</div>
+              <h2 className="text-xl font-semibold mb-2">Pacotes de Créditos</h2>
+              <p className="text-gray-300 mb-4">
+                Gerenciar preços e configurações dos pacotes de compra
+              </p>
+              <Link
+                href="/admin/credit-packages"
+                className="block w-full text-center px-4 py-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg transition duration-200"
+              >
+                Configurar
               </Link>
             </div>
           </div>
