@@ -20,14 +20,26 @@ export async function GET(req: NextRequest) {
           orderBy: {
             percentage: 'desc'
           }
-        }
+        },
+        customType: true
       },
       orderBy: {
         createdAt: 'asc'
       }
     })
 
-    return NextResponse.json(packs)
+    // Transform packs to include unified type information
+    const transformedPacks = packs.map(pack => {
+      // If pack uses custom type, use that; otherwise use legacy enum type
+      const effectiveType = pack.customType ? pack.customType.name : pack.type
+      
+      return {
+        ...pack,
+        type: effectiveType // This will be the type name to use in frontend
+      }
+    })
+
+    return NextResponse.json(transformedPacks)
   } catch (error) {
     console.error('Admin packs fetch error:', error)
     return NextResponse.json(
@@ -70,31 +82,73 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // Handle type assignment - support both legacy enum types and custom types
+    let packData: any = {
+      name,
+      description,
+      price: parseFloat(price),
+      isActive: true,
+      probabilities: {
+        create: Object.entries(probabilities).map(([rarity, percentage]) => ({
+          rarity: rarity as any,
+          percentage: parseFloat(percentage as string)
+        }))
+      }
+    }
+
+    // Check if it's a legacy enum type or custom type
+    const legacyTypes = ['BRONZE', 'SILVER', 'GOLD', 'PLATINUM', 'DIAMOND']
+    
+    if (legacyTypes.includes(type)) {
+      // Use legacy enum
+      packData.type = type
+      packData.customTypeId = null
+    } else {
+      // Find custom type by name
+      const customType = await prisma.packTypeCustom.findUnique({
+        where: { name: type }
+      })
+
+      if (!customType) {
+        return NextResponse.json(
+          { error: `Custom pack type '${type}' not found` },
+          { status: 404 }
+        )
+      }
+
+      if (!customType.isActive) {
+        return NextResponse.json(
+          { error: `Pack type '${customType.displayName}' is not active` },
+          { status: 400 }
+        )
+      }
+
+      // Use custom type
+      packData.type = null
+      packData.customTypeId = customType.id
+    }
+
     // Create pack with probabilities
     const pack = await prisma.pack.create({
-      data: {
-        type,
-        name,
-        description,
-        price: parseFloat(price),
-        isActive: true,
-        probabilities: {
-          create: Object.entries(probabilities).map(([rarity, percentage]) => ({
-            rarity: rarity as any,
-            percentage: parseFloat(percentage as string)
-          }))
-        }
-      },
+      data: packData,
       include: {
         probabilities: {
           orderBy: {
             percentage: 'desc'
           }
-        }
+        },
+        customType: true
       }
     })
 
-    return NextResponse.json(pack, { status: 201 })
+    // Transform response to include unified type information
+    const effectiveType = pack.customType ? pack.customType.name : pack.type
+    const transformedPack = {
+      ...pack,
+      type: effectiveType
+    }
+
+    return NextResponse.json(transformedPack, { status: 201 })
   } catch (error) {
     console.error('Pack creation error:', error)
     return NextResponse.json(

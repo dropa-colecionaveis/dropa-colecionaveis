@@ -81,7 +81,8 @@ model Item {
 
 model Pack {
   id             String            @id @default(cuid())
-  type           PackType
+  type           PackType?         // Tipo enum (legacy)
+  customTypeId   String?           // Novo campo para tipos personalizados
   name           String
   description    String?
   price          Int
@@ -90,6 +91,7 @@ model Pack {
   freePackGrants FreePackGrant[]
   packOpenings   PackOpening[]
   probabilities  PackProbability[]
+  customType     PackTypeCustom?   @relation(fields: [customTypeId], references: [id])
 
   @@map("packs")
 }
@@ -583,4 +585,20 @@ model CreditPackage {
 
   @@index([isActive, displayOrder])
   @@map("credit_packages")
+}
+
+model PackTypeCustom {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  displayName String
+  emoji       String  @default("📦")
+  color       String  @default("#6b7280")
+  description String?
+  isActive    Boolean @default(true)
+  isDefault   Boolean @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  packs       Pack[]
+
+  @@map("pack_types_custom")
 }

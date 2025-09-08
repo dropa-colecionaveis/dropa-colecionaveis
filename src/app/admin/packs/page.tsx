@@ -41,11 +41,19 @@ export default function AdminPacks() {
     LENDARIO: ''
   })
   const [newPack, setNewPack] = useState({
-    type: 'BRONZE',
+    type: '',
     name: '',
     description: '',
     price: ''
   })
+  const [editPackData, setEditPackData] = useState({
+    type: '',
+    name: '',
+    description: '',
+    price: ''
+  })
+  const [availablePackTypes, setAvailablePackTypes] = useState<Array<{id: string, name: string, displayName: string, emoji: string}>>([])
+  const [packTypesLoading, setPackTypesLoading] = useState(true)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -56,9 +64,24 @@ export default function AdminPacks() {
         router.push('/dashboard')
       } else {
         fetchPacks()
+        fetchPackTypes()
       }
     }
   }, [status, router, isAdmin, adminLoading])
+
+  const fetchPackTypes = async () => {
+    try {
+      const response = await fetch('/api/admin/pack-types')
+      if (response.ok) {
+        const data = await response.json()
+        setAvailablePackTypes(data.packTypes.filter((type: any) => type.isActive))
+      }
+    } catch (error) {
+      console.error('Error fetching pack types:', error)
+    } finally {
+      setPackTypesLoading(false)
+    }
+  }
 
   const fetchPacks = async () => {
     try {
@@ -76,6 +99,14 @@ export default function AdminPacks() {
 
   const handleEditProbabilities = (pack: Pack) => {
     setEditingPack(pack)
+    
+    // Load pack data for editing
+    setEditPackData({
+      type: pack.type,
+      name: pack.name,
+      description: pack.description || '',
+      price: pack.price.toString()
+    })
     
     // Reset probabilities
     const newProbs = {
@@ -98,6 +129,17 @@ export default function AdminPacks() {
   const handleSaveProbabilities = async () => {
     if (!editingPack) return
 
+    // Validate pack data
+    if (!editPackData.name.trim()) {
+      alert('❌ Nome do pacote é obrigatório!')
+      return
+    }
+    
+    if (!editPackData.price || parseFloat(editPackData.price) <= 0) {
+      alert('❌ Preço deve ser maior que zero!')
+      return
+    }
+
     // Validate that probabilities add up to 100
     const total = Object.values(probabilities).reduce((sum: number, val) => sum + (parseFloat(val) || 0), 0)
     if (Math.abs(total - 100) > 0.01) {
@@ -106,22 +148,40 @@ export default function AdminPacks() {
     }
 
     try {
-      const response = await fetch(`/api/admin/packs/${editingPack.id}/probabilities`, {
+      // Update pack basic data
+      const packResponse = await fetch(`/api/admin/packs/${editingPack.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: editPackData.type,
+          name: editPackData.name.trim(),
+          description: editPackData.description.trim() || null,
+          price: parseFloat(editPackData.price)
+        })
+      })
+
+      if (!packResponse.ok) {
+        alert('❌ Erro ao atualizar dados do pacote')
+        return
+      }
+
+      // Update probabilities
+      const probResponse = await fetch(`/api/admin/packs/${editingPack.id}/probabilities`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(probabilities)
       })
 
-      if (response.ok) {
-        alert('✅ Probabilidades atualizadas!')
+      if (probResponse.ok) {
+        alert('✅ Pacote atualizado com sucesso!')
         setShowModal(false)
         fetchPacks()
       } else {
         alert('❌ Erro ao atualizar probabilidades')
       }
     } catch (error) {
-      console.error('Error updating probabilities:', error)
-      alert('❌ Erro ao atualizar probabilidades')
+      console.error('Error updating pack:', error)
+      alert('❌ Erro ao atualizar pacote')
     }
   }
 
@@ -164,30 +224,19 @@ export default function AdminPacks() {
   }
 
   const getPackTypeEmoji = (type: string) => {
-    switch (type) {
-      case 'BRONZE': return '🥉'
-      case 'SILVER': return '🥈'
-      case 'GOLD': return '🥇'
-      case 'PLATINUM': return '💎'
-      case 'DIAMOND': return '💠'
-      default: return '📦'
-    }
+    const packType = availablePackTypes.find(pt => pt.name === type)
+    return packType ? packType.emoji : '📦'
   }
 
   const getPackTypeName = (type: string) => {
-    switch (type) {
-      case 'BRONZE': return 'Bronze'
-      case 'SILVER': return 'Prata'
-      case 'GOLD': return 'Ouro'
-      case 'PLATINUM': return 'Platina'
-      case 'DIAMOND': return 'Diamante'
-      default: return type
-    }
+    const packType = availablePackTypes.find(pt => pt.name === type)
+    return packType ? packType.displayName : type
   }
 
   const handleCreatePack = () => {
+    const defaultType = availablePackTypes.length > 0 ? availablePackTypes[0].name : 'BRONZE'
     setNewPack({
-      type: 'BRONZE',
+      type: defaultType,
       name: '',
       description: '',
       price: ''
@@ -374,12 +423,77 @@ export default function AdminPacks() {
       {/* Modal for Editing Probabilities */}
       {showModal && editingPack && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-xl font-bold text-white mb-4">
-              Configurar Probabilidades - {editingPack.name}
+          <div className="bg-gray-800 rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-bold text-white mb-6">
+              Configurar Pacote - {editingPack.name}
             </h3>
             
-            <div className="space-y-4">
+            <div className="space-y-6">
+              {/* Pack Basic Information */}
+              <div className="bg-gray-700 rounded-lg p-4">
+                <h4 className="text-lg font-semibold text-white mb-4">Informações Básicas</h4>
+                
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-white font-medium mb-2">Tipo do Pacote *</label>
+                    <select
+                      value={editPackData.type}
+                      onChange={(e) => setEditPackData({...editPackData, type: e.target.value})}
+                      className="w-full px-3 py-2 bg-gray-600 text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      {packTypesLoading ? (
+                        <option disabled>Carregando tipos...</option>
+                      ) : (
+                        availablePackTypes.map((type) => (
+                          <option key={type.id} value={type.name}>
+                            {type.emoji} {type.displayName}
+                          </option>
+                        ))
+                      )}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-white font-medium mb-2">Preço (créditos) *</label>
+                    <input
+                      type="number"
+                      value={editPackData.price}
+                      onChange={(e) => setEditPackData({...editPackData, price: e.target.value})}
+                      className="w-full px-3 py-2 bg-gray-600 text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      min="1"
+                      step="1"
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div className="mt-4">
+                  <label className="block text-white font-medium mb-2">Nome do Pacote *</label>
+                  <input
+                    type="text"
+                    value={editPackData.name}
+                    onChange={(e) => setEditPackData({...editPackData, name: e.target.value})}
+                    className="w-full px-3 py-2 bg-gray-600 text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Ex: Pacote Bronze"
+                    required
+                  />
+                </div>
+                
+                <div className="mt-4">
+                  <label className="block text-white font-medium mb-2">Descrição</label>
+                  <textarea
+                    value={editPackData.description}
+                    onChange={(e) => setEditPackData({...editPackData, description: e.target.value})}
+                    className="w-full px-3 py-2 bg-gray-600 text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500 h-20 resize-none"
+                    placeholder="Descrição do pacote (opcional)"
+                  />
+                </div>
+              </div>
+
+              {/* Probabilities Section */}
+              <div className="bg-gray-700 rounded-lg p-4">
+                <h4 className="text-lg font-semibold text-white mb-4">Configurar Probabilidades</h4>
+                <div className="space-y-4">
               {Object.entries(probabilities).map(([rarity, percentage]) => (
                 <div key={rarity}>
                   <label className={`block mb-2 font-medium ${getRarityColor(rarity)}`}>
@@ -421,15 +535,17 @@ export default function AdminPacks() {
                   </div>
                 )}
               </div>
+                </div>
+              </div>
             </div>
 
             <div className="flex space-x-3 mt-6">
               <button
                 onClick={handleSaveProbabilities}
-                disabled={Math.abs(getTotalPercentage() - 100) > 0.01}
+                disabled={Math.abs(getTotalPercentage() - 100) > 0.01 || !editPackData.name.trim() || !editPackData.price || parseFloat(editPackData.price) <= 0}
                 className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded transition duration-200"
               >
-                ✅ Salvar
+                ✅ Salvar Pacote
               </button>
               <button
                 onClick={() => setShowModal(false)}
@@ -461,11 +577,15 @@ export default function AdminPacks() {
                   onChange={(e) => setNewPack({...newPack, type: e.target.value})}
                   className="w-full px-3 py-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="BRONZE">🥉 Bronze</option>
-                  <option value="SILVER">🥈 Prata</option>
-                  <option value="GOLD">🥇 Ouro</option>
-                  <option value="PLATINUM">💎 Platina</option>
-                  <option value="DIAMOND">💠 Diamante</option>
+                  {packTypesLoading ? (
+                    <option disabled>Carregando tipos...</option>
+                  ) : (
+                    availablePackTypes.map((type) => (
+                      <option key={type.id} value={type.name}>
+                        {type.emoji} {type.displayName}
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
               
