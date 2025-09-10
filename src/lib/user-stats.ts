@@ -70,6 +70,8 @@ export class UserStatsService {
     const lastActivity = userStats.lastActivityAt
     let newStreak = userStats.currentStreak || 0
     let shouldUpdateStreak = false
+    let daysDifference = 0
+    let isFirstLogin = false
 
     if (lastActivity) {
       // Converter ambas as datas para horário de Brasília para comparação
@@ -86,7 +88,7 @@ export class UserStatsService {
       const currentDate = new Date(currentBrasil.getFullYear(), currentBrasil.getMonth(), currentBrasil.getDate())
       
       const timeDiff = currentDate.getTime() - lastActivityDate.getTime()
-      const daysDifference = Math.floor(timeDiff / (24 * 60 * 60 * 1000))
+      daysDifference = Math.floor(timeDiff / (24 * 60 * 60 * 1000))
       
       if (daysDifference > 0) {
         // É um dia diferente no fuso de Brasília, atualizar streak
@@ -106,6 +108,7 @@ export class UserStatsService {
       // Primeira atividade do usuário
       shouldUpdateStreak = true
       newStreak = 1
+      isFirstLogin = true
     }
 
     const longestStreak = Math.max(newStreak, userStats.longestStreak || 0)
@@ -122,9 +125,26 @@ export class UserStatsService {
       data: updateData
     })
     
-    // Invalidar cache se o streak mudou
+    // Invalidar cache e processar achievements se o streak mudou
     if (shouldUpdateStreak) {
       await this.invalidateActivityCache()
+      
+      // Processar achievements de daily login em background
+      setImmediate(async () => {
+        try {
+          await achievementEngine.checkAchievements({
+            type: 'DAILY_LOGIN',
+            userId,
+            data: {
+              streak: newStreak,
+              isFirstLogin,
+              wasStreakBroken: daysDifference > 1
+            }
+          })
+        } catch (error) {
+          console.error('Error processing daily login achievements:', error)
+        }
+      })
     }
   }
 

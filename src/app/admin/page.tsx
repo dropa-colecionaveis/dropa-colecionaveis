@@ -308,6 +308,20 @@ export default function AdminPanel() {
                 Gerenciar
               </Link>
             </div>
+
+            <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 text-white">
+              <div className="text-4xl mb-4">🎁</div>
+              <h2 className="text-xl font-semibold mb-2">Recompensas Diárias</h2>
+              <p className="text-gray-300 mb-4">
+                Configurar sistema de recompensas de login diário
+              </p>
+              <Link
+                href="/admin/daily-rewards"
+                className="block w-full text-center px-4 py-2 bg-pink-600 hover:bg-pink-700 rounded-lg transition duration-200"
+              >
+                Configurar
+              </Link>
+            </div>
           </div>
 
           {/* Security Management Section */}

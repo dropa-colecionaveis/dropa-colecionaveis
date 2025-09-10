@@ -9,7 +9,7 @@ export interface GameEvent {
 }
 
 export interface AchievementCondition {
-  type: 'count' | 'value' | 'streak' | 'rarity' | 'collection' | 'time' | 'first' | 'first-purchase'
+  type: 'count' | 'value' | 'streak' | 'rarity' | 'collection' | 'time' | 'first' | 'first-purchase' | 'daily_login' | 'daily_streak' | 'daily_rewards_claimed'
   target?: number
   rarity?: Rarity
   collectionId?: string
@@ -240,6 +240,80 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
     type: 'PROGRESS',
     conditions: [{ type: 'time', target: 50, timeframe: 'night' }],
     points: 50
+  },
+
+  // Daily Login Achievements
+  {
+    id: 'first-daily-login',
+    name: 'Primeira Visita',
+    description: 'Faça seu primeiro login diário e ganhe recompensas',
+    icon: '🌅',
+    category: 'DAILY',
+    type: 'MILESTONE',
+    conditions: [{ type: 'daily_login', target: 1 }],
+    points: 10
+  },
+  {
+    id: 'daily-streak-7',
+    name: 'Semana Dedicada',
+    description: 'Complete 7 dias consecutivos de login diário',
+    icon: '📅',
+    category: 'DAILY',
+    type: 'STREAK',
+    conditions: [{ type: 'daily_streak', target: 7 }],
+    points: 25
+  },
+  {
+    id: 'daily-streak-30',
+    name: 'Mês Completo',
+    description: 'Complete 30 dias consecutivos de login diário',
+    icon: '🗓️',
+    category: 'DAILY',
+    type: 'STREAK',
+    conditions: [{ type: 'daily_streak', target: 30 }],
+    points: 100
+  },
+  {
+    id: 'daily-streak-100',
+    name: 'Centena Lendária',
+    description: 'Complete 100 dias consecutivos de login diário',
+    icon: '💯',
+    category: 'DAILY',
+    type: 'STREAK',
+    conditions: [{ type: 'daily_streak', target: 100 }],
+    points: 500,
+    isSecret: true
+  },
+  {
+    id: 'daily-streak-365',
+    name: 'Ano Completo',
+    description: 'Complete 365 dias consecutivos de login diário',
+    icon: '🏆',
+    category: 'DAILY',
+    type: 'STREAK',
+    conditions: [{ type: 'daily_streak', target: 365 }],
+    points: 2000,
+    isSecret: true
+  },
+  {
+    id: 'daily-rewards-collected',
+    name: 'Coletor de Recompensas',
+    description: 'Colete 50 recompensas diárias',
+    icon: '🎁',
+    category: 'DAILY',
+    type: 'PROGRESS',
+    conditions: [{ type: 'daily_rewards_claimed', target: 50 }],
+    points: 75
+  },
+  {
+    id: 'streak-master',
+    name: 'Mestre das Sequências',
+    description: 'Alcance uma sequência de 50 dias',
+    icon: '⚡',
+    category: 'DAILY',
+    type: 'STREAK',
+    conditions: [{ type: 'daily_streak', target: 50 }],
+    points: 200
   }
 ]
 
@@ -349,6 +423,16 @@ export class AchievementEngine {
       return event.type === 'CREDITS_PURCHASED'
     }
 
+    // Verificações específicas para conquistas de daily login
+    if (['first-daily-login', 'daily-streak-7', 'daily-streak-30', 'daily-streak-100', 
+         'daily-streak-365', 'streak-master'].includes(achievement.id)) {
+      return event.type === 'DAILY_LOGIN'
+    }
+
+    if (achievement.id === 'daily-rewards-collected') {
+      return event.type === 'DAILY_REWARD_CLAIMED'
+    }
+
     const eventTypeMap: Record<string, AchievementCategory[]> = {
       'USER_REGISTERED': ['MILESTONE'],
       'CREDITS_PURCHASED': ['MILESTONE'],
@@ -356,7 +440,9 @@ export class AchievementEngine {
       'ITEM_OBTAINED': ['COLLECTOR'],
       'COLLECTION_COMPLETED': ['COLLECTOR'],
       'MARKETPLACE_SALE': ['TRADER'],
-      'MARKETPLACE_PURCHASE': ['TRADER']
+      'MARKETPLACE_PURCHASE': ['TRADER'],
+      'DAILY_LOGIN': ['DAILY'],
+      'DAILY_REWARD_CLAIMED': ['DAILY']
     }
 
     return eventTypeMap[event.type]?.includes(achievement.category) || false
@@ -406,6 +492,15 @@ export class AchievementEngine {
       
       case 'time':
         return await this.evaluateTimeCondition(condition, achievementId, event)
+      
+      case 'daily_login':
+        return await this.evaluateDailyLoginCondition(condition, achievementId, event)
+      
+      case 'daily_streak':
+        return await this.evaluateDailyStreakCondition(condition, achievementId, event)
+      
+      case 'daily_rewards_claimed':
+        return await this.evaluateDailyRewardsClaimedCondition(condition, achievementId, event)
       
       default:
         return false
@@ -646,6 +741,52 @@ export class AchievementEngine {
       }
     }
 
+    return false
+  }
+
+  private async evaluateDailyLoginCondition(
+    condition: AchievementCondition,
+    achievementId: string,
+    event: GameEvent
+  ): Promise<boolean> {
+    // Para primeira visita, qualquer login diário conta
+    if (event.type === 'DAILY_LOGIN') {
+      return true
+    }
+    return false
+  }
+
+  private async evaluateDailyStreakCondition(
+    condition: AchievementCondition,
+    achievementId: string,
+    event: GameEvent
+  ): Promise<boolean> {
+    if (event.type === 'DAILY_LOGIN') {
+      // Buscar streak atual do usuário
+      const userStats = await prisma.userStats.findUnique({
+        where: { userId: event.userId }
+      })
+      
+      if (!userStats) return false
+      
+      return userStats.currentStreak >= (condition.target || 1)
+    }
+    return false
+  }
+
+  private async evaluateDailyRewardsClaimedCondition(
+    condition: AchievementCondition,
+    achievementId: string,
+    event: GameEvent
+  ): Promise<boolean> {
+    if (event.type === 'DAILY_REWARD_CLAIMED') {
+      // Contar total de recompensas diárias coletadas
+      const claimedCount = await prisma.dailyRewardClaim.count({
+        where: { userId: event.userId }
+      })
+      
+      return claimedCount >= (condition.target || 1)
+    }
     return false
   }
 

@@ -45,6 +45,7 @@ model User {
   userItems               UserItem[]
   userStats               UserStats?
   uniqueItems             Item[]        @relation("UniqueItems")
+  dailyRewardClaims       DailyRewardClaim[]
 
   @@map("users")
 }
@@ -503,6 +504,7 @@ enum AchievementCategory {
   SOCIAL
   SPECIAL
   MILESTONE
+  DAILY
 }
 
 enum AchievementType {
@@ -560,6 +562,12 @@ enum ScarcityLevel {
   UNIQUE      // Único - apenas 1 exemplar mundial
 }
 
+enum RewardType {
+  CREDITS
+  PACK
+  ITEMS
+}
+
 model StatsMonitoringLog {
   id                   Int      @id @default(autoincrement())
   timestamp            DateTime
@@ -599,6 +607,39 @@ model PackTypeCustom {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   packs       Pack[]
+  dailyRewards DailyReward[]
 
   @@map("pack_types_custom")
+}
+
+model DailyReward {
+  id          String   @id @default(cuid())
+  day         Int      // Day of streak (1-7, then repeats)
+  rewardType  RewardType
+  rewardValue Int      // Credits amount or pack count
+  packTypeId  String?  // For pack rewards
+  description String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  
+  packType    PackTypeCustom? @relation(fields: [packTypeId], references: [id])
+  claims      DailyRewardClaim[]
+
+  @@unique([day, rewardType])
+  @@map("daily_rewards")
+}
+
+model DailyRewardClaim {
+  id             String      @id @default(cuid())
+  userId         String
+  rewardId       String
+  streakDay      Int
+  claimedAt      DateTime    @default(now())
+  rewardReceived Json        // Details of what was received
+  
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reward         DailyReward @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, rewardId, streakDay])
+  @@map("daily_reward_claims")
 }

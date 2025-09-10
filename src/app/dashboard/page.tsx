@@ -8,6 +8,7 @@ import Image from 'next/image'
 import { useUserRankings } from '@/hooks/useUserRankings'
 import { useAdmin } from '@/hooks/useAdmin'
 import FreePackModal from '@/components/FreePackModal'
+import StreakIndicator from '@/components/StreakIndicator'
 import { ProfileSkeleton, StatsSkeleton, ActivitiesSkeleton, HeaderStatsSkeleton } from '@/components/SkeletonLoader'
 
 export default function Dashboard() {
@@ -280,6 +281,7 @@ export default function Dashboard() {
                       </Link>
                     </div>
                   )}
+
                   
                   {/* Container para elementos empilhados no mobile */}
                   <div className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-4">
@@ -403,11 +405,11 @@ export default function Dashboard() {
             </p>
             
             {/* Quick Stats */}
-            <div className="mb-12 max-w-3xl mx-auto">
+            <div className="mb-12 max-w-5xl mx-auto">
               {statsLoading || !userStats ? (
                 <StatsSkeleton />
               ) : (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                   <div className="bg-gradient-to-br from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl p-4 border border-purple-400/30">
                     <div className="text-2xl font-bold text-purple-300">{userStats?.totalPacksOpened || 0}</div>
                     <div className="text-sm text-gray-300">Pacotes Abertos</div>
@@ -424,6 +426,13 @@ export default function Dashboard() {
                     <div className="text-2xl font-bold text-green-300">{userProfile?.credits || 0}</div>
                     <div className="text-sm text-gray-300">Créditos</div>
                   </div>
+                  
+                  {/* Daily Streak Card */}
+                  {session?.user?.id && (
+                    <div className="bg-gradient-to-br from-orange-600/30 to-red-600/30 backdrop-blur-sm rounded-xl p-4 border border-orange-400/30 relative overflow-hidden">
+                      <StreakIndicator onRewardClaimed={fetchUserDataProgressive} compact />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
