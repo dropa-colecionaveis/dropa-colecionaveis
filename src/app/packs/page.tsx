@@ -196,13 +196,17 @@ export default function PackStore() {
   }
 
   const getPackTypeEmoji = (type: string) => {
-    switch (type) {
+    if (!type) {
+      return '📦'
+    }
+    switch (type.toUpperCase()) {
       case 'BRONZE': return '🥉'
       case 'SILVER': return '🥈'
       case 'GOLD': return '🥇'
       case 'PLATINUM': return '💎'
       case 'DIAMOND': return '💠'
-      default: return '📦'
+      default: 
+        return '📦'
     }
   }
 
