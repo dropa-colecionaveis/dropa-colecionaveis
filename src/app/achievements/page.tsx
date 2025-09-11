@@ -25,6 +25,8 @@ interface Achievement {
   points: number
   isSecret: boolean
   completionRate: number
+  globalCompletedCount?: number
+  globalTotalUsers?: number
   userProgress?: {
     progress: number
     isCompleted: boolean
@@ -158,7 +160,9 @@ export default function Achievements() {
           type: ua.achievement.type,
           points: ua.achievement.points,
           isSecret: ua.achievement.isSecret,
-          completionRate: Math.round(Math.random() * 100), // Placeholder para taxa de conclusão global
+          completionRate: ua.achievement.globalCompletionRate || 0, // Progresso global real
+          globalCompletedCount: ua.achievement.globalCompletedCount || 0,
+          globalTotalUsers: ua.achievement.globalTotalUsers || 0,
           userProgress: {
             progress: ua.progress,
             isCompleted: ua.isCompleted,

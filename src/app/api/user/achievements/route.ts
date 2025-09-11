@@ -27,16 +27,54 @@ export async function GET(req: Request) {
     // Obter conquistas do usuário (apenas as que ele já iniciou/completou)
     const userAchievements = await achievementEngine.getUserAchievements(session.user.id)
     
+    // Calcular progresso global de cada conquista (quantos % dos jogadores completaram)
+    const { prisma } = await import('@/lib/prisma')
+    const totalUsers = await prisma.user.count()
+    
+    const achievementGlobalStats = await Promise.all(
+      allAchievements.map(async (achievement) => {
+        const completedCount = await prisma.userAchievement.count({
+          where: {
+            achievementId: achievement.id,
+            isCompleted: true
+          }
+        })
+        
+        const globalCompletionRate = totalUsers > 0 
+          ? Math.round((completedCount / totalUsers) * 100)
+          : 0
+          
+        return {
+          achievementId: achievement.id,
+          globalCompletionRate,
+          completedCount,
+          totalUsers
+        }
+      })
+    )
+    
+    // Criar mapa para lookup rápido
+    const globalStatsMap = new Map(
+      achievementGlobalStats.map(stat => [stat.achievementId, stat])
+    )
+    
     // Criar mapa para facilitar lookup
     const userAchievementMap = new Map(
       userAchievements.map(ua => [ua.achievement.id, ua])
     )
     
-    // Combinar todas as conquistas com o progresso do usuário
+    // Combinar todas as conquistas com o progresso do usuário e global
     const combinedAchievements = allAchievements.map(achievement => {
       const userProgress = userAchievementMap.get(achievement.id)
+      const globalStats = globalStatsMap.get(achievement.id)
+      
       return {
-        achievement,
+        achievement: {
+          ...achievement,
+          globalCompletionRate: globalStats?.globalCompletionRate || 0,
+          globalCompletedCount: globalStats?.completedCount || 0,
+          globalTotalUsers: globalStats?.totalUsers || 0
+        },
         progress: userProgress?.progress || 0,
         isCompleted: userProgress?.isCompleted || false,
         unlockedAt: userProgress?.unlockedAt || null
