@@ -194,10 +194,12 @@ export class RankingService {
         break
 
       case 'WEEKLY_ACTIVE':
+        // Para o ranking semanal, precisamos calcular streaks atuais dinamicamente
         const weekAgo = new Date()
         weekAgo.setDate(weekAgo.getDate() - 7)
         
-        query = {
+        // Buscar todos os usuários ativos na última semana
+        const weeklyActiveUsers = await prisma.userStats.findMany({
           select: {
             userId: true,
             currentStreak: true,
@@ -209,19 +211,38 @@ export class RankingService {
             }
           },
           where: {
-            currentStreak: { gt: 0 }, // Apenas usuários com streak > 0
             lastActivityAt: { gte: weekAgo },
             user: {
               role: {
                 notIn: ['ADMIN', 'SUPER_ADMIN']
               }
             }
-          },
-          orderBy: [
-            { currentStreak: 'desc' },
-            { user: { createdAt: 'asc' } } // Em caso de empate, usuários mais antigos primeiro
-          ]
-        }
+          }
+        })
+
+        // Calcular streaks atuais dinamicamente
+        const { calculateCurrentStreaksForUsers } = await import('@/lib/streak-calculator')
+        const userIds = weeklyActiveUsers.map(u => u.userId)
+        const currentStreaks = await calculateCurrentStreaksForUsers(userIds)
+
+        // Filtrar apenas usuários com streak atual > 0 e ordenar
+        const validStreakUsers = weeklyActiveUsers
+          .map(user => ({
+            userId: user.userId,
+            value: currentStreaks[user.userId] || 0,
+            createdAt: user.user.createdAt
+          }))
+          .filter(user => user.value > 0)
+          .sort((a, b) => {
+            // Primeiro critério: streak em ordem decrescente
+            if (a.value !== b.value) {
+              return b.value - a.value
+            }
+            // Critério de desempate: usuários mais antigos primeiro
+            return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          })
+
+        return validStreakUsers
         break
 
       case 'MONTHLY_ACTIVE':
@@ -437,8 +458,11 @@ export class RankingService {
         userValue = (userStats.marketplaceSales || 0) + (userStats.marketplacePurchases || 0)
         break
       case 'WEEKLY_ACTIVE':
-        userValue = userStats.currentStreak || 0
-        // Verificar se foi ativo na última semana E tem streak > 0
+        // Calcular streak atual dinamicamente
+        const { calculateCurrentStreak } = await import('@/lib/streak-calculator')
+        userValue = await calculateCurrentStreak(userId)
+        
+        // Verificar se foi ativo na última semana E tem streak atual > 0
         const weekAgo = new Date()
         weekAgo.setDate(weekAgo.getDate() - 7)
         if (!userStats.lastActivityAt || userStats.lastActivityAt < weekAgo || userValue <= 0) {
