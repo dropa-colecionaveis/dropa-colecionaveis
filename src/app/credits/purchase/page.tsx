@@ -28,6 +28,7 @@ export default function PurchaseCredits() {
   const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 })
   const [paymentResponse, setPaymentResponse] = useState<PaymentResponse | null>(null)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [checkingPaymentStatus, setCheckingPaymentStatus] = useState(false)
   const { bestRanking, loading: rankingLoading } = useUserRankings()
 
   useEffect(() => {
@@ -233,6 +234,45 @@ export default function PurchaseCredits() {
       setShowPaymentModal(false)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const checkPaymentStatus = async (paymentId: string) => {
+    setCheckingPaymentStatus(true)
+    
+    try {
+      const response = await fetch('/api/payments/check-status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ paymentId }),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        if (result.status === 'APPROVED') {
+          alert(`🎉 ${result.message}`)
+          await fetchUserProfile() // Refresh user profile
+          setShowPaymentModal(false)
+          setPaymentResponse(null)
+          router.push('/dashboard')
+        } else if (result.status === 'REJECTED' || result.status === 'CANCELLED') {
+          alert(`❌ ${result.message}`)
+          setShowPaymentModal(false)
+          setPaymentResponse(null)
+        } else {
+          alert('⏳ Pagamento ainda está pendente. Tente novamente em alguns instantes.')
+        }
+      } else {
+        alert(result.error || 'Erro ao verificar status do pagamento')
+      }
+    } catch (error) {
+      console.error('Error checking payment status:', error)
+      alert('Erro ao verificar status do pagamento')
+    } finally {
+      setCheckingPaymentStatus(false)
     }
   }
 
@@ -840,12 +880,22 @@ export default function PurchaseCredits() {
                       <span className="text-yellow-400">PIX expira em 15 minutos</span>
                     </div>
 
-                    <button
-                      onClick={() => {setShowPaymentModal(false); setPaymentResponse(null)}}
-                      className="w-full px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200"
-                    >
-                      Fechar
-                    </button>
+                    <div className="space-y-3">
+                      <button
+                        onClick={() => checkPaymentStatus(paymentResponse.paymentId)}
+                        disabled={checkingPaymentStatus}
+                        className="w-full px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg transition-all duration-200 disabled:opacity-50"
+                      >
+                        {checkingPaymentStatus ? 'Verificando...' : '🔍 Verificar Status do Pagamento'}
+                      </button>
+                      
+                      <button
+                        onClick={() => {setShowPaymentModal(false); setPaymentResponse(null)}}
+                        className="w-full px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200"
+                      >
+                        Fechar
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

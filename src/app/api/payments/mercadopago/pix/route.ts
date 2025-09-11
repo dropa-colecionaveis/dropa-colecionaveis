@@ -107,8 +107,10 @@ export async function POST(req: Request) {
       description: `${creditPackage.credits} créditos - Colecionáveis Platform`,
       payment_method_id: 'pix',
       external_reference: externalReference,
-      // notification_url removido para desenvolvimento local
-      // notification_url: `${process.env.NEXTAUTH_URL}/api/payments/mercadopago/webhook`,
+      // Enable webhook in production
+      ...(process.env.NEXTAUTH_URL && !process.env.NEXTAUTH_URL.includes('localhost') && {
+        notification_url: `${process.env.NEXTAUTH_URL}/api/payments/mercadopago/webhook`,
+      }),
       payer: {
         email: user.email,
       },

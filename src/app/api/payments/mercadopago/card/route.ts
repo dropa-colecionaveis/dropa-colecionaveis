@@ -310,6 +310,11 @@ export async function POST(req: NextRequest) {
       transaction_amount: creditPackage.price,
       token: body.token,
       installments: body.installments,
+      external_reference: externalReference,
+      // Enable webhook in production
+      ...(process.env.NEXTAUTH_URL && !process.env.NEXTAUTH_URL.includes('localhost') && {
+        notification_url: `${process.env.NEXTAUTH_URL}/api/payments/mercadopago/webhook`,
+      }),
       payer: {
         email: user.email,
       },

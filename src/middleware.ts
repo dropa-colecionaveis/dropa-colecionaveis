@@ -28,6 +28,11 @@ export default withAuth(
           return true
         }
 
+        // Allow access to payment webhooks (Mercado Pago needs to access these)
+        if (req.nextUrl.pathname.startsWith('/api/payments/mercadopago/webhook')) {
+          return true
+        }
+
         // Allow access to public stats API
         if (req.nextUrl.pathname.startsWith('/api/stats/public') || 
             req.nextUrl.pathname.startsWith('/api/stats/live')) {
