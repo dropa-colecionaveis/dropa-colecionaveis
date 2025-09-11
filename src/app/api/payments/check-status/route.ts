@@ -63,6 +63,16 @@ export async function POST(req: Request) {
       })
     }
 
+    // Check if external ID exists
+    if (!payment.externalId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Payment external ID not found',
+        status: payment.status,
+        credits: payment.user?.credits || 0
+      })
+    }
+
     // Check status with Mercado Pago
     console.log(`🔍 Checking MP status for external ID: ${payment.externalId}`)
     
