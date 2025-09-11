@@ -39,8 +39,8 @@ export const useUserRankings = (): UserRankingData => {
         const cachedData = JSON.parse(cached)
         const globalCachedData = JSON.parse(globalCached)
         
-        // Cache válido por 2 minutos
-        if (Date.now() - cachedData.timestamp < 2 * 60 * 1000) {
+        // Cache válido por 30 segundos
+        if (Date.now() - cachedData.timestamp < 30 * 1000) {
           setRankings(cachedData.rankings)
           setGlobalRankingData(globalCachedData.ranking)
           return true
@@ -90,13 +90,13 @@ export const useUserRankings = (): UserRankingData => {
         // Buscar todos os dados em paralelo para melhor performance
         const [userResponse, rankingResponse, globalResponse] = await Promise.all([
           fetch(`/api/user/${session.user.id}/stats`, {
-            headers: { 'Cache-Control': 'max-age=120' } // Cache 2min
+            headers: { 'Cache-Control': 'max-age=30' } // Cache 30s
           }),
           fetch('/api/rankings?action=stats', {
             headers: { 'Cache-Control': 'max-age=300' } // Cache 5min
           }),
           fetch(`/api/rankings/global?action=user-position&userId=${session.user.id}`, {
-            headers: { 'Cache-Control': 'max-age=180' } // Cache 3min
+            headers: { 'Cache-Control': 'max-age=60' } // Cache 1min
           })
         ])
         

@@ -2,7 +2,7 @@ import { rankingService } from './rankings'
 
 export class RankingScheduler {
   private intervalId: NodeJS.Timeout | null = null
-  private readonly UPDATE_INTERVAL = 60 * 60 * 1000 // 1 hora
+  private readonly UPDATE_INTERVAL = 5 * 60 * 1000 // 5 minutos
 
   // Iniciar o scheduler automático
   start(): void {
@@ -11,7 +11,7 @@ export class RankingScheduler {
       return
     }
 
-    console.log('🚀 Starting ranking scheduler (updates every hour)')
+    console.log('🚀 Starting ranking scheduler (updates every 5 minutes)')
     
     // Atualizar imediatamente
     this.updateRankings()

@@ -847,6 +847,16 @@ export class AchievementEngine {
     })
 
     console.log(`🏆 Achievement unlocked: ${achievement.name} (+${achievement.points} XP) for user ${userId}`)
+    
+    // Atualizar rankings após conquistar achievement (XP afeta rankings)
+    setTimeout(async () => {
+      try {
+        const { rankingService } = await import('./rankings')
+        await rankingService.updateRanking('TOTAL_XP', undefined, true)
+      } catch (error) {
+        console.error('Error updating ranking after achievement unlock:', error)
+      }
+    }, 1500)
   }
 
   // FUNÇÃO REMOVIDA: addXP agora está integrada na transação do unlockAchievement

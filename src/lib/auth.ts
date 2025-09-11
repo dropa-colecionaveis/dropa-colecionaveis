@@ -150,7 +150,17 @@ export const authOptions: NextAuthOptions = {
         // Update user activity on each session creation/refresh
         try {
           const { userStatsService } = await import('./user-stats')
-          await userStatsService.updateUserActivity(session.user.id)
+          const activityResult = await userStatsService.updateUserActivity(session.user.id)
+          
+          // Se houve login diário (streak atualizado), atualizar ranking
+          if (activityResult && activityResult.streakUpdated) {
+            const { rankingService } = await import('./rankings')
+            // Agendar atualização em 2 segundos para não bloquear o login
+            setTimeout(() => {
+              rankingService.updateRanking('WEEKLY_ACTIVE', undefined, true)
+                .catch(error => console.error('Error updating ranking after login:', error))
+            }, 2000)
+          }
         } catch (error) {
           console.error('Error updating user activity on session:', error)
         }

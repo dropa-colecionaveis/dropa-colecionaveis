@@ -55,7 +55,7 @@ export class UserStatsService {
   }
 
   // Atualizar atividade do usuário
-  async updateUserActivity(userId: string): Promise<void> {
+  async updateUserActivity(userId: string): Promise<{ streakUpdated: boolean, newStreak: number } | void> {
     const now = new Date()
     
     const userStats = await prisma.userStats.findUnique({
@@ -64,7 +64,7 @@ export class UserStatsService {
 
     if (!userStats) {
       await this.initializeUserStats(userId)
-      return
+      return { streakUpdated: true, newStreak: 1 }
     }
 
     const lastActivity = userStats.lastActivityAt
@@ -146,12 +146,14 @@ export class UserStatsService {
         }
       })
     }
+    
+    return { streakUpdated: shouldUpdateStreak, newStreak }
   }
 
   // Tracking de abertura de pacotes
   async trackPackOpening(userId: string, packId: string, itemId: string, rarity: Rarity): Promise<void> {
     // Atualizar stats básicas
-    await this.updateUserActivity(userId)
+    const activityResult = await this.updateUserActivity(userId)
     
     const updateData: any = {
       totalPacksOpened: { increment: 1 }
@@ -209,7 +211,13 @@ export class UserStatsService {
     // Atualizar ranking após cada pack opening
     if (packCount && packCount.totalPacksOpened > 0) {
       setTimeout(() => {
+        // Atualizar ranking de pack opener
         rankingService.updateRanking('PACK_OPENER').catch(console.error)
+        
+        // Se houve atualização de streak, atualizar também ranking semanal
+        if (activityResult && activityResult.streakUpdated) {
+          rankingService.updateRanking('WEEKLY_ACTIVE', undefined, true).catch(console.error)
+        }
       }, 1000)
     }
   }
@@ -220,7 +228,7 @@ export class UserStatsService {
     packId: string, 
     items: Array<{ id: string, rarity: Rarity }>
   ): Promise<void> {
-    await this.updateUserActivity(userId)
+    const activityResult = await this.updateUserActivity(userId)
     
     // Calcular totais de raridade
     let rareCount = 0
@@ -290,6 +298,11 @@ export class UserStatsService {
     if (packCount && packCount.totalPacksOpened > 0) {
       setTimeout(() => {
         rankingService.updateRanking('PACK_OPENER').catch(console.error)
+        
+        // Se houve atualização de streak, atualizar também ranking semanal
+        if (activityResult && activityResult.streakUpdated) {
+          rankingService.updateRanking('WEEKLY_ACTIVE', undefined, true).catch(console.error)
+        }
       }, 1000)
     }
   }
