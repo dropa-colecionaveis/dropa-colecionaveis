@@ -103,7 +103,7 @@ export async function POST(req: Request) {
     }
 
     // Handle approved payments
-    if (newStatus === 'APPROVED' && payment.status !== 'APPROVED') {
+    if (newStatus === 'APPROVED' && (payment.status as string) !== 'APPROVED') {
       console.log('💰 Payment approved! Adding credits...')
 
       // Add credits to user and record transaction
