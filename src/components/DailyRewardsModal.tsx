@@ -48,13 +48,18 @@ export default function DailyRewardsModal({ isOpen, onClose, onRewardClaimed }: 
   const [rewardsData, setRewardsData] = useState<DailyRewardsData | null>(null)
   const [showClaimAnimation, setShowClaimAnimation] = useState(false)
   const [claimedReward, setClaimedReward] = useState<any>(null)
+  const [autoCloseTimeout, setAutoCloseTimeout] = useState<NodeJS.Timeout | null>(null)
   const router = useRouter()
 
-  // Handle ESC key press
+  // Handle ESC key press and cleanup
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        onClose()
+        if (showClaimAnimation) {
+          closeClaimAnimation()
+        } else {
+          onClose()
+        }
       }
     }
     
@@ -67,8 +72,12 @@ export default function DailyRewardsModal({ isOpen, onClose, onRewardClaimed }: 
     return () => {
       document.removeEventListener('keydown', handleEsc)
       document.body.style.overflow = 'unset'
+      // Limpar timeout ao desmontar componente
+      if (autoCloseTimeout) {
+        clearTimeout(autoCloseTimeout)
+      }
     }
-  }, [isOpen, onClose])
+  }, [isOpen, onClose, showClaimAnimation, autoCloseTimeout])
 
   useEffect(() => {
     if (isOpen) {
@@ -111,12 +120,11 @@ export default function DailyRewardsModal({ isOpen, onClose, onRewardClaimed }: 
         setClaimedReward(result.reward)
         setShowClaimAnimation(true)
         
-        // Atualizar dados após claim
-        setTimeout(() => {
-          fetchRewardsData()
-          setShowClaimAnimation(false)
-          onRewardClaimed?.(result.reward)
-        }, 4000)
+        // Atualizar dados após claim (aumentado para 8 segundos)
+        const timeout = setTimeout(() => {
+          closeClaimAnimation()
+        }, 8000)
+        setAutoCloseTimeout(timeout)
 
       } else {
         const error = await response.json()
@@ -156,6 +164,16 @@ export default function DailyRewardsModal({ isOpen, onClose, onRewardClaimed }: 
     return `+${bonus}% bonus`
   }
 
+  const closeClaimAnimation = () => {
+    if (autoCloseTimeout) {
+      clearTimeout(autoCloseTimeout)
+      setAutoCloseTimeout(null)
+    }
+    setShowClaimAnimation(false)
+    fetchRewardsData()
+    onRewardClaimed?.(claimedReward)
+  }
+
   if (!isOpen) return null
 
   const modalContent = (
@@ -164,19 +182,19 @@ export default function DailyRewardsModal({ isOpen, onClose, onRewardClaimed }: 
       onClick={onClose}
     >
       <div 
-        className="bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-white/10"
+        className="bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 rounded-xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl border border-white/10 mx-2 sm:mx-4"
         onClick={(e) => e.stopPropagation()}
       >
         
         {/* Header */}
-        <div className="p-6 border-b border-white/10">
-          <div className="flex justify-between items-center">
-            <div>
-              <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+        <div className="p-4 sm:p-6 border-b border-white/10">
+          <div className="flex justify-between items-start">
+            <div className="flex-1 pr-2">
+              <h2 className="text-lg sm:text-2xl font-bold text-white flex items-center gap-2">
                 🔥 Recompensas Diárias
               </h2>
               {rewardsData && (
-                <div className="flex items-center gap-4 mt-2">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-2">
                   <div className="text-sm text-gray-300">
                     Streak atual: <span className="font-bold text-yellow-400">{rewardsData.currentStreak}</span> dias
                   </div>
@@ -202,34 +220,34 @@ export default function DailyRewardsModal({ isOpen, onClose, onRewardClaimed }: 
             <div className="text-white">Carregando recompensas...</div>
           </div>
         ) : rewardsData ? (
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             
             {/* Today's Reward */}
             {rewardsData.todayReward && (
-              <div className="mb-8">
-                <h3 className="text-lg font-semibold text-white mb-4">
+              <div className="mb-6 sm:mb-8">
+                <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">
                   🎯 Recompensa de Hoje (Dia {rewardsData.cycleDay})
                 </h3>
                 
-                <div className={`p-6 rounded-lg border-2 ${
+                <div className={`p-4 sm:p-6 rounded-lg border-2 ${
                   rewardsData.hasClaimedToday 
                     ? 'border-green-500/30 bg-green-500/10' 
                     : 'border-yellow-500/50 bg-yellow-500/20'
                 }`}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="text-4xl">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="flex items-center gap-3 sm:gap-4 flex-1">
+                      <div className="text-3xl sm:text-4xl flex-shrink-0">
                         {getRewardIcon(rewardsData.todayReward)}
                       </div>
-                      <div>
-                        <div className="text-white font-semibold">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-white font-semibold text-sm sm:text-base">
                           {getRewardDescription(rewardsData.todayReward)}
                         </div>
-                        <div className="text-sm text-gray-300">
-                          {rewardsData.todayReward.description}
+                        <div className="text-xs sm:text-sm text-gray-300 break-words">
+                          Continue sua sequência de login!
                         </div>
                         {rewardsData.bonusMultiplier > 1 && (
-                          <div className="text-sm text-green-400">
+                          <div className="text-xs sm:text-sm text-green-400 mt-1">
                             Valor original: {rewardsData.todayReward.rewardValue} 
                             → Com bonus: {rewardsData.todayReward.adjustedValue}
                           </div>
@@ -237,10 +255,10 @@ export default function DailyRewardsModal({ isOpen, onClose, onRewardClaimed }: 
                       </div>
                     </div>
                     
-                    <div>
+                    <div className="flex-shrink-0">
                       {rewardsData.hasClaimedToday ? (
                         <div className="text-center">
-                          <div className="text-green-400 font-semibold">✅ Coletado!</div>
+                          <div className="text-green-400 font-semibold text-sm sm:text-base">✅ Coletado!</div>
                           <div className="text-xs text-gray-400 mt-1">
                             {new Date(rewardsData.todayReward.claimedAt!).toLocaleTimeString('pt-BR')}
                           </div>
@@ -249,7 +267,7 @@ export default function DailyRewardsModal({ isOpen, onClose, onRewardClaimed }: 
                         <button
                           onClick={handleClaimReward}
                           disabled={claiming}
-                          className="px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50"
+                          className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 text-sm sm:text-base"
                         >
                           {claiming ? '⏳ Coletando...' : '🎁 Coletar Agora!'}
                         </button>
@@ -262,23 +280,27 @@ export default function DailyRewardsModal({ isOpen, onClose, onRewardClaimed }: 
 
             {/* Upcoming Rewards Preview */}
             <div>
-              <h3 className="text-lg font-semibold text-white mb-4">
+              <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">
                 📅 Próximas Recompensas (Ciclo de 7 Dias)
               </h3>
               
-              <div className="grid grid-cols-7 gap-2">
+              <div className="grid grid-cols-7 gap-1 sm:gap-2">
                 {rewardsData.upcomingRewards.map((reward, index) => (
                   <div
                     key={reward.id}
-                    className={`p-3 rounded-lg text-center ${
+                    className={`p-1.5 sm:p-3 rounded-lg text-center min-h-[80px] sm:min-h-[100px] flex flex-col justify-between ${
                       reward.isCurrent
                         ? 'border-2 border-yellow-400 bg-yellow-400/20'
                         : 'border border-gray-600 bg-gray-800/50'
                     }`}
                   >
-                    <div className="text-xs text-gray-300 mb-1">Dia {reward.day}</div>
-                    <div className="text-2xl mb-2">{getRewardIcon(reward)}</div>
-                    <div className="text-xs text-white font-medium">
+                    <div className="text-[10px] sm:text-xs text-gray-300 mb-1">
+                      Dia {reward.day}
+                    </div>
+                    <div className="text-lg sm:text-2xl mb-1 sm:mb-2 flex-shrink-0">
+                      {getRewardIcon(reward)}
+                    </div>
+                    <div className="text-[10px] sm:text-xs text-white font-medium leading-tight">
                       {reward.rewardType === 'CREDITS' ? (
                         `${reward.adjustedValue}`
                       ) : reward.rewardType === 'PACK' ? (
@@ -288,13 +310,15 @@ export default function DailyRewardsModal({ isOpen, onClose, onRewardClaimed }: 
                       )}
                     </div>
                     {reward.isCurrent && (
-                      <div className="text-xs text-yellow-400 font-bold mt-1">HOJE</div>
+                      <div className="text-[8px] sm:text-xs text-yellow-400 font-bold mt-0.5 sm:mt-1">
+                        HOJE
+                      </div>
                     )}
                   </div>
                 ))}
               </div>
               
-              <div className="text-xs text-gray-400 text-center mt-3">
+              <div className="text-[10px] sm:text-xs text-gray-400 text-center mt-3 px-2">
                 💡 Mantenha seu streak para multiplicadores de bonus: 8+ dias (+10%), 15+ dias (+20%), 31+ dias (+30%)
               </div>
             </div>
@@ -309,10 +333,18 @@ export default function DailyRewardsModal({ isOpen, onClose, onRewardClaimed }: 
         {/* Claim Animation Overlay */}
         {showClaimAnimation && claimedReward && (
           <div 
-            className="absolute inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[100] rounded-xl cursor-pointer"
-            onClick={() => setShowClaimAnimation(false)}
+            className="absolute inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[100] rounded-xl"
           >
-            <div className="text-center transform transition-all duration-700 scale-100 animate-bounce"
+            {/* Botão X para fechar */}
+            <button
+              onClick={closeClaimAnimation}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors text-2xl z-[101] bg-black/30 rounded-full w-10 h-10 flex items-center justify-center hover:bg-black/50"
+            >
+              ✕
+            </button>
+            
+            <div className="text-center transform transition-all duration-700 scale-100 animate-bounce cursor-pointer"
+                 onClick={closeClaimAnimation}
                  style={{ 
                    animation: 'bounceIn 0.7s ease-out, floating 2s ease-in-out infinite 0.7s' 
                  }}>
@@ -376,7 +408,10 @@ export default function DailyRewardsModal({ isOpen, onClose, onRewardClaimed }: 
                 
                 {/* Action hint */}
                 <div className="text-gray-300 text-sm mt-4 opacity-75">
-                  Clique em qualquer lugar para continuar
+                  Clique em qualquer lugar ou no ✕ para continuar
+                </div>
+                <div className="text-gray-400 text-xs mt-2 opacity-60">
+                  Fechará automaticamente em alguns segundos...
                 </div>
               </div>
             </div>
