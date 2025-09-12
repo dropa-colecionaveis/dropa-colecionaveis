@@ -49,6 +49,7 @@ export default function DailyRewardsModal({ isOpen, onClose, onRewardClaimed }: 
   const [showClaimAnimation, setShowClaimAnimation] = useState(false)
   const [claimedReward, setClaimedReward] = useState<any>(null)
   const [autoCloseTimeout, setAutoCloseTimeout] = useState<NodeJS.Timeout | null>(null)
+  const [showAlreadyClaimedMessage, setShowAlreadyClaimedMessage] = useState(false)
   const router = useRouter()
 
   // Handle ESC key press and cleanup
@@ -57,6 +58,8 @@ export default function DailyRewardsModal({ isOpen, onClose, onRewardClaimed }: 
       if (event.key === 'Escape') {
         if (showClaimAnimation) {
           closeClaimAnimation()
+        } else if (showAlreadyClaimedMessage) {
+          setShowAlreadyClaimedMessage(false)
         } else {
           onClose()
         }
@@ -77,7 +80,7 @@ export default function DailyRewardsModal({ isOpen, onClose, onRewardClaimed }: 
         clearTimeout(autoCloseTimeout)
       }
     }
-  }, [isOpen, onClose, showClaimAnimation, autoCloseTimeout])
+  }, [isOpen, onClose, showClaimAnimation, showAlreadyClaimedMessage, autoCloseTimeout])
 
   useEffect(() => {
     if (isOpen) {
@@ -126,6 +129,22 @@ export default function DailyRewardsModal({ isOpen, onClose, onRewardClaimed }: 
         }, 8000)
         setAutoCloseTimeout(timeout)
 
+      } else if (response.status === 409) {
+        // Recompensa já foi coletada hoje
+        const error = await response.json()
+        setShowAlreadyClaimedMessage(true)
+        
+        // Atualizar dados para refletir o estado correto
+        fetchRewardsData()
+        
+        // Notificar o componente pai (StreakIndicator) para atualizar também
+        onRewardClaimed?.(null)
+        
+        // Fechar mensagem automaticamente após 4 segundos
+        setTimeout(() => {
+          setShowAlreadyClaimedMessage(false)
+        }, 4000)
+        
       } else {
         const error = await response.json()
         alert(`Erro ao reivindicar recompensa: ${error.error}`)
@@ -193,7 +212,12 @@ export default function DailyRewardsModal({ isOpen, onClose, onRewardClaimed }: 
               <h2 className="text-lg sm:text-2xl font-bold text-white flex items-center gap-2">
                 🔥 Recompensas Diárias
               </h2>
-              {rewardsData && (
+              {loading ? (
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-2">
+                  <div className="h-4 bg-white/10 rounded w-32 animate-pulse"></div>
+                  <div className="h-4 bg-white/10 rounded w-24 animate-pulse" style={{ animationDelay: '200ms' }}></div>
+                </div>
+              ) : rewardsData && (
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-2">
                   <div className="text-sm text-gray-300">
                     Streak atual: <span className="font-bold text-yellow-400">{rewardsData.currentStreak}</span> dias
@@ -216,8 +240,75 @@ export default function DailyRewardsModal({ isOpen, onClose, onRewardClaimed }: 
         </div>
 
         {loading ? (
-          <div className="p-8 text-center">
-            <div className="text-white">Carregando recompensas...</div>
+          <div className="p-4 sm:p-6">
+            {/* Skeleton Loading */}
+            
+            {/* Today's Reward Skeleton */}
+            <div className="mb-6 sm:mb-8">
+              <div className="h-5 sm:h-6 bg-white/10 rounded-md w-64 mb-3 sm:mb-4 animate-pulse"></div>
+              
+              <div className="p-4 sm:p-6 rounded-lg border-2 border-yellow-500/30 bg-yellow-500/10">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="flex items-center gap-3 sm:gap-4 flex-1">
+                    <div 
+                      className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 rounded-full animate-pulse"
+                      style={{ animationDelay: '100ms' }}
+                    ></div>
+                    <div className="flex-1 min-w-0">
+                      <div 
+                        className="h-4 sm:h-5 bg-white/20 rounded-md w-32 mb-2 animate-pulse"
+                        style={{ animationDelay: '200ms' }}
+                      ></div>
+                      <div 
+                        className="h-3 sm:h-4 bg-white/10 rounded-md w-48 animate-pulse"
+                        style={{ animationDelay: '300ms' }}
+                      ></div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex-shrink-0">
+                    <div 
+                      className="h-10 sm:h-12 bg-gradient-to-r from-yellow-500/30 to-orange-500/30 rounded-lg w-32 sm:w-40 animate-pulse"
+                      style={{ animationDelay: '400ms' }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Upcoming Rewards Skeleton */}
+            <div>
+              <div className="h-5 sm:h-6 bg-white/10 rounded-md w-72 mb-3 sm:mb-4 animate-pulse"></div>
+              
+              <div className="grid grid-cols-7 gap-1 sm:gap-2">
+                {[...Array(7)].map((_, index) => (
+                  <div
+                    key={index}
+                    className={`p-1.5 sm:p-3 rounded-lg min-h-[80px] sm:min-h-[100px] flex flex-col justify-between border ${
+                      index === 2 
+                        ? 'border-yellow-400/30 bg-yellow-400/10' 
+                        : 'border-white/10 bg-white/5'
+                    }`}
+                  >
+                    <div 
+                      className="h-3 bg-white/20 rounded w-8 mx-auto mb-1 animate-pulse"
+                      style={{ animationDelay: `${index * 150}ms` }}
+                    ></div>
+                    <div 
+                      className="w-6 h-6 sm:w-8 sm:h-8 bg-white/20 rounded-full mx-auto mb-1 sm:mb-2 animate-pulse"
+                      style={{ animationDelay: `${index * 200}ms` }}
+                    ></div>
+                    <div 
+                      className="h-2 sm:h-3 bg-white/10 rounded w-6 mx-auto animate-pulse"
+                      style={{ animationDelay: `${index * 100}ms` }}
+                    ></div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="h-3 bg-white/10 rounded-md w-full mt-3 animate-pulse"></div>
+            </div>
+
           </div>
         ) : rewardsData ? (
           <div className="p-4 sm:p-6">
@@ -413,6 +504,38 @@ export default function DailyRewardsModal({ isOpen, onClose, onRewardClaimed }: 
                 <div className="text-gray-400 text-xs mt-2 opacity-60">
                   Fechará automaticamente em alguns segundos...
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Already Claimed Message */}
+        {showAlreadyClaimedMessage && (
+          <div 
+            className="absolute inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[100] rounded-xl"
+          >
+            <div className="text-center transform transition-all duration-500 scale-100">
+              <div className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 backdrop-blur-sm rounded-2xl p-6 border border-blue-400/30 mx-4">
+                <div className="text-6xl mb-4 animate-bounce">✅</div>
+                
+                <div className="text-white text-2xl font-bold mb-3">
+                  Recompensa já coletada!
+                </div>
+                
+                <div className="text-blue-200 text-lg mb-4">
+                  Você já coletou esta recompensa hoje.
+                </div>
+                
+                <div className="text-gray-300 text-sm">
+                  Sua recompensa já está disponível no seu inventário!
+                </div>
+                
+                <button
+                  onClick={() => setShowAlreadyClaimedMessage(false)}
+                  className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                >
+                  Entendi
+                </button>
               </div>
             </div>
           </div>

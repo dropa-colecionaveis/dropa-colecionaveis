@@ -34,6 +34,8 @@ export async function POST() {
     const cycleDay = ((currentStreak - 1) % 7) + 1
 
     // Buscar recompensa de hoje
+    console.log(`[DEBUG] Claiming reward for cycle day: ${cycleDay}, streak: ${currentStreak}`)
+    
     const todayReward = await prisma.dailyReward.findFirst({
       where: { 
         day: cycleDay,
@@ -52,6 +54,13 @@ export async function POST() {
       }
     })
 
+    console.log(`[DEBUG] Found reward:`, {
+      id: todayReward?.id,
+      day: todayReward?.day,
+      type: todayReward?.rewardType,
+      packTypeId: todayReward?.packTypeId
+    })
+
     if (!todayReward) {
       return NextResponse.json(
         { error: 'No reward available for today' },
@@ -59,28 +68,16 @@ export async function POST() {
       )
     }
 
-    // Verificar se já foi reclamada hoje
-    const todayBrasil = new Date(today.toLocaleString('en-US', {
-      timeZone: 'America/Sao_Paulo'
-    }))
-    
-    const startOfDay = new Date(todayBrasil.getFullYear(), todayBrasil.getMonth(), todayBrasil.getDate(), 0, 0, 0)
-    const endOfDay = new Date(todayBrasil.getFullYear(), todayBrasil.getMonth(), todayBrasil.getDate(), 23, 59, 59, 999)
-    
-    // Converter para UTC
-    const startOfDayUTC = new Date(startOfDay.getTime() + (3 * 60 * 60 * 1000))
-    const endOfDayUTC = new Date(endOfDay.getTime() + (3 * 60 * 60 * 1000))
-    
+    // Verificar se já foi reclamada para este streakDay (mesma lógica da constraint única)
     const existingClaim = await prisma.dailyRewardClaim.findFirst({
       where: {
         userId,
         rewardId: todayReward.id,
-        claimedAt: {
-          gte: startOfDayUTC,
-          lte: endOfDayUTC
-        }
+        streakDay: currentStreak
       }
     })
+
+    console.log(`[DEBUG] Checking existing claim for userId=${userId}, rewardId=${todayReward.id}, streakDay=${currentStreak}:`, !!existingClaim)
 
     if (existingClaim) {
       return NextResponse.json(
@@ -133,16 +130,9 @@ export async function POST() {
         rewardDetails.credits = adjustedValue
 
       } else if (todayReward.rewardType === 'PACK') {
-        // Criar concessão de pacote gratuito
-        const freePackGrant = await tx.freePackGrant.create({
-          data: {
-            userId,
-            packId: '', // Será preenchido depois
-            claimed: false
-          }
-        })
-
-        // Buscar um pacote do tipo especificado
+        console.log(`[DEBUG] Searching for pack with customTypeId: ${todayReward.packTypeId}`)
+        
+        // Buscar um pacote do tipo especificado primeiro
         const availablePack = await tx.pack.findFirst({
           where: {
             customTypeId: todayReward.packTypeId,
@@ -150,14 +140,24 @@ export async function POST() {
           }
         })
 
+        console.log(`[DEBUG] Found pack:`, {
+          id: availablePack?.id,
+          name: availablePack?.name,
+          customTypeId: availablePack?.customTypeId,
+          isActive: availablePack?.isActive
+        })
+
         if (!availablePack) {
-          throw new Error('No available pack for reward type')
+          throw new Error(`No available pack found for reward type: ${todayReward.packTypeId}`)
         }
 
-        // Atualizar o grant com o pack correto
-        await tx.freePackGrant.update({
-          where: { id: freePackGrant.id },
-          data: { packId: availablePack.id }
+        // Criar concessão de pacote gratuito com packId válido
+        const freePackGrant = await tx.freePackGrant.create({
+          data: {
+            userId,
+            packId: availablePack.id,
+            claimed: false
+          }
         })
 
         rewardDetails.pack = {

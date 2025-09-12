@@ -20,6 +20,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Free pack grant ID is required' }, { status: 400 })
     }
 
+    console.log(`[DEBUG] Attempting to claim free pack grant: ${freePackGrantId} for user: ${session.user.id}`)
+
     // Find the free pack grant
     const freePackGrant = await prisma.freePackGrant.findFirst({
       where: {
@@ -38,8 +40,11 @@ export async function POST(req: NextRequest) {
     })
 
     if (!freePackGrant) {
+      console.log(`[DEBUG] Free pack grant not found: ${freePackGrantId}`)
       return NextResponse.json({ error: 'Free pack not found or already claimed' }, { status: 404 })
     }
+
+    console.log(`[DEBUG] Found valid free pack grant: ${freePackGrant.id}`)
 
     // Generate random item based on pack probabilities (reuse existing logic)
     const probabilities = freePackGrant.pack.probabilities

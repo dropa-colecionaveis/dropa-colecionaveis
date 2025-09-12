@@ -62,30 +62,16 @@ export async function GET() {
     // Buscar recompensa de hoje
     const todayReward = allRewards.find(r => r.day === cycleDay)
     
-    // Verificar se já foi reclamada hoje
+    // Verificar se já foi reclamada (mesma lógica do claim endpoint)
     let hasClaimedToday = false
     let todayClaim = null
     
     if (todayReward) {
-      const todayBrasil = new Date(today.toLocaleString('en-US', {
-        timeZone: 'America/Sao_Paulo'
-      }))
-      
-      const startOfDay = new Date(todayBrasil.getFullYear(), todayBrasil.getMonth(), todayBrasil.getDate(), 0, 0, 0)
-      const endOfDay = new Date(todayBrasil.getFullYear(), todayBrasil.getMonth(), todayBrasil.getDate(), 23, 59, 59, 999)
-      
-      // Converter para UTC
-      const startOfDayUTC = new Date(startOfDay.getTime() + (3 * 60 * 60 * 1000))
-      const endOfDayUTC = new Date(endOfDay.getTime() + (3 * 60 * 60 * 1000))
-      
       todayClaim = await prisma.dailyRewardClaim.findFirst({
         where: {
           userId,
           rewardId: todayReward.id,
-          claimedAt: {
-            gte: startOfDayUTC,
-            lte: endOfDayUTC
-          }
+          streakDay: currentStreak
         }
       })
       
