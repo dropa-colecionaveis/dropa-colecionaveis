@@ -1,9 +1,12 @@
 import { NextResponse, NextRequest } from 'next/server'
 import { verifyAdminAuth } from '@/lib/admin-auth'
-import { writeFile } from 'fs/promises'
-import { join } from 'path'
-import { mkdir } from 'fs/promises'
-import { existsSync } from 'fs'
+import { v2 as cloudinary } from 'cloudinary'
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+})
 
 export async function POST(req: NextRequest) {
   try {
@@ -45,30 +48,39 @@ export async function POST(req: NextRequest) {
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
-    // Create unique filename
+    // Create unique filename for Cloudinary
     const timestamp = Date.now()
     const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
-    const filename = `${timestamp}_${originalName}`
-    
-    // Ensure uploads directory exists
-    const uploadsDir = join(process.cwd(), 'public', 'uploads', 'items')
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true })
-    }
+    const publicId = `items/${timestamp}_${originalName.split('.')[0]}`
 
-    // Save file
-    const filepath = join(uploadsDir, filename)
-    await writeFile(filepath, buffer)
-    
-    // Return the public URL
-    const imageUrl = `/uploads/items/${filename}`
-    
+    // Upload to Cloudinary
+    const uploadResult = await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          resource_type: 'image',
+          public_id: publicId,
+          folder: 'colecionaveis/items',
+          transformation: [
+            { width: 800, height: 800, crop: 'limit' },
+            { quality: 'auto:good' },
+            { format: 'auto' }
+          ]
+        },
+        (error, result) => {
+          if (error) reject(error)
+          else resolve(result)
+        }
+      ).end(buffer)
+    }) as any
+
     return NextResponse.json({
       success: true,
-      imageUrl,
-      filename,
+      imageUrl: uploadResult.secure_url,
+      publicId: uploadResult.public_id,
+      filename: originalName,
       size: file.size,
-      type: file.type
+      type: file.type,
+      cloudinaryUrl: uploadResult.secure_url
     })
   } catch (error) {
     console.error('File upload error:', error)
