@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 
 export interface RecentActivity {
   id: string
-  type: 'PACK_OPENED' | 'ITEM_OBTAINED' | 'MARKETPLACE_SALE' | 'MARKETPLACE_PURCHASE' | 'ACHIEVEMENT_UNLOCKED' | 'COLLECTION_COMPLETED' | 'CREDITS_PURCHASED'
+  type: 'PACK_OPENED' | 'ITEM_OBTAINED' | 'MARKETPLACE_SALE' | 'MARKETPLACE_PURCHASE' | 'ACHIEVEMENT_UNLOCKED' | 'COLLECTION_COMPLETED' | 'CREDITS_PURCHASED' | 'DAILY_REWARD_CLAIMED'
   timestamp: Date
   description: string
   data: {
@@ -14,6 +14,7 @@ export interface RecentActivity {
     price?: number
     amount?: number
     credits?: number
+    dailyReward?: { type: string, value: number, day: number, streak: number }
   }
 }
 
@@ -113,7 +114,8 @@ export async function GET(req: Request) {
       marketplaceTransactionsResult, 
       achievementsResult,
       completedCollectionsResult,
-      creditPurchasesResult
+      creditPurchasesResult,
+      dailyRewardClaimsResult
     ] = await Promise.allSettled([
       // 1. Marketplace Transactions (optimized with selective includes)
       prisma.marketplaceTransaction.findMany({
@@ -205,6 +207,27 @@ export async function GET(req: Request) {
           amount: true,
           createdAt: true
         }
+      }),
+
+      // 5. Daily Reward Claims (optimized select)
+      prisma.dailyRewardClaim.findMany({
+        where: { userId },
+        take: Math.min(limit, 10),
+        orderBy: { claimedAt: 'desc' },
+        select: {
+          id: true,
+          claimedAt: true,
+          streakDay: true,
+          rewardReceived: true,
+          reward: {
+            select: {
+              day: true,
+              rewardType: true,
+              rewardValue: true,
+              description: true
+            }
+          }
+        }
       })
     ])
 
@@ -289,6 +312,37 @@ export async function GET(req: Request) {
           data: {
             credits: transaction.amount,
             price: transaction.amount
+          }
+        })
+      })
+    }
+
+    // Process daily reward claims
+    if (dailyRewardClaimsResult.status === 'fulfilled') {
+      dailyRewardClaimsResult.value.forEach(claim => {
+        const rewardDetails = claim.rewardReceived as any
+        let description = `Coletou recompensa diária (Dia ${claim.reward.day})`
+        
+        if (claim.reward.rewardType === 'CREDITS' && rewardDetails?.credits) {
+          description = `Coletou ${rewardDetails.credits} créditos como recompensa diária (Streak: ${claim.streakDay} dias)`
+        } else if (claim.reward.rewardType === 'PACK' && rewardDetails?.pack) {
+          description = `Ganhou um pacote ${rewardDetails.pack.name} como recompensa diária (Streak: ${claim.streakDay} dias)`
+        }
+
+        activities.push({
+          id: `daily_reward_${claim.id}`,
+          type: 'DAILY_REWARD_CLAIMED',
+          timestamp: claim.claimedAt,
+          description,
+          data: {
+            dailyReward: {
+              type: claim.reward.rewardType,
+              value: rewardDetails?.value || claim.reward.rewardValue,
+              day: claim.reward.day,
+              streak: claim.streakDay
+            },
+            credits: rewardDetails?.credits,
+            pack: rewardDetails?.pack
           }
         })
       })

@@ -32,8 +32,8 @@ export default function Dashboard() {
     if (status === 'unauthenticated') {
       router.push('/auth/signin')
       return
-    } 
-    
+    }
+
     if (status === 'authenticated' && session?.user) {
       // Carregamento progressivo - começar imediatamente sem aguardar todos os dados
       fetchUserDataProgressive()
@@ -83,20 +83,20 @@ export default function Dashboard() {
       fetchUserProfile(),
       fetchUserStats()
     ]
-    
+
     // 2. Buscar dados menos críticos sem aguardar os críticos
     const nonCriticalPromises = [
       fetchRecentActivities(),
       checkFreePack()
     ]
-    
+
     // 3. Aguardar dados críticos para remover skeleton do header mais rápido
     try {
       await Promise.allSettled(criticalDataPromises)
     } catch (error) {
       console.error('Error loading critical data:', error)
     }
-    
+
     // 4. Dados não críticos podem continuar carregando em background
     Promise.allSettled(nonCriticalPromises).catch(error => {
       console.error('Error loading non-critical data:', error)
@@ -113,7 +113,7 @@ export default function Dashboard() {
           'Pragma': 'no-cache'
         }
       })
-      
+
       if (response.ok) {
         const profileData = await response.json()
         setUserProfile(profileData)
@@ -129,10 +129,10 @@ export default function Dashboard() {
     try {
       setStatsLoading(true)
       const response = await fetch('/api/user/stats', {
-        cache: 'force-cache', 
+        cache: 'force-cache',
         next: { revalidate: 180 } // Cache 3min with ISR - shorter because stats change more frequently
       })
-      
+
       if (response.ok) {
         const statsData = await response.json()
         setUserStats(statsData)
@@ -167,7 +167,7 @@ export default function Dashboard() {
         cache: 'force-cache',
         next: { revalidate: 60 } // Cache 1min - activities change frequently
       })
-      
+
       if (response.ok) {
         const data = await response.json()
         setRecentActivities(data.activities || [])
@@ -190,6 +190,7 @@ export default function Dashboard() {
       case 'ACHIEVEMENT_UNLOCKED': return '🎖️'
       case 'COLLECTION_COMPLETED': return '✅'
       case 'CREDITS_PURCHASED': return '💳'
+      case 'DAILY_REWARD_CLAIMED': return '🔥'
       default: return '📌'
     }
   }
@@ -209,7 +210,7 @@ export default function Dashboard() {
     const date = new Date(timestamp)
     const now = new Date()
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
-    
+
     if (diffInHours < 1) {
       const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
       return diffInMinutes <= 1 ? 'Agora há pouco' : `${diffInMinutes}m atrás`
@@ -237,7 +238,7 @@ export default function Dashboard() {
       {status === 'loading' && (
         <div className="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-blue-500 animate-pulse z-50"></div>
       )}
-      
+
       {/* Header */}
       <header className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 backdrop-blur-lg border-b border-purple-500/30 shadow-xl">
         <div className="container mx-auto px-4 py-3">
@@ -254,7 +255,7 @@ export default function Dashboard() {
                   priority
                 />
               </Link>
-              
+
               {/* Welcome Text */}
               <div className="hidden md:block">
                 <div className="text-white font-medium">
@@ -282,7 +283,7 @@ export default function Dashboard() {
                     </div>
                   )}
 
-                  
+
                   {/* Container para elementos empilhados no mobile */}
                   <div className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-4">
 
@@ -309,7 +310,7 @@ export default function Dashboard() {
                       </Link>
                     </div>
                   )}
-                  
+
                     {/* Credits */}
                     <div className="bg-gradient-to-r from-yellow-600/30 to-orange-600/30 backdrop-blur-sm rounded-xl px-2 py-1 sm:px-4 sm:py-2 border border-yellow-400/30 hover:border-yellow-300/50 transition-colors duration-200">
                       <Link href="/credits/purchase" className="flex items-center space-x-1 sm:space-x-2 group">
@@ -323,7 +324,7 @@ export default function Dashboard() {
                   </div>
                 </>
               )}
-              
+
               {/* Quick Actions */}
               <div className="flex items-center space-x-2">
                 {/* Free Pack Button */}
@@ -336,7 +337,7 @@ export default function Dashboard() {
                     🎁
                   </button>
                 )}
-                
+
                 {/* Admin Link */}
                 {isAdmin && (
                   <Link
@@ -347,7 +348,7 @@ export default function Dashboard() {
                     {isSuperAdmin ? '👑' : '🔧'}
                   </Link>
                 )}
-                
+
                 {/* User Menu */}
                 <div data-user-menu>
                   <button
@@ -400,10 +401,10 @@ export default function Dashboard() {
               SUA AVENTURA CONTINUA!
             </h1>
             <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              Bem-vindo de volta, <span className="text-purple-400 font-semibold">{session?.user?.name || 'Colecionador'}</span>! 
+              Bem-vindo de volta, <span className="text-purple-400 font-semibold">{session?.user?.name || 'Colecionador'}</span>!
               Sua coleção épica te aguarda. Que raridades você descobrirá hoje?
             </p>
-            
+
             {/* Quick Stats */}
             <div className="mb-12 max-w-5xl mx-auto">
               {statsLoading || !userStats ? (
@@ -426,7 +427,7 @@ export default function Dashboard() {
                     <div className="text-2xl font-bold text-green-300">{userProfile?.credits || 0}</div>
                     <div className="text-sm text-gray-300">Créditos</div>
                   </div>
-                  
+
                   {/* Daily Streak Card */}
                   {session?.user?.id && (
                     <div className="bg-gradient-to-br from-orange-600/30 to-red-600/30 backdrop-blur-sm rounded-xl p-4 border border-orange-400/30 relative overflow-hidden">
@@ -444,7 +445,7 @@ export default function Dashboard() {
       <main className="container mx-auto px-4 py-8">
         {/* Action Cards */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-          
+
           {/* Pack Store - Primary Action */}
           <div className="group relative bg-gradient-to-br from-purple-800/40 to-blue-800/40 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 hover:transform hover:scale-105 overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition-opacity"></div>
@@ -470,7 +471,7 @@ export default function Dashboard() {
               <div className="text-6xl mb-6 group-hover:animate-pulse">💰</div>
               <h2 className="text-2xl font-bold text-white mb-3">Comprar Créditos</h2>
               <p className="text-gray-300 mb-6 leading-relaxed">
-                Adquira créditos para alimentar sua jornada de colecionador. Pagamento seguro via PIX, cartão ou PayPal.
+                Adquira créditos para alimentar sua jornada de colecionador. Pagamento seguro via PIX, cartão.
               </p>
               <Link
                 href="/credits/purchase"
@@ -501,20 +502,8 @@ export default function Dashboard() {
         </div>
 
         {/* Secondary Actions Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6 mb-12">
-          
-          {/* User Profile */}
-          <div className="group bg-gradient-to-br from-violet-800/40 to-purple-800/40 backdrop-blur-lg rounded-xl p-6 border border-violet-500/30 hover:border-violet-400/50 transition-all duration-300 hover:transform hover:scale-105">
-            <div className="text-4xl mb-4 group-hover:animate-pulse">👤</div>
-            <h3 className="text-lg font-bold text-white mb-2">Meu Perfil</h3>
-            <p className="text-gray-300 text-sm mb-4">Configure sua conta, foto e informações pessoais.</p>
-            <Link
-              href="/profile/settings"
-              className="inline-block w-full text-center px-4 py-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-200"
-            >
-              Ver Perfil
-            </Link>
-          </div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+
 
           {/* Collections */}
           <div className="group bg-gradient-to-br from-orange-800/40 to-red-800/40 backdrop-blur-lg rounded-xl p-6 border border-orange-500/30 hover:border-orange-400/50 transition-all duration-300 hover:transform hover:scale-105">
@@ -623,11 +612,11 @@ export default function Dashboard() {
 
       {/* Fixed Position User Menu */}
       {showUserMenu && (
-        <div 
+        <div
           className="absolute w-64 bg-gradient-to-br from-gray-900/95 to-gray-800/95 backdrop-blur-lg rounded-xl border border-white/20 shadow-2xl z-[99999] overflow-hidden animate-in slide-in-from-top-2 fade-in-0 duration-200"
-          style={{ 
-            top: menuPosition.top, 
-            right: menuPosition.right 
+          style={{
+            top: menuPosition.top,
+            right: menuPosition.right
           }}
           data-user-dropdown
         >
@@ -823,8 +812,8 @@ export default function Dashboard() {
       )}
 
       {/* Free Pack Modal */}
-      <FreePackModal 
-        isOpen={showFreePackModal} 
+      <FreePackModal
+        isOpen={showFreePackModal}
         onClose={() => {
           setShowFreePackModal(false)
           setHasUnclaimedFreePack(false)

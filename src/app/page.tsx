@@ -363,7 +363,7 @@ export default function Home() {
             <div className="bg-gradient-to-br from-amber-800/30 to-yellow-800/30 backdrop-blur-sm rounded-lg p-4 border border-amber-500/30 hover:scale-105 transition-transform">
               <div className="text-3xl mb-2">🥉</div>
               <h4 className="text-amber-300 font-semibold">Bronze</h4>
-              <p className="text-xs text-amber-400 mb-2">25 créditos</p>
+              <p className="text-xs text-amber-400 mb-2">28 créditos</p>
               <div className="text-xs text-gray-300 space-y-1">
                 <div>🟡 Lendário: 0.5%</div>
                 <div>🟣 Épico: 2%</div>
@@ -374,7 +374,7 @@ export default function Home() {
             <div className="bg-gradient-to-br from-gray-700/30 to-slate-700/30 backdrop-blur-sm rounded-lg p-4 border border-gray-500/30 hover:scale-105 transition-transform">
               <div className="text-3xl mb-2">🥈</div>
               <h4 className="text-gray-300 font-semibold">Prata</h4>
-              <p className="text-xs text-gray-400 mb-2">40 créditos</p>
+              <p className="text-xs text-gray-400 mb-2">45 créditos</p>
               <div className="text-xs text-gray-300 space-y-1">
                 <div>🟡 Lendário: 1%</div>
                 <div>🟣 Épico: 4%</div>
@@ -396,7 +396,7 @@ export default function Home() {
             <div className="bg-gradient-to-br from-slate-600/30 to-zinc-600/30 backdrop-blur-sm rounded-lg p-4 border border-slate-500/30 hover:scale-105 transition-transform">
               <div className="text-3xl mb-2">💎</div>
               <h4 className="text-slate-300 font-semibold">Platina</h4>
-              <p className="text-xs text-slate-400 mb-2">150 créditos</p>
+              <p className="text-xs text-slate-400 mb-2">140 créditos</p>
               <div className="text-xs text-gray-300 space-y-1">
                 <div>🟡 Lendário: 3%</div>
                 <div>🟣 Épico: 12%</div>
@@ -407,7 +407,7 @@ export default function Home() {
             <div className="bg-gradient-to-br from-cyan-600/30 to-blue-700/30 backdrop-blur-sm rounded-lg p-4 border border-cyan-500/30 hover:scale-105 transition-transform animate-pulse">
               <div className="text-3xl mb-2">💠</div>
               <h4 className="text-cyan-300 font-semibold">Diamante</h4>
-              <p className="text-xs text-cyan-400 mb-2">300 créditos</p>
+              <p className="text-xs text-cyan-400 mb-2">280 créditos</p>
               <div className="text-xs text-gray-300 space-y-1">
                 <div>🟡 Lendário: 5%</div>
                 <div>🟣 Épico: 20%</div>
@@ -447,7 +447,7 @@ export default function Home() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Valor:</span>
-                  <span className="text-green-400 font-semibold">10.000 créditos</span>
+                  <span className="text-green-400 font-semibold">450 créditos</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Status:</span>
@@ -464,8 +464,16 @@ export default function Home() {
               </p>
               <div className="bg-black/30 rounded-lg p-3">
                 <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Raridade:</span>
+                  <span className="text-yellow-400 font-semibold">🟡 Lendário</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Escassez:</span>
+                  <span className="text-pink-400 font-semibold">🌟 Único</span>
+                </div>
+                <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Valor:</span>
-                  <span className="text-green-400 font-semibold">15.000 créditos</span>
+                  <span className="text-green-400 font-semibold">500 créditos</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Status:</span>
@@ -482,12 +490,20 @@ export default function Home() {
               </p>
               <div className="bg-black/30 rounded-lg p-3">
                 <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Raridade:</span>
+                  <span className="text-yellow-400 font-semibold">🟡 Lendário</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Escassez:</span>
+                  <span className="text-pink-400 font-semibold">🌟 Único</span>
+                </div>
+                <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Valor:</span>
-                  <span className="text-green-400 font-semibold">8.000 créditos</span>
+                  <span className="text-green-400 font-semibold">480 créditos</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Status:</span>
-                  <span className="text-red-400 font-semibold animate-pulse">🔍 Mistério</span>
+                  <span className="text-cyan-400 font-semibold animate-pulse">🔍 Mistério</span>
                 </div>
               </div>
             </div>
@@ -500,8 +516,20 @@ export default function Home() {
               </p>
               <div className="bg-black/30 rounded-lg p-3">
                 <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Raridade:</span>
+                  <span className="text-yellow-400 font-semibold">🟡 Lendário</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Escassez:</span>
+                  <span className="text-pink-400 font-semibold">🌟 Único</span>
+                </div>
+                <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Valor:</span>
-                  <span className="text-green-400 font-semibold">12.000 créditos</span>
+                  <span className="text-green-400 font-semibold">450 créditos</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Status:</span>
+                  <span className="text-indigo-400 font-semibold animate-pulse">🗝️ Oculto</span>
                 </div>
               </div>
             </div>
@@ -514,8 +542,16 @@ export default function Home() {
               </p>
               <div className="bg-black/30 rounded-lg p-3">
                 <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Raridade:</span>
+                  <span className="text-yellow-400 font-semibold">🟡 Lendário</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Escassez:</span>
+                  <span className="text-pink-400 font-semibold">🌟 Único</span>
+                </div>
+                <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Valor:</span>
-                  <span className="text-green-400 font-semibold">20.000 créditos</span>
+                  <span className="text-green-400 font-semibold">400 créditos</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Status:</span>
