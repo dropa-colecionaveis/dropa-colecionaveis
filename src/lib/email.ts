@@ -1,6 +1,12 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const getResend = () => {
+  const apiKey = process.env.RESEND_API_KEY
+  if (!apiKey) {
+    throw new Error('RESEND_API_KEY environment variable is not set')
+  }
+  return new Resend(apiKey)
+}
 
 const getPasswordResetTemplate = (userEmail: string, resetToken: string) => {
   const baseUrl = process.env.NEXTAUTH_URL?.replace(/\/$/, '') || 'http://localhost:3000'
@@ -169,7 +175,8 @@ export async function sendPasswordResetEmail(email: string, resetToken: string) 
       console.log('🔄 Modo desenvolvimento: email redirecionado para mateusreys@gmail.com')
     }
     
-    const { data, error } = await resend.emails.send(emailData)
+    const resendClient = getResend()
+    const { data, error } = await resendClient.emails.send(emailData)
 
     if (error) {
       console.error('❌ Erro do Resend:', error)
