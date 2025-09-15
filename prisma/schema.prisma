@@ -30,13 +30,15 @@ model User {
   adminLogs               AdminLog[]
   autoSellConfig          AutoSellConfig?
   autoSellLogs            AutoSellLog[]
+  dailyRewardClaims       DailyRewardClaim[]
   emailVerificationTokens EmailVerificationToken[]
-  passwordResetTokens     PasswordResetToken[]
   freePackGrants          FreePackGrant[]
+  uniqueItems             Item[]                   @relation("UniqueItems")
   marketplaceListings     MarketplaceListing[]
   marketplacePurchases    MarketplaceTransaction[] @relation("Buyer")
   marketplaceSales        MarketplaceTransaction[] @relation("Seller")
   packOpenings            PackOpening[]
+  passwordResetTokens     PasswordResetToken[]
   payments                Payment[]
   rankings                Ranking[]
   transactions            Transaction[]
@@ -45,8 +47,6 @@ model User {
   userItemProtections     UserItemProtection[]
   userItems               UserItem[]
   userStats               UserStats?
-  uniqueItems             Item[]        @relation("UniqueItems")
-  dailyRewardClaims       DailyRewardClaim[]
 
   @@map("users")
 }
@@ -64,27 +64,25 @@ model Item {
   isLimitedEdition Boolean          @default(false)
   maxEditions      Int?
   currentEditions  Int              @default(0)
-  // Campos para Sistema de Escassez
-  isUnique         Boolean          @default(false) // Item único (1 exemplar mundial)
+  isUnique         Boolean          @default(false)
   scarcityLevel    ScarcityLevel    @default(COMMON)
-  uniqueOwnerId    String?          // ID do dono atual (para itens únicos)
-  // Metadados temporais
+  uniqueOwnerId    String?
   isTemporal       Boolean          @default(false)
   availableFrom    DateTime?
   availableUntil   DateTime?
   createdAt        DateTime         @default(now())
   collection       Collection?      @relation(fields: [collectionId], references: [id])
+  uniqueOwner      User?            @relation("UniqueItems", fields: [uniqueOwnerId], references: [id])
   limitedEditions  LimitedEdition[]
   userItems        UserItem[]
-  uniqueOwner      User?            @relation("UniqueItems", fields: [uniqueOwnerId], references: [id])
 
   @@map("items")
 }
 
 model Pack {
   id             String            @id @default(cuid())
-  type           PackType?         // Tipo enum (legacy)
-  customTypeId   String?           // Novo campo para tipos personalizados
+  type           PackType?
+  customTypeId   String?
   name           String
   description    String?
   price          Int
@@ -163,29 +161,26 @@ model Transaction {
 }
 
 model Collection {
-  id              String           @id @default(cuid())
-  name            String           @unique
-  description     String?
-  themeId         String?
-  customTheme     String?
-  imageUrl        String?
-  maxItems        Int
-  isActive        Boolean          @default(true)
-  isLimited       Boolean          @default(false)
-  // Campos para Coleções Temporais
-  isTemporal      Boolean          @default(false)
-  availableFrom   DateTime?
-  availableUntil  DateTime?
-  // Campos para Coleções com Raridade específica
+  id               String           @id @default(cuid())
+  name             String           @unique
+  description      String?
+  themeId          String?
+  customTheme      String?
+  imageUrl         String?
+  maxItems         Int
+  isActive         Boolean          @default(true)
+  isLimited        Boolean          @default(false)
+  isTemporal       Boolean          @default(false)
+  availableFrom    DateTime?
+  availableUntil   DateTime?
   collectionRarity Rarity?
-  // Metadados de escassez
-  scarcityLevel   ScarcityLevel    @default(COMMON)
-  totalSupply     Int?             // Fornecimento máximo total da coleção
-  currentSupply   Int              @default(0)
-  createdAt       DateTime         @default(now())
-  theme           Theme?           @relation(fields: [themeId], references: [id])
-  items           Item[]
-  userCollections UserCollection[]
+  scarcityLevel    ScarcityLevel    @default(COMMON)
+  totalSupply      Int?
+  currentSupply    Int              @default(0)
+  createdAt        DateTime         @default(now())
+  theme            Theme?           @relation(fields: [themeId], references: [id])
+  items            Item[]
+  userCollections  UserCollection[]
 
   @@map("collections")
 }
@@ -414,28 +409,28 @@ model AdminLog {
 }
 
 model Payment {
-  id                String         @id @default(cuid())
-  userId            String
-  externalId        String?
-  status            PaymentStatus  @default(PENDING)
-  method            PaymentMethod
-  amount            Float
-  credits           Int
-  packageId         Int?
-  creditPackageId   String?
-  mercadoPagoData   Json?
-  pixQrCode         String?
-  pixQrCodeBase64   String?
-  pixCopyPaste      String?
-  expiresAt         DateTime?
-  approvedAt        DateTime?
-  failedAt          DateTime?
-  failureReason     String?
-  webhookData       Json?
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
-  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  creditPackage     CreditPackage? @relation(fields: [creditPackageId], references: [id])
+  id              String         @id @default(cuid())
+  userId          String
+  externalId      String?
+  status          PaymentStatus  @default(PENDING)
+  method          PaymentMethod
+  amount          Float
+  credits         Int
+  packageId       Int?
+  creditPackageId String?
+  mercadoPagoData Json?
+  pixQrCode       String?
+  pixQrCodeBase64 String?
+  pixCopyPaste    String?
+  expiresAt       DateTime?
+  approvedAt      DateTime?
+  failedAt        DateTime?
+  failureReason   String?
+  webhookData     Json?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  creditPackage   CreditPackage? @relation(fields: [creditPackageId], references: [id])
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
@@ -476,6 +471,98 @@ model PasswordResetToken {
   @@index([userId])
   @@index([expiresAt])
   @@map("password_reset_tokens")
+}
+
+model StatsMonitoringLog {
+  id                   Int      @id @default(autoincrement())
+  timestamp            DateTime
+  inconsistenciesFound Int      @map("inconsistencies_found")
+  autoFixedUsers       Int      @map("auto_fixed_users")
+  criticalErrors       Int      @map("critical_errors")
+  healthStatus         String   @map("health_status") @db.VarChar(20)
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  @@map("stats_monitoring_log")
+}
+
+model CreditPackage {
+  id           String    @id @default(cuid())
+  credits      Int
+  price        Float
+  isActive     Boolean   @default(true)
+  isPopular    Boolean   @default(false)
+  displayOrder Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  payments     Payment[]
+
+  @@index([isActive, displayOrder])
+  @@map("credit_packages")
+}
+
+model PackTypeCustom {
+  id           String        @id @default(cuid())
+  name         String        @unique
+  displayName  String
+  emoji        String        @default("📦")
+  color        String        @default("#6b7280")
+  description  String?
+  isActive     Boolean       @default(true)
+  isDefault    Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  dailyRewards DailyReward[]
+  packs        Pack[]
+
+  @@map("pack_types_custom")
+}
+
+model DailyReward {
+  id          String             @id @default(cuid())
+  day         Int
+  rewardType  RewardType
+  rewardValue Int
+  packTypeId  String?
+  description String
+  isActive    Boolean            @default(true)
+  createdAt   DateTime           @default(now())
+  claims      DailyRewardClaim[]
+  packType    PackTypeCustom?    @relation(fields: [packTypeId], references: [id])
+
+  @@unique([day, rewardType])
+  @@map("daily_rewards")
+}
+
+model DailyRewardClaim {
+  id             String      @id @default(cuid())
+  userId         String
+  rewardId       String
+  streakDay      Int
+  claimedAt      DateTime    @default(now())
+  rewardReceived Json
+  reward         DailyReward @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, rewardId, streakDay])
+  @@map("daily_reward_claims")
+}
+
+model stats_audit_log {
+  id           Int       @id @default(autoincrement())
+  user_id      String    @db.VarChar(255)
+  action       String    @db.VarChar(50)
+  before_state Json?
+  after_state  Json?
+  metadata     Json?
+  source       String    @db.VarChar(20)
+  success      Boolean
+  error        String?
+  timestamp    DateTime  @db.Timestamp(6)
+  created_at   DateTime? @default(now()) @db.Timestamp(6)
+
+  @@index([source], map: "idx_stats_audit_source")
+  @@index([success, timestamp(sort: Desc)], map: "idx_stats_audit_success_timestamp")
+  @@index([user_id, timestamp(sort: Desc)], map: "idx_stats_audit_user_timestamp")
 }
 
 enum Rarity {
@@ -571,93 +658,17 @@ enum PaymentMethod {
 }
 
 enum ScarcityLevel {
-  COMMON      // Comum - disponível em grandes quantidades
-  UNCOMMON    // Incomum - disponibilidade limitada
-  RARE        // Raro - muito limitado
-  EPIC        // Épico - extremamente raro
-  LEGENDARY   // Lendário - quase impossível de obter
-  MYTHIC      // Mítico - apenas alguns exemplares
-  UNIQUE      // Único - apenas 1 exemplar mundial
+  COMMON
+  UNCOMMON
+  RARE
+  EPIC
+  LEGENDARY
+  MYTHIC
+  UNIQUE
 }
 
 enum RewardType {
   CREDITS
   PACK
   ITEMS
-}
-
-model StatsMonitoringLog {
-  id                   Int      @id @default(autoincrement())
-  timestamp            DateTime
-  inconsistenciesFound Int      @map("inconsistencies_found")
-  autoFixedUsers       Int      @map("auto_fixed_users")
-  criticalErrors       Int      @map("critical_errors")
-  healthStatus         String   @map("health_status") @db.VarChar(20)
-  createdAt            DateTime @default(now()) @map("created_at")
-
-  @@map("stats_monitoring_log")
-}
-
-model CreditPackage {
-  id           String    @id @default(cuid())
-  credits      Int
-  price        Float
-  isActive     Boolean   @default(true)
-  isPopular    Boolean   @default(false)
-  displayOrder Int       @default(0)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  payments     Payment[]
-
-  @@index([isActive, displayOrder])
-  @@map("credit_packages")
-}
-
-model PackTypeCustom {
-  id          String  @id @default(cuid())
-  name        String  @unique
-  displayName String
-  emoji       String  @default("📦")
-  color       String  @default("#6b7280")
-  description String?
-  isActive    Boolean @default(true)
-  isDefault   Boolean @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  packs       Pack[]
-  dailyRewards DailyReward[]
-
-  @@map("pack_types_custom")
-}
-
-model DailyReward {
-  id          String   @id @default(cuid())
-  day         Int      // Day of streak (1-7, then repeats)
-  rewardType  RewardType
-  rewardValue Int      // Credits amount or pack count
-  packTypeId  String?  // For pack rewards
-  description String
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  
-  packType    PackTypeCustom? @relation(fields: [packTypeId], references: [id])
-  claims      DailyRewardClaim[]
-
-  @@unique([day, rewardType])
-  @@map("daily_rewards")
-}
-
-model DailyRewardClaim {
-  id             String      @id @default(cuid())
-  userId         String
-  rewardId       String
-  streakDay      Int
-  claimedAt      DateTime    @default(now())
-  rewardReceived Json        // Details of what was received
-  
-  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  reward         DailyReward @relation(fields: [rewardId], references: [id], onDelete: Cascade)
-  
-  @@unique([userId, rewardId, streakDay])
-  @@map("daily_reward_claims")
 }

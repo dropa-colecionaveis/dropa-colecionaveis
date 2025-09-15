@@ -1,0 +1,76 @@
+{
+  "name": "Sistema de Sorteio de Pacote Gratuito - Otimizado",
+  "version": "2.0",
+  "lastUpdated": "2025-09-15T17:56:27.338Z",
+  "description": "Probabilidades otimizadas para melhor experiência do usuário",
+  "probabilities": {
+    "bronze": 55,
+    "prata": 30,
+    "ouro": 12,
+    "platina": 2.5,
+    "diamante": 0.5
+  },
+  "packMapping": {
+    "bronze": {
+      "packName": "Pacote Bronze",
+      "credits": 25,
+      "realCost": 1.25,
+      "tier": "basic"
+    },
+    "prata": {
+      "packName": "Pacote Prata",
+      "credits": 35,
+      "realCost": 1.75,
+      "tier": "standard"
+    },
+    "ouro": {
+      "packName": "Pacote Ouro",
+      "credits": 45,
+      "realCost": 2.25,
+      "tier": "premium"
+    },
+    "platina": {
+      "packName": "Pacote Platina",
+      "credits": 75,
+      "realCost": 3.75,
+      "tier": "luxury"
+    },
+    "diamante": {
+      "packName": "Pacote Diamante",
+      "credits": 95,
+      "realCost": 4.75,
+      "tier": "ultimate"
+    }
+  },
+  "expectedValues": {
+    "averageCredits": 32,
+    "averageCostBRL": 1.6,
+    "costPer1000Users": 1600
+  },
+  "changelog": [
+    {
+      "version": "2.0",
+      "date": "2025-09-15T17:56:27.338Z",
+      "changes": [
+        "Reduzido Bronze de 60% para 55%",
+        "Aumentado Prata de 25% para 30%",
+        "Mantidos outros packs inalterados",
+        "Melhoria na experiência do usuário"
+      ]
+    },
+    {
+      "version": "1.0",
+      "date": "2024-01-01",
+      "changes": [
+        "Sistema inicial implementado",
+        "Bronze: 60%, Prata: 25%, outros: conforme original"
+      ]
+    }
+  ],
+  "notes": [
+    "Implementação requer atualização no frontend",
+    "Sistema de sorteio deve usar essas probabilidades",
+    "Monitorar satisfação do usuário após implementação",
+    "Considerar A/B testing se necessário"
+  ]
+}

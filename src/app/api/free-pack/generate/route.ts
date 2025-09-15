@@ -1,17 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { PackType } from '@prisma/client'
+import * as fs from 'fs'
+import * as path from 'path'
 
 export const dynamic = 'force-dynamic'
 
-// Free pack generation probabilities based on pack price/rarity - v2
-const FREE_PACK_PROBABILITIES = {
-  BRONZE: 60,    // 60% chance - cheapest pack
-  SILVER: 25,    // 25% chance - medium pack  
-  GOLD: 12,      // 12% chance - expensive pack
-  PLATINUM: 2.5, // 2.5% chance - very expensive
-  DIAMOND: 0.5   // 0.5% chance - most expensive/rare
+// Load optimized probabilities from configuration file
+function loadFreePackConfig() {
+  try {
+    const configPath = path.join(process.cwd(), 'free-pack-lottery-config.json')
+    const configData = fs.readFileSync(configPath, 'utf-8')
+    const config = JSON.parse(configData)
+    
+    // Map Portuguese names to English PackType enum values
+    return {
+      BRONZE: config.probabilities.bronze,    // 55%
+      SILVER: config.probabilities.prata,     // 30% 
+      GOLD: config.probabilities.ouro,        // 12%
+      PLATINUM: config.probabilities.platina, // 2.5%
+      DIAMOND: config.probabilities.diamante  // 0.5%
+    }
+  } catch (error) {
+    console.error('Error loading free pack config, using fallback probabilities:', error)
+    // Fallback to optimized values if config file is not available
+    return {
+      BRONZE: 55,    // 55% chance - reduced from 60% for better UX
+      SILVER: 30,    // 30% chance - increased from 25% for satisfaction
+      GOLD: 12,      // 12% chance - maintained
+      PLATINUM: 2.5, // 2.5% chance - maintained
+      DIAMOND: 0.5   // 0.5% chance - maintained
+    }
+  }
 }
+
+const FREE_PACK_PROBABILITIES = loadFreePackConfig()
 
 function selectRandomPack(): string {
   const random = Math.random() * 100
