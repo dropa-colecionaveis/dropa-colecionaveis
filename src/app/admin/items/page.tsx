@@ -56,6 +56,7 @@ export default function AdminItems() {
     value: '',
     imageUrl: '',
     collectionId: '',
+    itemNumber: '',
     isLimitedEdition: false,
     maxEditions: '',
     // Novos campos do Sistema de Escassez
@@ -177,6 +178,7 @@ export default function AdminItems() {
         imageUrl: finalImageUrl,
         value: parseInt(formData.value),
         collectionId: formData.collectionId || null,
+        itemNumber: formData.itemNumber ? parseInt(formData.itemNumber) : null,
         maxEditions: formData.maxEditions ? parseInt(formData.maxEditions) : null,
         // Novos campos do Sistema de Escassez
         availableFrom: formData.availableFrom ? new Date(formData.availableFrom).toISOString() : null,
@@ -216,6 +218,7 @@ export default function AdminItems() {
       value: item.value.toString(),
       imageUrl: item.imageUrl,
       collectionId: item.collectionId || '',
+      itemNumber: item.itemNumber?.toString() || '',
       isLimitedEdition: item.isLimitedEdition,
       maxEditions: item.maxEditions?.toString() || '',
       // Novos campos do Sistema de Escassez
@@ -262,6 +265,7 @@ export default function AdminItems() {
       value: '',
       imageUrl: '',
       collectionId: '',
+      itemNumber: '',
       isLimitedEdition: false,
       maxEditions: '',
       // Novos campos do Sistema de Escassez
@@ -707,7 +711,27 @@ export default function AdminItems() {
                   ))}
                 </select>
                 <div className="text-xs text-gray-400 mt-1">
-                  O número do item na coleção será automaticamente atribuído
+                  Escolha a coleção para este item
+                </div>
+              </div>
+
+              {/* Item Number Field */}
+              <div>
+                <label className="block text-gray-300 mb-2">
+                  Número do Item na Coleção:
+                  <span className="text-xs text-gray-400 ml-2">(#001, #002, etc.)</span>
+                </label>
+                <input
+                  type="number"
+                  value={formData.itemNumber}
+                  onChange={(e) => setFormData({...formData, itemNumber: e.target.value})}
+                  className="w-full px-3 py-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  min="1"
+                  max="9999"
+                  placeholder="Ex: 1, 98, 115..."
+                />
+                <div className="text-xs text-gray-400 mt-1">
+                  Número sequencial que aparece como "#098" no nome da coleção. Deixe vazio para auto-atribuir.
                 </div>
               </div>
 

@@ -17,7 +17,7 @@ export async function PUT(req: NextRequest, { params }: { params: { itemId: stri
 
     const body = await req.json()
     const { 
-      name, description, rarity, value, imageUrl, isActive, collectionId, isLimitedEdition, maxEditions,
+      name, description, rarity, value, imageUrl, isActive, collectionId, itemNumber, isLimitedEdition, maxEditions,
       // Novos campos do Sistema de Escassez
       isUnique, scarcityLevel, isTemporal, availableFrom, availableUntil
     } = body
@@ -53,9 +53,14 @@ export async function PUT(req: NextRequest, { params }: { params: { itemId: stri
       )
     }
 
-    // Handle collection change
-    let itemNumber = currentItem.itemNumber
-    if (collectionId !== undefined && collectionId !== currentItem.collectionId) {
+    // Handle item number and collection change
+    let finalItemNumber = currentItem.itemNumber
+    
+    // If itemNumber is provided explicitly, use it
+    if (itemNumber !== undefined && itemNumber !== null) {
+      finalItemNumber = parseInt(itemNumber.toString()) || null
+    } else if (collectionId !== undefined && collectionId !== currentItem.collectionId) {
+      // Auto-assign only if changing collection and no explicit number provided
       if (collectionId) {
         // Validate new collection
         const collection = await prisma.collection.findUnique({
@@ -93,10 +98,10 @@ export async function PUT(req: NextRequest, { params }: { params: { itemId: stri
           orderBy: { itemNumber: 'desc' }
         })
 
-        itemNumber = lastItem ? (lastItem.itemNumber || 0) + 1 : 1
+        finalItemNumber = lastItem ? (lastItem.itemNumber || 0) + 1 : 1
       } else {
         // Removing from collection
-        itemNumber = null
+        finalItemNumber = null
       }
     }
 
@@ -110,7 +115,7 @@ export async function PUT(req: NextRequest, { params }: { params: { itemId: stri
         imageUrl: imageUrl || currentItem.imageUrl,
         isActive: isActive !== undefined ? isActive : currentItem.isActive,
         collectionId: collectionId !== undefined ? collectionId : currentItem.collectionId,
-        itemNumber,
+        itemNumber: finalItemNumber,
         isLimitedEdition: isLimitedEdition !== undefined ? Boolean(isLimitedEdition) : currentItem.isLimitedEdition,
         maxEditions: isLimitedEdition !== undefined 
           ? (isLimitedEdition && maxEditions ? parseInt(maxEditions) : null)
