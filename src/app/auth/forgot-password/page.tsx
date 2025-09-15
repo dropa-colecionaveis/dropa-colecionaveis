@@ -1,48 +1,42 @@
 'use client'
 
 import { useState } from 'react'
-import { signIn, getSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 
-export default function SignIn() {
+export default function ForgotPassword() {
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setMessage('')
 
     try {
-      const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
+      const response = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
       })
 
-      if (result?.error) {
-        setError('Invalid credentials')
-      } else if (result?.ok) {
-        // Wait a bit for the session to be established
-        setTimeout(() => {
-          router.push('/dashboard')
-          router.refresh()
-        }, 500)
+      const data = await response.json()
+
+      if (response.ok) {
+        setMessage('Email de recuperação enviado! Verifique sua caixa de entrada.')
+      } else {
+        setError(data.error || 'Algo deu errado. Tente novamente.')
       }
     } catch (error) {
-      setError('Something went wrong')
+      setError('Erro ao enviar email. Tente novamente.')
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleSocialSignIn = async (provider: string) => {
-    await signIn(provider, { callbackUrl: '/dashboard' })
   }
 
   return (
@@ -78,40 +72,15 @@ export default function SignIn() {
               {/* Welcome Text */}
               <div className="space-y-3">
                 <h1 className="text-3xl font-bold text-white flex items-center justify-center">
-                  <span className="mr-3 text-4xl animate-bounce">🎮</span>
-                  Bem-vindo de volta!
+                  <span className="mr-3 text-4xl animate-bounce">🔑</span>
+                  Esqueceu sua senha?
                 </h1>
-                <p className="text-gray-300 text-lg">Entre e continue sua jornada épica</p>
+                <p className="text-gray-300 text-lg">Sem problemas! Vamos te ajudar a recuperar</p>
                 <div className="flex items-center justify-center space-x-2 text-purple-300">
-                  <span className="text-sm">⭐</span>
-                  <span className="text-sm font-medium">Acesse sua coleção digital</span>
-                  <span className="text-sm">⭐</span>
+                  <span className="text-sm">💡</span>
+                  <span className="text-sm font-medium">Digite seu email para receber o link</span>
+                  <span className="text-sm">💡</span>
                 </div>
-              </div>
-            </div>
-
-            {/* Social Login */}
-            <div className="mb-8">
-              <button
-                onClick={() => handleSocialSignIn('google')}
-                className="group w-full relative overflow-hidden bg-gradient-to-r from-red-600/20 to-blue-600/20 hover:from-red-600/30 hover:to-blue-600/30 border border-white/20 hover:border-white/40 rounded-2xl p-4 transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
-              >
-                <div className="flex items-center justify-center space-x-3">
-                  <div className="text-2xl group-hover:animate-pulse">🚀</div>
-                  <span className="text-white font-semibold group-hover:text-gray-100">Continuar com Google</span>
-                </div>
-              </button>
-            </div>
-
-            {/* Divider */}
-            <div className="relative mb-8">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gradient-to-r from-transparent via-white/30 to-transparent"></div>
-              </div>
-              <div className="relative flex justify-center">
-                <span className="px-4 bg-gradient-to-r from-purple-600/20 to-indigo-600/20 backdrop-blur-sm text-gray-300 text-sm font-medium rounded-full border border-white/20">
-                  ou entre com email
-                </span>
               </div>
             </div>
 
@@ -126,11 +95,20 @@ export default function SignIn() {
                 </div>
               )}
 
+              {message && (
+                <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-400/50 text-green-100 px-5 py-4 rounded-2xl backdrop-blur-sm">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xl">✅</span>
+                    <span className="font-medium">{message}</span>
+                  </div>
+                </div>
+              )}
+
               {/* Email Field */}
               <div className="group">
                 <label htmlFor="email" className="block text-sm font-semibold text-purple-300 mb-3 flex items-center">
                   <span className="mr-2">📧</span>
-                  Endereço de email
+                  Seu endereço de email
                 </label>
                 <div className="relative">
                   <input
@@ -139,27 +117,7 @@ export default function SignIn() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 group-hover:border-white/30 transition-all duration-300 backdrop-blur-sm"
-                    placeholder="seu@email.com"
-                    required
-                  />
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-500/0 to-blue-500/0 group-focus-within:from-purple-500/10 group-focus-within:to-blue-500/10 pointer-events-none transition-all duration-300"></div>
-                </div>
-              </div>
-
-              {/* Password Field */}
-              <div className="group">
-                <label htmlFor="password" className="block text-sm font-semibold text-purple-300 mb-3 flex items-center">
-                  <span className="mr-2">🔒</span>
-                  Senha secreta
-                </label>
-                <div className="relative">
-                  <input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 group-hover:border-white/30 transition-all duration-300 backdrop-blur-sm"
-                    placeholder="••••••••••••"
+                    placeholder="Digite o email da sua conta"
                     required
                   />
                   <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-500/0 to-blue-500/0 group-focus-within:from-purple-500/10 group-focus-within:to-blue-500/10 pointer-events-none transition-all duration-300"></div>
@@ -176,12 +134,12 @@ export default function SignIn() {
                   {loading ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      <span>Entrando na sua conta...</span>
+                      <span>Enviando email...</span>
                     </>
                   ) : (
                     <>
-                      <span className="text-xl group-hover:animate-pulse">🎯</span>
-                      <span>Entrar na Aventura</span>
+                      <span className="text-xl group-hover:animate-pulse">🚀</span>
+                      <span>Enviar Link de Recuperação</span>
                     </>
                   )}
                 </div>
@@ -192,37 +150,23 @@ export default function SignIn() {
             {/* Footer */}
             <div className="text-center mt-8 pt-6 border-t border-white/10">
               <p className="text-gray-300 mb-4">
-                Esqueceu sua senha?{' '}
+                Lembrou da senha?{' '}
                 <Link 
-                  href="/auth/forgot-password" 
+                  href="/auth/signin" 
                   className="text-purple-400 hover:text-purple-300 font-semibold transition-colors duration-200 hover:underline"
                 >
-                  Redefinir senha 🔑
-                </Link>
-              </p>
-              <p className="text-gray-300 mb-4">
-                Novo por aqui?{' '}
-                <Link 
-                  href="/auth/signup" 
-                  className="text-purple-400 hover:text-purple-300 font-semibold transition-colors duration-200 hover:underline"
-                >
-                  Crie sua conta épica
+                  Voltar ao login 🔙
                 </Link>
               </p>
               
-              {/* Features */}
-              <div className="grid grid-cols-3 gap-4 mt-6">
+              {/* Security Info */}
+              <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-2xl p-4 mt-6 border border-white/10">
                 <div className="text-center">
-                  <div className="text-2xl mb-1">🏆</div>
-                  <div className="text-xs text-gray-400">Rankings</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl mb-1">💎</div>
-                  <div className="text-xs text-gray-400">Coleções</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl mb-1">🎮</div>
-                  <div className="text-xs text-gray-400">Conquistas</div>
+                  <div className="text-2xl mb-2">🔐</div>
+                  <div className="text-sm text-gray-300">
+                    <p className="font-semibold mb-1">Segurança em primeiro lugar!</p>
+                    <p className="text-xs">O link expira em 30 minutos e só pode ser usado uma vez.</p>
+                  </div>
                 </div>
               </div>
             </div>

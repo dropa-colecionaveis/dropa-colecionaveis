@@ -31,6 +31,7 @@ model User {
   autoSellConfig          AutoSellConfig?
   autoSellLogs            AutoSellLog[]
   emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens     PasswordResetToken[]
   freePackGrants          FreePackGrant[]
   marketplaceListings     MarketplaceListing[]
   marketplacePurchases    MarketplaceTransaction[] @relation("Buyer")
@@ -458,6 +459,23 @@ model EmailVerificationToken {
   @@index([userId])
   @@index([expiresAt])
   @@map("email_verification_tokens")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
 }
 
 enum Rarity {
