@@ -123,6 +123,7 @@ model FreePackGrant {
   id        String    @id @default(cuid())
   userId    String
   packId    String
+  source    String    @default("WELCOME") // WELCOME, DAILY_REWARD, ACHIEVEMENT, etc
   grantedAt DateTime  @default(now())
   claimed   Boolean   @default(false)
   claimedAt DateTime?

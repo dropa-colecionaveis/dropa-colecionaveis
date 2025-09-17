@@ -14,36 +14,31 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if user has received and claimed their free pack
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { hasReceivedFreePack: true }
-    })
-
-    if (!user) {
-      console.warn(`User with ID ${session.user.id} not found in database`)
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
-
-    // Check for any unclaimed WELCOME free packs (not daily rewards)
-    const unclaimedFreePack = await prisma.freePackGrant.findFirst({
+    // Check for any unclaimed DAILY_REWARD free packs
+    const unclaimedDailyPacks = await prisma.freePackGrant.findMany({
       where: {
         userId: session.user.id,
         claimed: false,
-        source: "WELCOME"
+        source: "DAILY_REWARD"
       },
       include: {
-        pack: true
+        pack: {
+          include: {
+            customType: true
+          }
+        }
+      },
+      orderBy: {
+        grantedAt: 'desc'
       }
     })
 
     return NextResponse.json({
-      hasReceivedFreePack: user.hasReceivedFreePack,
-      unclaimedFreePack: unclaimedFreePack
+      unclaimedDailyPacks
     })
 
   } catch (error) {
-    console.error('Free pack check error:', error)
+    console.error('Daily reward packs check error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

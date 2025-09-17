@@ -8,6 +8,7 @@ import Image from 'next/image'
 import { useUserRankings } from '@/hooks/useUserRankings'
 import { useAdmin } from '@/hooks/useAdmin'
 import FreePackModal from '@/components/FreePackModal'
+import DailyRewardPackModal from '@/components/DailyRewardPackModal'
 import StreakIndicator from '@/components/StreakIndicator'
 import { ProfileSkeleton, StatsSkeleton, ActivitiesSkeleton, HeaderStatsSkeleton } from '@/components/SkeletonLoader'
 
@@ -23,6 +24,7 @@ export default function Dashboard() {
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [showFreePackModal, setShowFreePackModal] = useState(false)
   const [hasUnclaimedFreePack, setHasUnclaimedFreePack] = useState(false)
+  const [showDailyRewardPackModal, setShowDailyRewardPackModal] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 })
   const { bestRanking, loading: rankingLoading } = useUserRankings()
@@ -87,7 +89,8 @@ export default function Dashboard() {
     // 2. Buscar dados menos críticos sem aguardar os críticos
     const nonCriticalPromises = [
       fetchRecentActivities(),
-      checkFreePack()
+      checkFreePack(),
+      checkDailyRewardPacks()
     ]
 
     // 3. Aguardar dados críticos para remover skeleton do header mais rápido
@@ -156,6 +159,20 @@ export default function Dashboard() {
       }
     } catch (error) {
       console.error('Error checking free pack:', error)
+    }
+  }
+
+  const checkDailyRewardPacks = async () => {
+    try {
+      const response = await fetch('/api/daily-rewards/check-packs')
+      if (response.ok) {
+        const data = await response.json()
+        if (data.unclaimedDailyPacks && data.unclaimedDailyPacks.length > 0) {
+          setShowDailyRewardPackModal(true)
+        }
+      }
+    } catch (error) {
+      console.error('Error checking daily reward packs:', error)
     }
   }
 
@@ -822,6 +839,19 @@ export default function Dashboard() {
         }}
         onItemReceived={() => {
           // Refresh data immediately when item is received
+          fetchUserProfile()
+          fetchRecentActivities()
+        }}
+      />
+
+      {/* Daily Reward Pack Modal */}
+      <DailyRewardPackModal
+        isOpen={showDailyRewardPackModal}
+        onClose={() => {
+          setShowDailyRewardPackModal(false)
+        }}
+        onItemReceived={() => {
+          // Refresh data after claiming daily reward pack
           fetchUserProfile()
           fetchRecentActivities()
         }}

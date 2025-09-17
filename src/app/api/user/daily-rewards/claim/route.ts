@@ -160,6 +160,12 @@ export async function POST() {
           }
         })
 
+        // Atualizar o source para DAILY_REWARD em seguida
+        await tx.freePackGrant.update({
+          where: { id: freePackGrant.id },
+          data: { source: "DAILY_REWARD" }
+        })
+
         rewardDetails.pack = {
           id: availablePack.id,
           name: availablePack.name,
