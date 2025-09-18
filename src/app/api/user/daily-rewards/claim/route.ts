@@ -86,14 +86,14 @@ export async function POST() {
       )
     }
 
-    // Calcular multiplicador de bonus
+    // Calcular multiplicador de bonus conforme documentação
     let bonusMultiplier = 1
-    if (currentStreak >= 31) {
-      bonusMultiplier = 1.3
+    if (currentStreak >= 30) {
+      bonusMultiplier = 1.25  // +25% Ouro
     } else if (currentStreak >= 15) {
-      bonusMultiplier = 1.2
+      bonusMultiplier = 1.15  // +15% Prata
     } else if (currentStreak >= 8) {
-      bonusMultiplier = 1.1
+      bonusMultiplier = 1.08  // +8% Bronze
     }
 
     const adjustedValue = Math.floor(todayReward.rewardValue * bonusMultiplier)

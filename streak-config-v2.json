@@ -5,25 +5,29 @@
       "minimumDays": 1,
       "bonusPercentage": 0,
       "tier": "standard",
-      "description": "1-7 dias: Recompensa base"
+      "description": "1-7 dias: 5 créditos (Padrão)",
+      "finalReward": 5
     },
     {
       "minimumDays": 8,
       "bonusPercentage": 8,
       "tier": "bronze",
-      "description": "8-14 dias: +8% de bônus"
+      "description": "8-14 dias: 5.4 créditos (Bronze)",
+      "finalReward": 5.4
     },
     {
       "minimumDays": 15,
       "bonusPercentage": 15,
       "tier": "silver",
-      "description": "15-29 dias: +15% de bônus"
+      "description": "15-29 dias: 5.75 créditos (Prata)",
+      "finalReward": 5.75
     },
     {
       "minimumDays": 30,
       "bonusPercentage": 25,
       "tier": "gold",
-      "description": "30+ dias: +25% de bônus"
+      "description": "30+ dias: 6.25 créditos (Ouro)",
+      "finalReward": 6.25
     }
   ]
 }

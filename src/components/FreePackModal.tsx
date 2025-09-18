@@ -194,8 +194,8 @@ export default function FreePackModal({ isOpen, onClose, onItemReceived }: FreeP
               <div className="bg-gradient-to-r from-yellow-600/20 to-orange-600/20 rounded-2xl p-6 mb-8 border border-yellow-400/30">
                 <h3 className="text-base sm:text-lg font-bold text-yellow-300 mb-2 sm:mb-3">🎲 Como funciona?</h3>
                 <div className="text-xs sm:text-sm text-yellow-200 space-y-1 sm:space-y-2">
-                  <p>• <span className="font-semibold">60%</span> de chance de ganhar Pacote Bronze 🥉</p>
-                  <p>• <span className="font-semibold">25%</span> de chance de ganhar Pacote Silver 🥈</p>
+                  <p>• <span className="font-semibold">55%</span> de chance de ganhar Pacote Bronze 🥉</p>
+                  <p>• <span className="font-semibold">30%</span> de chance de ganhar Pacote Silver 🥈</p>
                   <p>• <span className="font-semibold">12%</span> de chance de ganhar Pacote Gold 🥇</p>
                   <p>• <span className="font-semibold">2.5%</span> de chance de ganhar Pacote Platinum 💎</p>
                   <p>• <span className="font-semibold">0.5%</span> de chance de ganhar Pacote Diamond 💠</p>
