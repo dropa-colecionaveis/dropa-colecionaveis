@@ -285,6 +285,33 @@ class InputValidator {
         min: 1,
         max: 10
       },
+      method: {
+        required: false,
+        type: 'string',
+        allowedValues: ['PIX', 'CREDIT_CARD', 'DEBIT_CARD']
+      },
+      token: {
+        required: false,
+        type: 'string',
+        maxLength: 500
+      },
+      cardNumber: {
+        required: false,
+        type: 'string',
+        pattern: /^\d{13,19}$/
+      },
+      expirationMonth: {
+        required: false,
+        type: 'number',
+        min: 1,
+        max: 12
+      },
+      expirationYear: {
+        required: false,
+        type: 'number',
+        min: 2024,
+        max: 2050
+      },
       installments: {
         required: true,
         type: 'number',

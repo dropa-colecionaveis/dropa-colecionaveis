@@ -29,6 +29,11 @@ export default function PurchaseCredits() {
   const [paymentResponse, setPaymentResponse] = useState<PaymentResponse | null>(null)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [checkingPaymentStatus, setCheckingPaymentStatus] = useState(false)
+  const [autoCheckingPayment, setAutoCheckingPayment] = useState(false)
+  const [pollCount, setPollCount] = useState(0)
+  const [pollInterval, setPollInterval] = useState<NodeJS.Timeout | null>(null)
+  const [showSuccessState, setShowSuccessState] = useState(false)
+  const [successCredits, setSuccessCredits] = useState(0)
   const { bestRanking, loading: rankingLoading } = useUserRankings()
 
   useEffect(() => {
@@ -50,11 +55,17 @@ export default function PurchaseCredits() {
         const packages = data.packages || []
         setCreditPackages(packages)
         
-        // Selecionar o segundo pacote (popular) por padrão, se existir
-        if (packages.length > 1) {
-          setSelectedPackage(packages[1])
+        // Selecionar o pacote popular por padrão
+        console.log('🔍 Pacotes carregados:', packages)
+        const popularPackage = packages.find(pkg => pkg.isPopular)
+        console.log('📦 Pacote popular encontrado:', popularPackage)
+        
+        if (popularPackage) {
+          setSelectedPackage(popularPackage)
+          console.log('✅ Pacote selecionado (popular):', popularPackage)
         } else if (packages.length > 0) {
           setSelectedPackage(packages[0])
+          console.log('⚠️ Nenhum popular, selecionado primeiro:', packages[0])
         }
       } else {
         console.error('Failed to load credit packages')
@@ -67,7 +78,9 @@ export default function PurchaseCredits() {
           { id: 5, credits: 2500, price: 120, popular: false }
         ]
         setCreditPackages(fallbackPackages)
-        setSelectedPackage(fallbackPackages[1])
+        // Selecionar o pacote popular no fallback também
+        const popularFallback = fallbackPackages.find(pkg => pkg.popular)
+        setSelectedPackage(popularFallback || fallbackPackages[0])
       }
     } catch (error) {
       console.error('Error loading credit packages:', error)
@@ -80,7 +93,9 @@ export default function PurchaseCredits() {
         { id: 5, credits: 2500, price: 120, popular: false }
       ]
       setCreditPackages(fallbackPackages)
-      setSelectedPackage(fallbackPackages[1])
+      // Selecionar o pacote popular no catch também
+      const popularCatch = fallbackPackages.find(pkg => pkg.popular)
+      setSelectedPackage(popularCatch || fallbackPackages[0])
     } finally {
       setPackagesLoading(false)
     }
@@ -143,6 +158,11 @@ export default function PurchaseCredits() {
 
   const handlePaymentMethodSelect = (method: PaymentMethod) => {
     setSelectedPaymentMethod(method)
+    // Reset all states when starting new payment
+    setShowSuccessState(false)
+    setSuccessCredits(0)
+    setAutoCheckingPayment(false)
+    setPollCount(0)
     setShowPaymentModal(true)
   }
 
@@ -168,6 +188,8 @@ export default function PurchaseCredits() {
       if (data.success) {
         setPaymentResponse(data)
         // Start polling for payment status
+        setAutoCheckingPayment(true)
+        setPollCount(0)
         startPaymentPolling(data.paymentId)
       } else {
         alert(data.error || 'Erro ao criar pagamento PIX. Tente novamente.')
@@ -277,29 +299,61 @@ export default function PurchaseCredits() {
   }
 
   const startPaymentPolling = (paymentId: string) => {
-    const pollInterval = setInterval(async () => {
+    // Clear any existing polling
+    if (pollInterval) {
+      clearInterval(pollInterval)
+    }
+    
+    const newPollInterval = setInterval(async () => {
       try {
+        setPollCount(prev => prev + 1)
         const response = await fetch(`/api/payments/status?paymentId=${paymentId}`)
         const payment = await response.json()
 
         if (payment.status === 'APPROVED') {
-          clearInterval(pollInterval)
-          alert('Pagamento aprovado! Créditos adicionados à sua conta.')
-          await fetchUserProfile() // Refresh user profile
-          router.push('/dashboard')
+          clearInterval(newPollInterval)
+          setPollInterval(null)
+          setAutoCheckingPayment(false)
+          
+          // Update payment response to show success state
+          setPaymentResponse(prev => prev ? { ...prev, status: 'APPROVED' } : null)
+          
+          // Show integrated success state instead of alert
+          setSuccessCredits(payment.credits || selectedPackage?.credits || 0)
+          setShowSuccessState(true)
+          
+          // Refresh user profile in background
+          await fetchUserProfile()
+          
         } else if (['REJECTED', 'CANCELLED', 'EXPIRED'].includes(payment.status)) {
-          clearInterval(pollInterval)
-          alert(`Pagamento ${payment.status.toLowerCase()}. ${payment.failureReason || ''}`)
-          setShowPaymentModal(false)
+          clearInterval(newPollInterval)
+          setPollInterval(null)
+          setAutoCheckingPayment(false)
+          setPaymentResponse(prev => prev ? { ...prev, status: payment.status } : null)
+          
+          setTimeout(() => {
+            alert(`❌ Pagamento ${payment.status.toLowerCase()}. ${payment.failureReason || ''}`)
+            setShowPaymentModal(false)
+          }, 1000)
+        }
+        
+        // Stop polling after 10 minutes (200 polls * 3 seconds)
+        if (pollCount >= 200) {
+          clearInterval(newPollInterval)
+          setPollInterval(null)
+          setAutoCheckingPayment(false)
+          alert('⏰ Tempo limite excedido. Você pode verificar o status manualmente.')
         }
       } catch (error) {
         console.error('Error polling payment status:', error)
       }
     }, 3000) // Poll every 3 seconds
+    
+    setPollInterval(newPollInterval)
 
-    // Stop polling after 15 minutes
+    // Stop polling after 15 minutes (backup)
     setTimeout(() => {
-      clearInterval(pollInterval)
+      clearInterval(newPollInterval)
     }, 15 * 60 * 1000)
   }
 
@@ -834,6 +888,61 @@ export default function PurchaseCredits() {
                       </button>
                     </div>
                   </div>
+                ) : showSuccessState ? (
+                  // Success State Display
+                  <div className="text-center py-6">
+                    <div className="mb-6">
+                      <div className="text-6xl mb-4 animate-bounce">🎉</div>
+                      <h4 className="text-2xl font-bold text-green-400 mb-2">Pagamento Aprovado!</h4>
+                      <p className="text-gray-300 text-lg mb-4">
+                        <span className="text-yellow-400 font-semibold">{successCredits} créditos</span> foram adicionados à sua conta
+                      </p>
+                    </div>
+                    
+                    <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 mb-6">
+                      <div className="flex items-center justify-center gap-2 text-green-400">
+                        <span className="text-lg">✅</span>
+                        <span className="font-medium">Transação concluída com sucesso</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <button
+                        onClick={() => {
+                          setShowPaymentModal(false)
+                          setPaymentResponse(null)
+                          setShowSuccessState(false)
+                          router.push('/dashboard')
+                        }}
+                        className="w-full px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg transition-all duration-200 font-medium"
+                      >
+                        🏠 Ir para Dashboard
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          setShowPaymentModal(false)
+                          setPaymentResponse(null)
+                          setShowSuccessState(false)
+                          router.push('/packs')
+                        }}
+                        className="w-full px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg transition-all duration-200"
+                      >
+                        📦 Abrir Pacotes Agora
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          setShowPaymentModal(false)
+                          setPaymentResponse(null)
+                          setShowSuccessState(false)
+                        }}
+                        className="w-full px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200"
+                      >
+                        Fechar
+                      </button>
+                    </div>
+                  </div>
                 ) : (
                   // PIX QR Code Display
                   <div>
@@ -875,22 +984,57 @@ export default function PurchaseCredits() {
                     )}
 
                     <div className="text-center text-gray-300 text-sm mb-4">
-                      Aguardando pagamento... ⏳
-                      <br />
-                      <span className="text-yellow-400">PIX expira em 15 minutos</span>
+                      {paymentResponse?.status === 'APPROVED' ? (
+                        <>
+                          <span className="text-green-400">✅ Pagamento aprovado!</span>
+                          <br />
+                          <span className="text-green-300">Redirecionando...</span>
+                        </>
+                      ) : autoCheckingPayment ? (
+                        <>
+                          <span className="flex items-center justify-center gap-2">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
+                            Verificando automaticamente... 🔄
+                          </span>
+                          <br />
+                          <span className="text-blue-300">Verificação {pollCount}/200</span>
+                          <br />
+                          <span className="text-yellow-400">PIX expira em 15 minutos</span>
+                        </>
+                      ) : (
+                        <>
+                          Aguardando pagamento... ⏳
+                          <br />
+                          <span className="text-yellow-400">PIX expira em 15 minutos</span>
+                        </>
+                      )}
                     </div>
 
                     <div className="space-y-3">
                       <button
                         onClick={() => checkPaymentStatus(paymentResponse.paymentId)}
-                        disabled={checkingPaymentStatus}
+                        disabled={checkingPaymentStatus || autoCheckingPayment}
                         className="w-full px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg transition-all duration-200 disabled:opacity-50"
                       >
-                        {checkingPaymentStatus ? 'Verificando...' : '🔍 Verificar Status do Pagamento'}
+                        {checkingPaymentStatus ? 'Verificando...' : 
+                         autoCheckingPayment ? '🔄 Verificação Automática Ativa' :
+                         '🔍 Verificar Status Manualmente'}
                       </button>
                       
                       <button
-                        onClick={() => {setShowPaymentModal(false); setPaymentResponse(null)}}
+                        onClick={() => {
+                          // Stop polling when closing modal
+                          if (pollInterval) {
+                            clearInterval(pollInterval)
+                            setPollInterval(null)
+                          }
+                          setAutoCheckingPayment(false)
+                          setPollCount(0)
+                          setShowSuccessState(false)
+                          setSuccessCredits(0)
+                          setShowPaymentModal(false)
+                          setPaymentResponse(null)
+                        }}
                         className="w-full px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200"
                       >
                         Fechar

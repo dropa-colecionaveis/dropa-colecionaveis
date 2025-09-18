@@ -174,9 +174,10 @@ export default function CardPaymentForm({
 
     try {
       // Create MercadoPago instance with explicit configuration
-      console.log('🔧 Initializing Mercado Pago with key:', 'TEST-4467ab04-8a8c-4eae-86dd-bdfe1fd08350')
+      const publicKey = process.env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY || 'APP_USR-5e121b09-e8c6-4932-8084-a7b412fe5519'
+      console.log('🔧 Initializing Mercado Pago with key:', publicKey)
       
-      const mp = new window.MercadoPago('TEST-4467ab04-8a8c-4eae-86dd-bdfe1fd08350', {
+      const mp = new window.MercadoPago(publicKey, {
         locale: 'pt-BR'
       })
 

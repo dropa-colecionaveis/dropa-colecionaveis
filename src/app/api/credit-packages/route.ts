@@ -31,7 +31,8 @@ export async function GET() {
       dbId: pkg.id, // ID real do banco para referência
       credits: pkg.credits,
       price: pkg.price,
-      popular: pkg.isPopular
+      popular: pkg.isPopular,
+      isPopular: pkg.isPopular // Adicionar ambos os campos para compatibilidade
     }))
 
     const response = NextResponse.json({ packages: formattedPackages })
