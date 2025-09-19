@@ -57,7 +57,7 @@ export default function PurchaseCredits() {
         
         // Selecionar o pacote popular por padrão
         console.log('🔍 Pacotes carregados:', packages)
-        const popularPackage = packages.find(pkg => pkg.isPopular)
+        const popularPackage = packages.find((pkg: CreditPackage) => pkg.isPopular)
         console.log('📦 Pacote popular encontrado:', popularPackage)
         
         if (popularPackage) {
@@ -79,7 +79,7 @@ export default function PurchaseCredits() {
         ]
         setCreditPackages(fallbackPackages)
         // Selecionar o pacote popular no fallback também
-        const popularFallback = fallbackPackages.find(pkg => pkg.popular)
+        const popularFallback = fallbackPackages.find((pkg: any) => pkg.popular)
         setSelectedPackage(popularFallback || fallbackPackages[0])
       }
     } catch (error) {
@@ -94,7 +94,7 @@ export default function PurchaseCredits() {
       ]
       setCreditPackages(fallbackPackages)
       // Selecionar o pacote popular no catch também
-      const popularCatch = fallbackPackages.find(pkg => pkg.popular)
+      const popularCatch = fallbackPackages.find((pkg: any) => pkg.popular)
       setSelectedPackage(popularCatch || fallbackPackages[0])
     } finally {
       setPackagesLoading(false)
@@ -316,7 +316,7 @@ export default function PurchaseCredits() {
           setAutoCheckingPayment(false)
           
           // Update payment response to show success state
-          setPaymentResponse(prev => prev ? { ...prev, status: 'APPROVED' } : null)
+          setPaymentResponse((prev: PaymentResponse | null) => prev ? { ...prev, status: 'APPROVED' } : null)
           
           // Show integrated success state instead of alert
           setSuccessCredits(payment.credits || selectedPackage?.credits || 0)
@@ -329,7 +329,7 @@ export default function PurchaseCredits() {
           clearInterval(newPollInterval)
           setPollInterval(null)
           setAutoCheckingPayment(false)
-          setPaymentResponse(prev => prev ? { ...prev, status: payment.status } : null)
+          setPaymentResponse((prev: PaymentResponse | null) => prev ? { ...prev, status: payment.status } : null)
           
           setTimeout(() => {
             alert(`❌ Pagamento ${payment.status.toLowerCase()}. ${payment.failureReason || ''}`)
