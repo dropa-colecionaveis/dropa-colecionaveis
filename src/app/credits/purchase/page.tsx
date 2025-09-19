@@ -57,7 +57,7 @@ export default function PurchaseCredits() {
         
         // Selecionar o pacote popular por padrão
         console.log('🔍 Pacotes carregados:', packages)
-        const popularPackage = packages.find((pkg: CreditPackage) => pkg.isPopular)
+        const popularPackage = packages.find((pkg: CreditPackage) => pkg.popular)
         console.log('📦 Pacote popular encontrado:', popularPackage)
         
         if (popularPackage) {
