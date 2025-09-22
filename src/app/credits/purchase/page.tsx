@@ -651,11 +651,21 @@ export default function PurchaseCredits() {
             </div>
           </div>
 
-          {/* Back to Dashboard */}
-          <div className="text-center">
-            <Link href="/dashboard" className="text-gray-400 hover:text-white transition duration-200">
-              ← Voltar ao Dashboard
-            </Link>
+          {/* Navigation Links */}
+          <div className="text-center space-y-4">
+            <div>
+              <Link 
+                href="/payments/history" 
+                className="inline-flex items-center px-6 py-3 bg-gray-700/50 hover:bg-gray-600/50 text-white rounded-lg transition-all duration-200 border border-gray-600/30 hover:border-gray-500/50"
+              >
+                📋 Ver Histórico de Pagamentos
+              </Link>
+            </div>
+            <div>
+              <Link href="/dashboard" className="text-gray-400 hover:text-white transition duration-200">
+                ← Voltar ao Dashboard
+              </Link>
+            </div>
           </div>
         </div>
       </main>
@@ -722,6 +732,21 @@ export default function PurchaseCredits() {
               <div className="flex items-center space-x-3">
                 <span className="text-lg w-5 flex justify-center">💰</span>
                 <span>Comprar Créditos</span>
+              </div>
+            </button>
+
+            {/* Payment History */}
+            <button
+              data-menu-item
+              onClick={(e) => {
+                e.stopPropagation()
+                window.location.href = '/payments/history'
+              }}
+              className="block w-full text-left px-3 py-2.5 hover:bg-white/10 rounded-lg transition-colors duration-200 text-gray-300 hover:text-white cursor-pointer"
+            >
+              <div className="flex items-center space-x-3">
+                <span className="text-lg w-5 flex justify-center">📋</span>
+                <span>Histórico de Pagamentos</span>
               </div>
             </button>
 

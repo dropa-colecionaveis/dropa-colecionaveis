@@ -411,9 +411,8 @@ export async function POST(req: NextRequest) {
     // FINAL SOLUTION: Detect test environment and simulate payment
     let response
     
-    // Check if we're in development with test cards
-    const isTestEnvironment = process.env.NODE_ENV === 'development' || 
-                              process.env.MERCADO_PAGO_ACCESS_TOKEN?.includes('TEST')
+    // Check if we're in development with test cards (force production mode)
+    const isTestEnvironment = process.env.MERCADO_PAGO_ACCESS_TOKEN?.includes('TEST') || false
     
     // Official Mercado Pago test cards (Brazil)
     const testCards = [
