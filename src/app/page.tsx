@@ -118,7 +118,7 @@ export default function Home() {
             <div className="relative group">
               <Image
                 src="/Dropa!.png"
-                alt="Dropa! - Colecionáveis Digitais"
+                alt="Dropa! - Colecionáveis Digitais TESTE"
                 width={350}
                 height={175}
                 className="drop-shadow-2xl group-hover:scale-105 transition-transform duration-300 filter drop-shadow-[0_0_20px_rgba(168,85,247,0.4)] group-hover:drop-shadow-[0_0_30px_rgba(168,85,247,0.6)]"
