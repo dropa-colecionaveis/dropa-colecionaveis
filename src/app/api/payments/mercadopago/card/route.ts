@@ -521,65 +521,60 @@ export async function POST(req: NextRequest) {
         amount: response.transaction_amount
       })
     } else {
-      // Real payment attempt (will likely fail with current token issue)
+      // Real payment attempt - use direct card approach as primary method
       try {
-        console.log('🚀 ATTEMPTING REAL PAYMENT...')
-        response = await createPaymentPureREST(minimalTokenWithRef)
-        console.log('🎉 REAL PAYMENT SUCCEEDED!')
-      } catch (pureRestError) {
-        const errorMessage = pureRestError instanceof Error ? pureRestError.message : String(pureRestError)
-        console.log('❌ Real payment failed:', errorMessage)
+        console.log('🚀 ATTEMPTING DIRECT CARD PAYMENT (PRIMARY METHOD)...')
         
-        // Check if it's the expiration_month error specifically
-        if (errorMessage.includes('expiration_month')) {
-          console.log('🔧 Detected expiration_month error - attempting alternative approach...')
-          
-          // Try with card data instead of token approach
-          const directCardData = {
-            transaction_amount: creditPackage.price,
-            installments: body.installments,
-            external_reference: externalReference,
-            payment_method_id: paymentMethodId || 'master',
-            payer: {
-              email: user.email,
+        // Use direct card data as primary approach
+        const directCardData = {
+          transaction_amount: creditPackage.price,
+          installments: body.installments,
+          external_reference: externalReference,
+          payment_method_id: paymentMethodId || 'master',
+          payer: {
+            email: user.email,
+            identification: {
+              type: body.identificationType || 'CPF',
+              number: cleanedIdentificationNumber || '12345678909'
+            }
+          },
+          card: {
+            number: body.cardNumber?.replace(/\s/g, '') || '5031433215406351',
+            expiration_month: parseInt(body.expirationMonth?.toString() || '12'),
+            expiration_year: parseInt(body.expirationYear?.toString() || '2025'),
+            security_code: body.securityCode || '123',
+            cardholder: {
+              name: body.cardholderName || 'APRO',
               identification: {
                 type: body.identificationType || 'CPF',
                 number: cleanedIdentificationNumber || '12345678909'
               }
-            },
-            card: {
-              number: body.cardNumber?.replace(/\s/g, '') || '5031433215406351',
-              expiration_month: parseInt(body.expirationMonth?.toString() || '12'),
-              expiration_year: parseInt(body.expirationYear?.toString() || '2025'),
-              security_code: body.securityCode || '123',
-              cardholder: {
-                name: body.cardholderName || 'APRO',
-                identification: {
-                  type: body.identificationType || 'CPF',
-                  number: cleanedIdentificationNumber || '12345678909'
-                }
-              }
-            },
-            description: `${creditPackage.credits} créditos - Colecionáveis Platform`
-          }
-          
-          console.log('🔧 Trying direct card data approach:', { 
-            ...directCardData, 
-            card: { ...directCardData.card, number: '[HIDDEN]' }
-          })
-          
-          try {
-            response = await createPaymentPureREST(directCardData)
-            console.log('✅ Direct card approach succeeded!')
-          } catch (directCardError) {
-            console.log('❌ Direct card approach also failed:', directCardError)
-            throw pureRestError // Throw original error
-          }
-        } else {
-          // For production, you'd want to throw the error
-          // For development, let's provide helpful error
+            }
+          },
+          description: `${creditPackage.credits} créditos - Colecionáveis Platform`
+        }
+        
+        console.log('🔧 Direct card payment data:', { 
+          ...directCardData, 
+          card: { ...directCardData.card, number: '[HIDDEN]', security_code: '[HIDDEN]' }
+        })
+        
+        response = await createPaymentPureREST(directCardData)
+        console.log('🎉 DIRECT CARD PAYMENT SUCCEEDED!')
+        
+      } catch (directCardError) {
+        const errorMessage = directCardError instanceof Error ? directCardError.message : String(directCardError)
+        console.log('❌ Direct card payment failed:', errorMessage)
+        
+        // Fallback to token approach if direct card fails
+        console.log('🔄 Falling back to token approach...')
+        try {
+          response = await createPaymentPureREST(minimalTokenWithRef)
+          console.log('✅ Token fallback succeeded!')
+        } catch (tokenError) {
+          console.log('❌ Token fallback also failed:', tokenError)
           console.log('💡 DEVELOPMENT TIP: Use test card 5031433215406351 with name APRO and CVV 123')
-          throw pureRestError
+          throw directCardError // Throw original direct card error
         }
       }
     }
