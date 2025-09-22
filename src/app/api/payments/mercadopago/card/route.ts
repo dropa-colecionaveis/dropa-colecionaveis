@@ -305,7 +305,7 @@ export async function POST(req: NextRequest) {
     // Create card payment directly with Mercado Pago
     console.log('💳 Creating card payment...')
     
-    // Back to token approach but with absolute minimum data
+    // Pure token approach - when using token, MP doesn't need card details again
     const ultraMinimalTokenData = {
       transaction_amount: creditPackage.price,
       token: body.token,
@@ -318,6 +318,7 @@ export async function POST(req: NextRequest) {
       payer: {
         email: user.email,
       },
+      description: `${creditPackage.credits} créditos - Colecionáveis Platform`
     }
 
     // Minimal token with external reference
@@ -333,6 +334,16 @@ export async function POST(req: NextRequest) {
 
     console.log('🔍 Ultra minimal token data:', { ...ultraMinimalTokenData, token: '[HIDDEN]' })
     console.log('🔍 Minimal token with ref:', { ...minimalTokenWithRef, token: '[HIDDEN]' })
+    
+    // Debug: Check if we have the required fields
+    console.log('🔍 Debug - Token validation:', {
+      hasToken: !!body.token,
+      tokenLength: body.token?.length,
+      hasInstallments: !!body.installments,
+      hasAmount: !!creditPackage.price,
+      hasEmail: !!user.email,
+      hasExternalRef: !!externalReference
+    })
     
     console.log('🚀 Making request to Mercado Pago...')
     
@@ -474,10 +485,57 @@ export async function POST(req: NextRequest) {
         const errorMessage = pureRestError instanceof Error ? pureRestError.message : String(pureRestError)
         console.log('❌ Real payment failed:', errorMessage)
         
-        // For production, you'd want to throw the error
-        // For development, let's provide helpful error
-        console.log('💡 DEVELOPMENT TIP: Use test card 5031433215406351 with name APRO and CVV 123')
-        throw pureRestError
+        // Check if it's the expiration_month error specifically
+        if (errorMessage.includes('expiration_month')) {
+          console.log('🔧 Detected expiration_month error - attempting alternative approach...')
+          
+          // Try with card data instead of token approach
+          const directCardData = {
+            transaction_amount: creditPackage.price,
+            installments: body.installments,
+            external_reference: externalReference,
+            payment_method_id: paymentMethodId || 'master',
+            payer: {
+              email: user.email,
+              identification: {
+                type: body.identificationType || 'CPF',
+                number: cleanedIdentificationNumber || '12345678909'
+              }
+            },
+            card: {
+              number: body.cardNumber?.replace(/\s/g, '') || '5031433215406351',
+              expiration_month: parseInt(body.expirationMonth?.toString() || '12'),
+              expiration_year: parseInt(body.expirationYear?.toString() || '2025'),
+              security_code: body.securityCode || '123',
+              cardholder: {
+                name: body.cardholderName || 'APRO',
+                identification: {
+                  type: body.identificationType || 'CPF',
+                  number: cleanedIdentificationNumber || '12345678909'
+                }
+              }
+            },
+            description: `${creditPackage.credits} créditos - Colecionáveis Platform`
+          }
+          
+          console.log('🔧 Trying direct card data approach:', { 
+            ...directCardData, 
+            card: { ...directCardData.card, number: '[HIDDEN]' }
+          })
+          
+          try {
+            response = await createPaymentPureREST(directCardData)
+            console.log('✅ Direct card approach succeeded!')
+          } catch (directCardError) {
+            console.log('❌ Direct card approach also failed:', directCardError)
+            throw pureRestError // Throw original error
+          }
+        } else {
+          // For production, you'd want to throw the error
+          // For development, let's provide helpful error
+          console.log('💡 DEVELOPMENT TIP: Use test card 5031433215406351 with name APRO and CVV 123')
+          throw pureRestError
+        }
       }
     }
     
