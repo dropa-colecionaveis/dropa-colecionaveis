@@ -525,9 +525,10 @@ export async function POST(req: NextRequest) {
       try {
         console.log('🚀 ATTEMPTING DIRECT CARD PAYMENT (PRIMARY METHOD)...')
         
-        // Use direct card data as primary approach
+        // Use proper token-based approach (standard Mercado Pago format)
         const directCardData = {
           transaction_amount: creditPackage.price,
+          token: body.token,
           installments: body.installments,
           external_reference: externalReference,
           payment_method_id: paymentMethodId || 'master',
@@ -538,25 +539,12 @@ export async function POST(req: NextRequest) {
               number: cleanedIdentificationNumber || '12345678909'
             }
           },
-          card: {
-            number: body.cardNumber?.replace(/\s/g, '') || '5031433215406351',
-            expiration_month: parseInt(body.expirationMonth?.toString() || '12'),
-            expiration_year: parseInt(body.expirationYear?.toString() || '2025'),
-            security_code: body.securityCode || '123',
-            cardholder: {
-              name: body.cardholderName || 'APRO',
-              identification: {
-                type: body.identificationType || 'CPF',
-                number: cleanedIdentificationNumber || '12345678909'
-              }
-            }
-          },
           description: `${creditPackage.credits} créditos - Colecionáveis Platform`
         }
         
         console.log('🔧 Direct card payment data:', { 
           ...directCardData, 
-          card: { ...directCardData.card, number: '[HIDDEN]', security_code: '[HIDDEN]' }
+          token: '[HIDDEN]'
         })
         
         response = await createPaymentPureREST(directCardData)
