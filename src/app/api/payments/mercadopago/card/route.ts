@@ -521,17 +521,16 @@ export async function POST(req: NextRequest) {
         amount: response.transaction_amount
       })
     } else {
-      // Real payment attempt - use direct card approach as primary method
+      // Real payment attempt - try SDK first, then REST API
       try {
-        console.log('🚀 ATTEMPTING DIRECT CARD PAYMENT (PRIMARY METHOD)...')
+        console.log('🚀 ATTEMPTING SDK PAYMENT (PRIMARY METHOD)...')
         
-        // Use proper token-based approach (standard Mercado Pago format)
-        const directCardData = {
+        // Use Mercado Pago SDK instead of pure REST
+        const sdkPaymentData = {
           transaction_amount: creditPackage.price,
           token: body.token,
           installments: body.installments,
           external_reference: externalReference,
-          payment_method_id: paymentMethodId || 'master',
           payer: {
             email: user.email,
             identification: {
@@ -542,27 +541,46 @@ export async function POST(req: NextRequest) {
           description: `${creditPackage.credits} créditos - Colecionáveis Platform`
         }
         
-        console.log('🔧 Direct card payment data:', { 
-          ...directCardData, 
+        console.log('🔧 SDK payment data:', { 
+          ...sdkPaymentData, 
           token: '[HIDDEN]'
         })
         
-        response = await createPaymentPureREST(directCardData)
-        console.log('🎉 DIRECT CARD PAYMENT SUCCEEDED!')
+        // Try using the official SDK
+        response = await payment.create({
+          body: sdkPaymentData
+        })
+        console.log('🎉 SDK PAYMENT SUCCEEDED!')
         
-      } catch (directCardError) {
-        const errorMessage = directCardError instanceof Error ? directCardError.message : String(directCardError)
-        console.log('❌ Direct card payment failed:', errorMessage)
+      } catch (sdkError) {
+        const errorMessage = sdkError instanceof Error ? sdkError.message : String(sdkError)
+        console.log('❌ SDK payment failed:', errorMessage)
         
-        // Fallback to token approach if direct card fails
-        console.log('🔄 Falling back to token approach...')
+        // Fallback to REST API
+        console.log('🔄 Falling back to REST API...')
         try {
-          response = await createPaymentPureREST(minimalTokenWithRef)
-          console.log('✅ Token fallback succeeded!')
-        } catch (tokenError) {
-          console.log('❌ Token fallback also failed:', tokenError)
+          const restPaymentData = {
+            transaction_amount: creditPackage.price,
+            token: body.token,
+            installments: body.installments,
+            external_reference: externalReference,
+            payment_method_id: paymentMethodId || 'master',
+            payer: {
+              email: user.email,
+              identification: {
+                type: body.identificationType || 'CPF',
+                number: cleanedIdentificationNumber || '12345678909'
+              }
+            },
+            description: `${creditPackage.credits} créditos - Colecionáveis Platform`
+          }
+          
+          response = await createPaymentPureREST(restPaymentData)
+          console.log('✅ REST API fallback succeeded!')
+        } catch (restError) {
+          console.log('❌ REST API fallback also failed:', restError)
           console.log('💡 DEVELOPMENT TIP: Use test card 5031433215406351 with name APRO and CVV 123')
-          throw directCardError // Throw original direct card error
+          throw sdkError // Throw original SDK error
         }
       }
     }
