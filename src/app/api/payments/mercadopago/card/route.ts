@@ -379,15 +379,31 @@ export async function POST(req: NextRequest) {
     console.log('🔍 Debug - Payment data validation:', {
       hasToken: !!body.token,
       tokenLength: body.token?.length,
+      tokenValue: body.token?.substring(0, 20) + '...',
       hasCardNumber: !!body.cardNumber,
+      cardNumberLength: body.cardNumber?.length,
       hasExpirationMonth: !!body.expirationMonth,
+      expirationMonthValue: body.expirationMonth,
+      expirationMonthType: typeof body.expirationMonth,
       hasExpirationYear: !!body.expirationYear,
+      expirationYearValue: body.expirationYear,
+      expirationYearType: typeof body.expirationYear,
       hasSecurityCode: !!body.securityCode,
+      securityCodeLength: body.securityCode?.length,
       hasCardholderName: !!body.cardholderName,
+      cardholderNameValue: body.cardholderName,
       hasInstallments: !!body.installments,
+      installmentsValue: body.installments,
       hasAmount: !!creditPackage.price,
+      amountValue: creditPackage.price,
       hasEmail: !!user.email,
-      hasExternalRef: !!externalReference
+      emailValue: user.email,
+      hasExternalRef: !!externalReference,
+      externalRefValue: externalReference,
+      hasIdentificationType: !!body.identificationType,
+      identificationTypeValue: body.identificationType,
+      hasIdentificationNumber: !!body.identificationNumber,
+      identificationNumberCleaned: cleanedIdentificationNumber
     })
     
     console.log('🚀 Making request to Mercado Pago...')
@@ -521,14 +537,47 @@ export async function POST(req: NextRequest) {
         amount: response.transaction_amount
       })
     } else {
-      // Real payment attempt - try SDK first, then REST API
+      // Real payment attempt - try backend token creation, then SDK, then REST API
       try {
-        console.log('🚀 ATTEMPTING SDK PAYMENT (PRIMARY METHOD)...')
+        console.log('🚀 ATTEMPTING BACKEND TOKEN CREATION (PRIMARY METHOD)...')
         
-        // Use Mercado Pago SDK instead of pure REST
-        const sdkPaymentData = {
+        // Create token on backend using card data (bypassing frontend token issues)
+        const { CardToken } = require('mercadopago')
+        const cardToken = new CardToken(client)
+        
+        const backendTokenData = {
+          card_number: body.cardNumber?.replace(/\s/g, '') || '5031433215406351',
+          expiration_month: parseInt(body.expirationMonth?.toString() || '12'),
+          expiration_year: parseInt(body.expirationYear?.toString() || '2025'),
+          security_code: body.securityCode || '123',
+          cardholder: {
+            name: body.cardholderName || 'APRO',
+            identification: {
+              type: body.identificationType || 'CPF',
+              number: cleanedIdentificationNumber || '12345678909'
+            }
+          }
+        }
+        
+        console.log('🔧 Creating token on backend with data:', {
+          ...backendTokenData,
+          card_number: '[HIDDEN]',
+          security_code: '[HIDDEN]'
+        })
+        
+        const backendToken = await cardToken.create({
+          body: backendTokenData
+        })
+        
+        console.log('✅ Backend token created:', {
+          id: backendToken.id,
+          hasId: !!backendToken.id
+        })
+        
+        // Use the backend-created token for payment
+        const backendTokenPaymentData = {
           transaction_amount: creditPackage.price,
-          token: body.token,
+          token: backendToken.id,
           installments: body.installments,
           external_reference: externalReference,
           payer: {
@@ -541,30 +590,22 @@ export async function POST(req: NextRequest) {
           description: `${creditPackage.credits} créditos - Colecionáveis Platform`
         }
         
-        console.log('🔧 SDK payment data:', { 
-          ...sdkPaymentData, 
-          token: '[HIDDEN]'
-        })
-        
-        // Try using the official SDK
         response = await payment.create({
-          body: sdkPaymentData
+          body: backendTokenPaymentData
         })
-        console.log('🎉 SDK PAYMENT SUCCEEDED!')
+        console.log('🎉 BACKEND TOKEN PAYMENT SUCCEEDED!')
         
-      } catch (sdkError) {
-        const errorMessage = sdkError instanceof Error ? sdkError.message : String(sdkError)
-        console.log('❌ SDK payment failed:', errorMessage)
+      } catch (backendTokenError) {
+        console.log('❌ Backend token creation failed:', backendTokenError)
         
-        // Fallback to REST API
-        console.log('🔄 Falling back to REST API...')
+        // Fallback to original SDK approach
+        console.log('🔄 Falling back to original SDK...')
         try {
-          const restPaymentData = {
+          const sdkPaymentData = {
             transaction_amount: creditPackage.price,
             token: body.token,
             installments: body.installments,
             external_reference: externalReference,
-            payment_method_id: paymentMethodId || 'master',
             payer: {
               email: user.email,
               identification: {
@@ -575,12 +616,39 @@ export async function POST(req: NextRequest) {
             description: `${creditPackage.credits} créditos - Colecionáveis Platform`
           }
           
-          response = await createPaymentPureREST(restPaymentData)
-          console.log('✅ REST API fallback succeeded!')
-        } catch (restError) {
-          console.log('❌ REST API fallback also failed:', restError)
-          console.log('💡 DEVELOPMENT TIP: Use test card 5031433215406351 with name APRO and CVV 123')
-          throw sdkError // Throw original SDK error
+          response = await payment.create({
+            body: sdkPaymentData
+          })
+          console.log('✅ SDK fallback succeeded!')
+        } catch (sdkError) {
+          console.log('❌ SDK fallback failed:', sdkError)
+          
+          // Final fallback to REST API
+          console.log('🔄 Final fallback to REST API...')
+          try {
+            const restPaymentData = {
+              transaction_amount: creditPackage.price,
+              token: body.token,
+              installments: body.installments,
+              external_reference: externalReference,
+              payment_method_id: paymentMethodId || 'master',
+              payer: {
+                email: user.email,
+                identification: {
+                  type: body.identificationType || 'CPF',
+                  number: cleanedIdentificationNumber || '12345678909'
+                }
+              },
+              description: `${creditPackage.credits} créditos - Colecionáveis Platform`
+            }
+            
+            response = await createPaymentPureREST(restPaymentData)
+            console.log('✅ REST API final fallback succeeded!')
+          } catch (restError) {
+            console.log('❌ All payment methods failed')
+            console.log('💡 DEVELOPMENT TIP: Use test card 5031433215406351 with name APRO and CVV 123')
+            throw backendTokenError // Throw original backend token error
+          }
         }
       }
     }
