@@ -44,6 +44,15 @@ export default function PurchaseCredits() {
     }
   }, [status, router])
 
+  // Cleanup polling interval on component unmount
+  useEffect(() => {
+    return () => {
+      if (pollInterval) {
+        clearInterval(pollInterval)
+      }
+    }
+  }, [pollInterval])
+
   const loadCreditPackages = async () => {
     try {
       setPackagesLoading(true)
@@ -258,44 +267,6 @@ export default function PurchaseCredits() {
     }
   }
 
-  const checkPaymentStatus = async (paymentId: string) => {
-    setCheckingPaymentStatus(true)
-    
-    try {
-      const response = await fetch('/api/payments/check-status', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ paymentId }),
-      })
-
-      const result = await response.json()
-
-      if (result.success) {
-        if (result.status === 'APPROVED') {
-          alert(`🎉 ${result.message}`)
-          await fetchUserProfile() // Refresh user profile
-          setShowPaymentModal(false)
-          setPaymentResponse(null)
-          router.push('/dashboard')
-        } else if (result.status === 'REJECTED' || result.status === 'CANCELLED') {
-          alert(`❌ ${result.message}`)
-          setShowPaymentModal(false)
-          setPaymentResponse(null)
-        } else {
-          alert('⏳ Pagamento ainda está pendente. Tente novamente em alguns instantes.')
-        }
-      } else {
-        alert(result.error || 'Erro ao verificar status do pagamento')
-      }
-    } catch (error) {
-      console.error('Error checking payment status:', error)
-      alert('Erro ao verificar status do pagamento')
-    } finally {
-      setCheckingPaymentStatus(false)
-    }
-  }
 
   const startPaymentPolling = (paymentId: string) => {
     // Clear any existing polling
@@ -305,9 +276,34 @@ export default function PurchaseCredits() {
     
     const newPollInterval = setInterval(async () => {
       try {
-        setPollCount(prev => prev + 1)
+        setPollCount(prev => {
+          const newCount = prev + 1
+          
+          // Stop polling after 10 minutes (200 polls * 3 seconds)
+          if (newCount >= 200) {
+            clearInterval(newPollInterval)
+            setPollInterval(null)
+            setAutoCheckingPayment(false)
+            alert('⏰ Tempo limite excedido. Você pode verificar o status manualmente.')
+            return newCount
+          }
+          
+          return newCount
+        })
+        
         const response = await fetch(`/api/payments/status?paymentId=${paymentId}`)
+        
+        if (!response.ok) {
+          console.error(`Failed to check payment status: ${response.status}`)
+          return
+        }
+        
         const payment = await response.json()
+
+        if (payment.error) {
+          console.error('Payment status error:', payment.error)
+          return
+        }
 
         if (payment.status === 'APPROVED') {
           clearInterval(newPollInterval)
@@ -321,8 +317,10 @@ export default function PurchaseCredits() {
           setSuccessCredits(payment.credits || selectedPackage?.credits || 0)
           setShowSuccessState(true)
           
-          // Refresh user profile in background
+          // Refresh user profile in background to update credits display
           await fetchUserProfile()
+          
+          console.log(`✅ Payment approved! ${payment.credits} credits added to account`)
           
         } else if (['REJECTED', 'CANCELLED', 'EXPIRED'].includes(payment.status)) {
           clearInterval(newPollInterval)
@@ -336,13 +334,6 @@ export default function PurchaseCredits() {
           }, 1000)
         }
         
-        // Stop polling after 10 minutes (200 polls * 3 seconds)
-        if (pollCount >= 200) {
-          clearInterval(newPollInterval)
-          setPollInterval(null)
-          setAutoCheckingPayment(false)
-          alert('⏰ Tempo limite excedido. Você pode verificar o status manualmente.')
-        }
       } catch (error) {
         console.error('Error polling payment status:', error)
       }
@@ -354,6 +345,64 @@ export default function PurchaseCredits() {
     setTimeout(() => {
       clearInterval(newPollInterval)
     }, 15 * 60 * 1000)
+  }
+
+  const checkPaymentStatus = async (paymentId: string) => {
+    setCheckingPaymentStatus(true)
+    try {
+      console.log('🔍 Checking payment status manually...')
+      const response = await fetch(`/api/payments/status?paymentId=${paymentId}`)
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+      
+      const payment = await response.json()
+
+      if (payment.error) {
+        alert(`❌ Erro: ${payment.error}`)
+        return
+      }
+
+      if (payment.status === 'APPROVED') {
+        // Payment was approved!
+        setPaymentResponse((prev: PaymentResponse | null) => prev ? { ...prev, status: 'APPROVED' } : null)
+        setSuccessCredits(payment.credits || selectedPackage?.credits || 0)
+        setShowSuccessState(true)
+        
+        // Refresh user profile to update credits display
+        await fetchUserProfile()
+        
+        console.log(`✅ Manual check: Payment approved! ${payment.credits} credits added`)
+        
+        // Stop any auto-checking
+        if (pollInterval) {
+          clearInterval(pollInterval)
+          setPollInterval(null)
+        }
+        setAutoCheckingPayment(false)
+        
+      } else if (['REJECTED', 'CANCELLED', 'EXPIRED'].includes(payment.status)) {
+        setPaymentResponse((prev: PaymentResponse | null) => prev ? { ...prev, status: payment.status } : null)
+        alert(`❌ Pagamento ${payment.status.toLowerCase()}. ${payment.failureReason || ''}`)
+        
+        // Stop auto-checking for failed payments
+        if (pollInterval) {
+          clearInterval(pollInterval)
+          setPollInterval(null)
+        }
+        setAutoCheckingPayment(false)
+        
+      } else {
+        console.log(`ℹ️ Payment still ${payment.status}`)
+        alert('⏳ Pagamento ainda está pendente. Continue aguardando ou tente novamente em alguns instantes.')
+      }
+    } catch (error) {
+      console.error('Error checking payment status:', error)
+      alert('Erro ao verificar status do pagamento. Tente novamente.')
+    } finally {
+      setCheckingPaymentStatus(false)
+    }
   }
 
   const handleLogout = () => {
