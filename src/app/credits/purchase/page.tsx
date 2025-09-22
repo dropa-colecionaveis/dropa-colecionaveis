@@ -8,7 +8,6 @@ import Image from 'next/image'
 import { useUserRankings } from '@/hooks/useUserRankings'
 // Removido import direto - vamos usar API route
 import type { PaymentMethod, PaymentResponse, CreditPackage } from '@/types/payments'
-import CardPaymentForm from '@/components/payments/CardPaymentForm'
 import { HeaderStatsSkeleton, CreditPackagesSkeleton } from '@/components/SkeletonLoader'
 
 export default function PurchaseCredits() {
@@ -564,22 +563,15 @@ export default function PurchaseCredits() {
           {/* Payment Methods */}
           <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 mb-8">
             <h3 className="text-xl font-semibold text-white mb-4">Métodos de Pagamento</h3>
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="flex justify-center">
               <button
                 onClick={() => handlePaymentMethodSelect('PIX')}
-                className="border border-gray-600 rounded-lg p-4 text-center text-white cursor-pointer hover:bg-white/10 hover:border-green-400 transition duration-200 group"
+                className="border border-gray-600 rounded-lg p-6 text-center text-white cursor-pointer hover:bg-white/10 hover:border-green-400 transition duration-200 group max-w-xs w-full"
               >
-                <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">📱</div>
-                <div className="font-semibold">PIX</div>
-                <div className="text-sm text-gray-300 mt-1">Pagamento instantâneo</div>
-              </button>
-              <button
-                onClick={() => handlePaymentMethodSelect('CREDIT_CARD')}
-                className="border border-gray-600 rounded-lg p-4 text-center text-white cursor-pointer hover:bg-white/10 hover:border-blue-400 transition duration-200 group"
-              >
-                <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">💳</div>
-                <div className="font-semibold">Cartão de Crédito</div>
-                <div className="text-sm text-gray-300 mt-1">Até 3x sem juros</div>
+                <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">📱</div>
+                <div className="font-semibold text-lg">PIX</div>
+                <div className="text-sm text-gray-300 mt-2">Pagamento instantâneo e seguro</div>
+                <div className="text-xs text-green-400 mt-1">✓ Aprovação imediata</div>
               </button>
             </div>
           </div>
@@ -595,29 +587,23 @@ export default function PurchaseCredits() {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="grid md:grid-cols-3 gap-6 mb-6">
               <div className="bg-black/20 rounded-xl p-4 text-center border border-green-500/20">
-                <div className="text-3xl mb-2">🔒</div>
-                <h4 className="text-green-400 font-semibold mb-1">SSL 256-bit</h4>
-                <p className="text-xs text-gray-300">Certificado de segurança avançado</p>
+                <div className="text-4xl mb-3">📱</div>
+                <h4 className="text-green-400 font-semibold mb-2">PIX Instantâneo</h4>
+                <p className="text-sm text-gray-300">Sistema oficial do Banco Central do Brasil</p>
               </div>
               
               <div className="bg-black/20 rounded-xl p-4 text-center border border-blue-500/20">
-                <div className="text-3xl mb-2">🏦</div>
-                <h4 className="text-blue-400 font-semibold mb-1">MercadoPago</h4>
-                <p className="text-xs text-gray-300">Processamento seguro e confiável</p>
+                <div className="text-4xl mb-3">🔒</div>
+                <h4 className="text-blue-400 font-semibold mb-2">100% Seguro</h4>
+                <p className="text-sm text-gray-300">Criptografia de ponta a ponta</p>
               </div>
 
               <div className="bg-black/20 rounded-xl p-4 text-center border border-purple-500/20">
-                <div className="text-3xl mb-2">🛡️</div>
-                <h4 className="text-purple-400 font-semibold mb-1">PCI DSS</h4>
-                <p className="text-xs text-gray-300">Padrão de segurança da indústria</p>
-              </div>
-
-              <div className="bg-black/20 rounded-xl p-4 text-center border border-yellow-500/20">
-                <div className="text-3xl mb-2">⚡</div>
-                <h4 className="text-yellow-400 font-semibold mb-1">PIX Instantâneo</h4>
-                <p className="text-xs text-gray-300">Pagamento aprovado em segundos</p>
+                <div className="text-4xl mb-3">⚡</div>
+                <h4 className="text-purple-400 font-semibold mb-2">Aprovação Imediata</h4>
+                <p className="text-sm text-gray-300">Créditos liberados instantaneamente</p>
               </div>
             </div>
 
@@ -629,11 +615,11 @@ export default function PurchaseCredits() {
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className="text-green-400">✓</span>
-                  <span>Não armazenamos cartões</span>
+                  <span>Sistema do Banco Central</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className="text-green-400">✓</span>
-                  <span>Transações monitoradas</span>
+                  <span>Aprovação instantânea</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className="text-green-400">✓</span>
@@ -644,28 +630,18 @@ export default function PurchaseCredits() {
 
             <div className="text-center mt-4">
               <p className="text-xs text-gray-400">
-                🔐 Todos os pagamentos são processados através de conexão segura com certificado SSL.
+                📱 PIX é o sistema de pagamentos instantâneos do Banco Central do Brasil.
                 <br />
-                Seus dados pessoais e financeiros estão protegidos e nunca são compartilhados com terceiros.
+                Pagamento 100% seguro, rápido e sem taxas adicionais.
               </p>
             </div>
           </div>
 
           {/* Navigation Links */}
-          <div className="text-center space-y-4">
-            <div>
-              <Link 
-                href="/payments/history" 
-                className="inline-flex items-center px-6 py-3 bg-gray-700/50 hover:bg-gray-600/50 text-white rounded-lg transition-all duration-200 border border-gray-600/30 hover:border-gray-500/50"
-              >
-                📋 Ver Histórico de Pagamentos
-              </Link>
-            </div>
-            <div>
-              <Link href="/dashboard" className="text-gray-400 hover:text-white transition duration-200">
-                ← Voltar ao Dashboard
-              </Link>
-            </div>
+          <div className="text-center">
+            <Link href="/dashboard" className="text-gray-400 hover:text-white transition duration-200">
+              ← Voltar ao Dashboard
+            </Link>
           </div>
         </div>
       </main>
@@ -735,20 +711,6 @@ export default function PurchaseCredits() {
               </div>
             </button>
 
-            {/* Payment History */}
-            <button
-              data-menu-item
-              onClick={(e) => {
-                e.stopPropagation()
-                window.location.href = '/payments/history'
-              }}
-              className="block w-full text-left px-3 py-2.5 hover:bg-white/10 rounded-lg transition-colors duration-200 text-gray-300 hover:text-white cursor-pointer"
-            >
-              <div className="flex items-center space-x-3">
-                <span className="text-lg w-5 flex justify-center">📋</span>
-                <span>Histórico de Pagamentos</span>
-              </div>
-            </button>
 
             {/* Pack Store */}
             <button
@@ -878,12 +840,9 @@ export default function PurchaseCredits() {
       {/* Payment Modal */}
       {showPaymentModal && selectedPaymentMethod && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start justify-center z-50 p-4 pt-8 overflow-y-auto">
-          <div className={`bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 w-full mx-4 border border-gray-700 shadow-2xl mb-8 max-h-[85vh] overflow-y-auto ${
-            selectedPaymentMethod === 'CREDIT_CARD' ? 'max-w-lg' : 'max-w-md'
-          }`}>
-            {selectedPaymentMethod === 'PIX' ? (
-              // PIX Payment Modal
-              <div>
+          <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 w-full mx-4 border border-gray-700 shadow-2xl mb-8 max-h-[85vh] overflow-y-auto max-w-md">
+            {/* PIX Payment Modal */}
+            <div>
                 <h3 className="text-xl font-bold text-white mb-4 flex items-center">
                   📱 <span className="ml-2">Pagamento PIX</span>
                 </h3>
@@ -1068,32 +1027,7 @@ export default function PurchaseCredits() {
                   </div>
                 )}
               </div>
-            ) : (
-              // Credit Card Payment Modal
-              <div>
-                <h3 className="text-xl font-bold text-white mb-4 flex items-center">
-                  💳 <span className="ml-2">Cartão de Crédito</span>
-                </h3>
-
-                <div className="bg-gradient-to-r from-purple-600/30 to-blue-600/30 backdrop-blur-sm rounded-xl p-4 mb-6 border border-purple-400/30">
-                  <div className="text-white text-center">
-                    <div className="text-lg font-semibold mb-2">{selectedPackage?.credits} créditos</div>
-                    <div className="text-2xl font-bold text-green-400">R$ {selectedPackage?.price}</div>
-                  </div>
-                </div>
-
-                {selectedPackage && (
-                  <CardPaymentForm
-                    amount={selectedPackage.price}
-                    credits={selectedPackage.credits}
-                    packageId={selectedPackage.id}
-                    onPayment={handleCardPayment}
-                    onCancel={() => setShowPaymentModal(false)}
-                    loading={loading}
-                  />
-                )}
-              </div>
-            )}
+            }
           </div>
         </div>
       )}

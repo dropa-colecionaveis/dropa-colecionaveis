@@ -1,4 +1,4 @@
-export type PaymentMethod = 'PIX' | 'CREDIT_CARD' | 'DEBIT_CARD'
+export type PaymentMethod = 'PIX'
 
 export type PaymentStatus = 
   | 'PENDING' 
@@ -18,12 +18,6 @@ export interface CreditPackage {
 export interface PaymentRequest {
   packageId: number
   method: PaymentMethod
-  // Card specific fields
-  token?: string
-  installments?: number
-  // User identification (optional)
-  identificationType?: string
-  identificationNumber?: string
 }
 
 export interface PaymentResponse {
@@ -35,10 +29,6 @@ export interface PaymentResponse {
   pixQrCodeBase64?: string
   pixCopyPaste?: string
   expirationDate?: string
-  // Card specific fields
-  installments?: number
-  paymentMethodId?: string
-  statusDetail?: string
   // Common fields
   amount: number
   credits: number
