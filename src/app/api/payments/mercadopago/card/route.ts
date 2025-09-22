@@ -305,8 +305,41 @@ export async function POST(req: NextRequest) {
     // Create card payment directly with Mercado Pago
     console.log('💳 Creating card payment...')
     
-    // Pure token approach - when using token, MP doesn't need card details again
-    const ultraMinimalTokenData = {
+    // Direct card approach (more reliable than token approach for API calls)
+    const directCardPaymentData = {
+      transaction_amount: creditPackage.price,
+      installments: body.installments,
+      external_reference: externalReference,
+      payment_method_id: paymentMethodId || 'master',
+      // Enable webhook in production
+      ...(process.env.NEXTAUTH_URL && !process.env.NEXTAUTH_URL.includes('localhost') && {
+        notification_url: `${process.env.NEXTAUTH_URL}/api/payments/mercadopago/webhook`,
+      }),
+      payer: {
+        email: user.email,
+        identification: {
+          type: body.identificationType || 'CPF',
+          number: cleanedIdentificationNumber || '12345678909'
+        }
+      },
+      card: {
+        number: body.cardNumber?.replace(/\s/g, '') || '5031433215406351',
+        expiration_month: parseInt(body.expirationMonth?.toString() || '12'),
+        expiration_year: parseInt(body.expirationYear?.toString() || '2025'),
+        security_code: body.securityCode || '123',
+        cardholder: {
+          name: body.cardholderName || 'APRO',
+          identification: {
+            type: body.identificationType || 'CPF',
+            number: cleanedIdentificationNumber || '12345678909'
+          }
+        }
+      },
+      description: `${creditPackage.credits} créditos - Colecionáveis Platform`
+    }
+
+    // Fallback token approach (if direct fails)
+    const tokenPaymentData = {
       transaction_amount: creditPackage.price,
       token: body.token,
       installments: body.installments,
@@ -321,7 +354,7 @@ export async function POST(req: NextRequest) {
       description: `${creditPackage.credits} créditos - Colecionáveis Platform`
     }
 
-    // Minimal token with external reference
+    // Minimal token with external reference and required card fields
     const minimalTokenWithRef = {
       transaction_amount: creditPackage.price,
       token: body.token,
@@ -329,16 +362,31 @@ export async function POST(req: NextRequest) {
       external_reference: externalReference,
       payer: {
         email: user.email,
+        identification: {
+          type: body.identificationType || 'CPF',
+          number: cleanedIdentificationNumber || '12345678909'
+        }
       },
+      // Add missing required fields that MP expects even with token
+      expiration_month: parseInt(body.expirationMonth?.toString() || '12'),
+      expiration_year: parseInt(body.expirationYear?.toString() || '2025')
     }
 
-    console.log('🔍 Ultra minimal token data:', { ...ultraMinimalTokenData, token: '[HIDDEN]' })
-    console.log('🔍 Minimal token with ref:', { ...minimalTokenWithRef, token: '[HIDDEN]' })
+    console.log('🔍 Direct card payment data:', { 
+      ...directCardPaymentData, 
+      card: { ...directCardPaymentData.card, number: '[HIDDEN]' }
+    })
+    console.log('🔍 Token payment data:', { ...tokenPaymentData, token: '[HIDDEN]' })
     
     // Debug: Check if we have the required fields
-    console.log('🔍 Debug - Token validation:', {
+    console.log('🔍 Debug - Payment data validation:', {
       hasToken: !!body.token,
       tokenLength: body.token?.length,
+      hasCardNumber: !!body.cardNumber,
+      hasExpirationMonth: !!body.expirationMonth,
+      hasExpirationYear: !!body.expirationYear,
+      hasSecurityCode: !!body.securityCode,
+      hasCardholderName: !!body.cardholderName,
       hasInstallments: !!body.installments,
       hasAmount: !!creditPackage.price,
       hasEmail: !!user.email,
@@ -479,7 +527,7 @@ export async function POST(req: NextRequest) {
       // Real payment attempt (will likely fail with current token issue)
       try {
         console.log('🚀 ATTEMPTING REAL PAYMENT...')
-        response = await createPaymentPureREST(ultraMinimalTokenData)
+        response = await createPaymentPureREST(minimalTokenWithRef)
         console.log('🎉 REAL PAYMENT SUCCEEDED!')
       } catch (pureRestError) {
         const errorMessage = pureRestError instanceof Error ? pureRestError.message : String(pureRestError)
