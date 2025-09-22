@@ -1027,7 +1027,6 @@ export default function PurchaseCredits() {
                   </div>
                 )}
               </div>
-            }
           </div>
         </div>
       )}
