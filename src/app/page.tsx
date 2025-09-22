@@ -129,7 +129,7 @@ export default function Home() {
           </div>
 
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-blue-400 to-indigo-400 mb-6 leading-tight px-2 sm:px-4 text-center">
-            COLECIONÁVEIS DIGITAIS
+            COLECIONÁVEIS DIGITAIS TESTE
           </h1>
 
           <p className="text-2xl text-gray-300 mb-8 max-w-3xl mx-auto font-light">
