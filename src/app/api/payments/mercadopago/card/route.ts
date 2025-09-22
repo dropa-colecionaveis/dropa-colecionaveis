@@ -354,7 +354,7 @@ export async function POST(req: NextRequest) {
       description: `${creditPackage.credits} créditos - Colecionáveis Platform`
     }
 
-    // Minimal token with external reference and required card fields
+    // Minimal token with external reference (expiration fields not needed with token)
     const minimalTokenWithRef = {
       transaction_amount: creditPackage.price,
       token: body.token,
@@ -366,10 +366,7 @@ export async function POST(req: NextRequest) {
           type: body.identificationType || 'CPF',
           number: cleanedIdentificationNumber || '12345678909'
         }
-      },
-      // Add missing required fields that MP expects even with token
-      expiration_month: parseInt(body.expirationMonth?.toString() || '12'),
-      expiration_year: parseInt(body.expirationYear?.toString() || '2025')
+      }
     }
 
     console.log('🔍 Direct card payment data:', { 
