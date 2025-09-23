@@ -129,7 +129,7 @@ export default function Home() {
           </div>
 
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-blue-400 to-indigo-400 mb-6 leading-tight px-2 sm:px-4 text-center">
-            COLECIONÁVEIS DIGITAIS TESTE
+            COLECIONÁVEIS DIGITAIS
           </h1>
 
           <p className="text-2xl text-gray-300 mb-8 max-w-3xl mx-auto font-light">
@@ -217,7 +217,7 @@ export default function Home() {
               <h4 className="text-lg font-bold text-white mb-3">🎯 Fornecimento Ultra-Limitado</h4>
               <p className="text-gray-300 text-sm leading-relaxed">
                 Apenas <span className="text-yellow-400 font-bold">5.005 itens especiais</span> da Genesis Collection poderão ser coletados por
-                TODOS os jogadores do mundo: <span className="text-pink-400">5 únicos + 5.000 limitados</span>. Quando atingir este limite, <span className="text-red-400 font-semibold">NUNCA MAIS</span>
+                TODOS os jogadores do mundo: <span className="text-pink-400">5 únicos + 5.000 limitados</span>. Quando atingir este limite, <span className="text-red-400 font-semibold">NUNCA MAIS </span>
                 serão distribuídos novos itens especiais desta coleção histórica.
               </p>
             </div>
@@ -363,21 +363,21 @@ export default function Home() {
             <div className="bg-gradient-to-br from-amber-800/30 to-yellow-800/30 backdrop-blur-sm rounded-lg p-4 border border-amber-500/30 hover:scale-105 transition-transform">
               <div className="text-3xl mb-2">🥉</div>
               <h4 className="text-amber-300 font-semibold">Bronze</h4>
-              <p className="text-xs text-amber-400 mb-2">28 créditos</p>
+              <p className="text-xs text-amber-400 mb-2">25 créditos</p>
               <div className="text-xs text-gray-300 space-y-1">
-                <div>🟡 Lendário: 0.5%</div>
-                <div>🟣 Épico: 2%</div>
-                <div>🔵 Raro: 8%</div>
+                <div>🟡 Lendário: 1%</div>
+                <div>🟣 Épico: 4%</div>
+                <div>🔵 Raro: 10%</div>
               </div>
             </div>
 
             <div className="bg-gradient-to-br from-gray-700/30 to-slate-700/30 backdrop-blur-sm rounded-lg p-4 border border-gray-500/30 hover:scale-105 transition-transform">
               <div className="text-3xl mb-2">🥈</div>
               <h4 className="text-gray-300 font-semibold">Prata</h4>
-              <p className="text-xs text-gray-400 mb-2">45 créditos</p>
+              <p className="text-xs text-gray-400 mb-2">35 créditos</p>
               <div className="text-xs text-gray-300 space-y-1">
                 <div>🟡 Lendário: 1%</div>
-                <div>🟣 Épico: 4%</div>
+                <div>🟣 Épico: 6%</div>
                 <div>🔵 Raro: 15%</div>
               </div>
             </div>
@@ -385,33 +385,33 @@ export default function Home() {
             <div className="bg-gradient-to-br from-yellow-600/30 to-orange-600/30 backdrop-blur-sm rounded-lg p-4 border border-yellow-500/30 hover:scale-105 transition-transform">
               <div className="text-3xl mb-2">🥇</div>
               <h4 className="text-yellow-300 font-semibold">Ouro</h4>
-              <p className="text-xs text-yellow-400 mb-2">75 créditos</p>
+              <p className="text-xs text-yellow-400 mb-2">45 créditos</p>
               <div className="text-xs text-gray-300 space-y-1">
-                <div>🟡 Lendário: 2%</div>
-                <div>🟣 Épico: 6%</div>
-                <div>🔵 Raro: 22%</div>
+                <div>🟡 Lendário: 3%</div>
+                <div>🟣 Épico: 10%</div>
+                <div>🔵 Raro: 20%</div>
               </div>
             </div>
 
             <div className="bg-gradient-to-br from-slate-600/30 to-zinc-600/30 backdrop-blur-sm rounded-lg p-4 border border-slate-500/30 hover:scale-105 transition-transform">
               <div className="text-3xl mb-2">💎</div>
               <h4 className="text-slate-300 font-semibold">Platina</h4>
-              <p className="text-xs text-slate-400 mb-2">140 créditos</p>
+              <p className="text-xs text-slate-400 mb-2">75 créditos</p>
               <div className="text-xs text-gray-300 space-y-1">
-                <div>🟡 Lendário: 3%</div>
-                <div>🟣 Épico: 12%</div>
-                <div>🔵 Raro: 25%</div>
+                <div>🟡 Lendário: 7%</div>
+                <div>🟣 Épico: 15%</div>
+                <div>🔵 Raro: 28%</div>
               </div>
             </div>
 
             <div className="bg-gradient-to-br from-cyan-600/30 to-blue-700/30 backdrop-blur-sm rounded-lg p-4 border border-cyan-500/30 hover:scale-105 transition-transform animate-pulse">
               <div className="text-3xl mb-2">💠</div>
               <h4 className="text-cyan-300 font-semibold">Diamante</h4>
-              <p className="text-xs text-cyan-400 mb-2">280 créditos</p>
+              <p className="text-xs text-cyan-400 mb-2">95 créditos</p>
               <div className="text-xs text-gray-300 space-y-1">
-                <div>🟡 Lendário: 5%</div>
-                <div>🟣 Épico: 20%</div>
-                <div>🔵 Raro: 30%</div>
+                <div>🟡 Lendário: 10%</div>
+                <div>🟣 Épico: 30%</div>
+                <div>🔵 Raro: 28%</div>
               </div>
             </div>
           </div>

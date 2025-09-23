@@ -601,19 +601,22 @@ export default function Collections() {
               </div>
             </button>
 
-            <button
-              data-menu-item
-              onClick={(e) => {
-                e.stopPropagation()
-                window.location.href = '/collections'
-              }}
-              className="block w-full text-left px-3 py-2.5 hover:bg-white/10 rounded-lg transition-colors duration-200 text-gray-300 hover:text-white cursor-pointer"
-            >
-              <div className="flex items-center space-x-3">
-                <span className="text-lg w-5 flex justify-center">📚</span>
-                <span>Coleções</span>
-              </div>
-            </button>
+            {/* Collections - Hidden when already on collections page */}
+            {typeof window !== 'undefined' && window.location.pathname !== '/collections' && (
+              <button
+                data-menu-item
+                onClick={(e) => {
+                  e.stopPropagation()
+                  window.location.href = '/collections'
+                }}
+                className="block w-full text-left px-3 py-2.5 hover:bg-white/10 rounded-lg transition-colors duration-200 text-gray-300 hover:text-white cursor-pointer"
+              >
+                <div className="flex items-center space-x-3">
+                  <span className="text-lg w-5 flex justify-center">📚</span>
+                  <span>Coleções</span>
+                </div>
+              </button>
+            )}
 
             <button
               data-menu-item
