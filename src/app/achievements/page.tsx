@@ -69,6 +69,7 @@ export default function Achievements() {
     { key: 'EXPLORER', name: 'Explorador', icon: '🎁' },
     { key: 'TRADER', name: 'Comerciante', icon: '💰' },
     { key: 'MILESTONE', name: 'Marcos', icon: '🌟' },
+    { key: 'DAILY', name: 'Diárias', icon: '📅' },
     { key: 'SPECIAL', name: 'Especiais', icon: '✨' }
   ]
 
@@ -216,6 +217,7 @@ export default function Achievements() {
       'EXPLORER': 'bg-purple-500/20 border-purple-500/30 text-purple-400',
       'TRADER': 'bg-green-500/20 border-green-500/30 text-green-400',
       'MILESTONE': 'bg-yellow-500/20 border-yellow-500/30 text-yellow-400',
+      'DAILY': 'bg-orange-500/20 border-orange-500/30 text-orange-400',
       'SPECIAL': 'bg-pink-500/20 border-pink-500/30 text-pink-400'
     }
     return colors[category as keyof typeof colors] || 'bg-gray-500/20 border-gray-500/30 text-gray-400'
