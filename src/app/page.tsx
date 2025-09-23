@@ -327,11 +327,11 @@ export default function Home() {
           <div className="max-w-5xl mx-auto">
             <div className="grid md:grid-cols-3 gap-8">
               <div className="bg-gradient-to-br from-green-900/40 to-emerald-900/40 backdrop-blur-lg rounded-2xl p-8 border border-green-500/30">
-                <div className="text-6xl mb-4">💳</div>
+                <div className="text-6xl mb-4">💰</div>
                 <h3 className="text-2xl font-bold text-green-400 mb-4">1. Compre Créditos</h3>
                 <p className="text-gray-300 leading-relaxed">
-                  Adquira créditos com <span className="text-green-400 font-semibold">dinheiro real</span> através de PIX e
-                  cartão de crédito. Seus créditos são a moeda do universo Dropa!
+                  Adquira créditos com <span className="text-green-400 font-semibold">dinheiro real</span> através de PIX.
+                  Seus créditos são a moeda do universo Dropa!
                 </p>
               </div>
 
