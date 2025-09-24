@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { selectRandomRarity, getCachedItemsByRarity } from '@/lib/rarity-system'
 import { userStatsService } from '@/lib/user-stats'
-import PackScarcityIntegration from '@/lib/pack-scarcity-integration'
+import PackScarcityIntegration, { AvailableItem } from '@/lib/pack-scarcity-integration'
 
 export async function POST(req: Request) {
   try {
@@ -60,7 +60,7 @@ export async function POST(req: Request) {
     const effectivePackType = pack.customType ? pack.customType.name : pack.type || 'UNKNOWN'
 
     // Usar o novo sistema de escassez para obter itens disponíveis
-    let availableItems = []
+    let availableItems: AvailableItem[] = []
     
     try {
       availableItems = await PackScarcityIntegration.getAvailableItemsForPack({
