@@ -81,11 +81,11 @@ export async function GET() {
     // Calcular multiplicador de bonus baseado no streak
     let bonusMultiplier = 1
     if (currentStreak >= 31) {
-      bonusMultiplier = 1.3 // 30% bonus
+      bonusMultiplier = 1.25 // 25% bonus
     } else if (currentStreak >= 15) {
-      bonusMultiplier = 1.2 // 20% bonus
+      bonusMultiplier = 1.15 // 15% bonus
     } else if (currentStreak >= 8) {
-      bonusMultiplier = 1.1 // 10% bonus
+      bonusMultiplier = 1.08 // 8% bonus
     }
 
     // Preparar próximas recompensas (preview dos próximos 7 dias)

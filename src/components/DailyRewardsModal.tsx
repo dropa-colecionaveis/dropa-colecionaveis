@@ -410,7 +410,7 @@ export default function DailyRewardsModal({ isOpen, onClose, onRewardClaimed }: 
               </div>
               
               <div className="text-[10px] sm:text-xs text-gray-400 text-center mt-3 px-2">
-                💡 Mantenha seu streak para multiplicadores de bonus: 8+ dias (+10%), 15+ dias (+20%), 31+ dias (+30%)
+                💡 Mantenha seu streak para multiplicadores de bonus: 8+ dias (+8%), 15+ dias (+15%), 31+ dias (+25%)
               </div>
             </div>
 

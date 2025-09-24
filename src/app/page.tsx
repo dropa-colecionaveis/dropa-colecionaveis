@@ -447,7 +447,7 @@ export default function Home() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Valor:</span>
-                  <span className="text-green-400 font-semibold">450 créditos</span>
+                  <span className="text-green-400 font-semibold">500 créditos</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Status:</span>
@@ -499,7 +499,7 @@ export default function Home() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Valor:</span>
-                  <span className="text-green-400 font-semibold">480 créditos</span>
+                  <span className="text-green-400 font-semibold">500 créditos</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Status:</span>
@@ -525,7 +525,7 @@ export default function Home() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Valor:</span>
-                  <span className="text-green-400 font-semibold">450 créditos</span>
+                  <span className="text-green-400 font-semibold">500 créditos</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Status:</span>
@@ -551,7 +551,7 @@ export default function Home() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Valor:</span>
-                  <span className="text-green-400 font-semibold">400 créditos</span>
+                  <span className="text-green-400 font-semibold">500 créditos</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Status:</span>
@@ -583,7 +583,7 @@ export default function Home() {
             </h2>
             <p className="text-xl text-gray-300 mb-8 leading-relaxed">
               Outros jogadores já estão se cadastrando e comprando créditos para serem os primeiros a abrir pacotes.
-              <span className="text-red-400 font-semibold">Cada segundo que passa é uma chance perdida</span> de ser o único proprietário
+              <span className="text-red-400 font-semibold"> Cada segundo que passa é uma chance perdida</span> de ser o único proprietário
               de um tesouro digital histórico.
             </p>
 
@@ -732,6 +732,136 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="relative z-10 bg-black/30 backdrop-blur-lg border-t border-white/10">
+        <div className="container mx-auto px-4 sm:px-6 py-12">
+          <div className="grid md:grid-cols-4 gap-8">
+            {/* Brand Section */}
+            <div className="md:col-span-1">
+              <div className="flex items-center mb-4">
+                <Image
+                  src="/Dropa!.png"
+                  alt="Dropa!"
+                  width={120}
+                  height={60}
+                  className="filter drop-shadow-lg"
+                />
+              </div>
+              <p className="text-gray-300 text-sm leading-relaxed mb-4">
+                A plataforma definitiva de colecionáveis digitais com sistema revolucionário de escassez multi-camadas.
+              </p>
+              <div className="flex space-x-4">
+                <div className="text-purple-400 hover:text-purple-300 transition-colors cursor-pointer">
+                  <span className="text-2xl">📧</span>
+                </div>
+                <div className="text-blue-400 hover:text-blue-300 transition-colors cursor-pointer">
+                  <span className="text-2xl">💬</span>
+                </div>
+                <div className="text-green-400 hover:text-green-300 transition-colors cursor-pointer">
+                  <span className="text-2xl">📱</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Plataforma */}
+            <div>
+              <h4 className="text-white font-bold mb-4">Plataforma</h4>
+              <ul className="space-y-2">
+                <li>
+                  <Link href="/auth/signup" className="text-gray-300 hover:text-white transition-colors text-sm">
+                    Criar Conta
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/auth/signin" className="text-gray-300 hover:text-white transition-colors text-sm">
+                    Fazer Login
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/como-funciona" className="text-purple-400 hover:text-purple-300 transition-colors text-sm font-semibold">
+                    📚 Como Funciona
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/marketplace" className="text-gray-300 hover:text-white transition-colors text-sm">
+                    🛒 Marketplace
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Coleções */}
+            <div>
+              <h4 className="text-white font-bold mb-4">Coleções</h4>
+              <ul className="space-y-2">
+                <li>
+                  <span className="text-yellow-400 text-sm font-semibold">
+                    🌟 Genesis Collection
+                  </span>
+                </li>
+                <li>
+                  <span className="text-gray-300 text-sm">
+                    110 Itens
+                  </span>
+                </li>
+                <li>
+                  <span className="text-pink-400 text-sm">
+                    5 Itens Únicos Mundiais
+                  </span>
+                </li>
+                <li>
+                  <span className="text-gray-500 text-sm">
+                    Futuras Coleções (A ser anunciado)
+                  </span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Suporte & Legal */}
+            <div>
+              <h4 className="text-white font-bold mb-4">Suporte & Legal</h4>
+              <ul className="space-y-2">
+                <li>
+                  <Link href="/terms" className="text-gray-500 text-sm cursor-not-allowed">
+                    Termos de Uso (Em Breve)
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/privacy" className="text-gray-500 text-sm cursor-not-allowed">
+                    Política de Privacidade (Em Breve)
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/suporte" className="text-gray-300 hover:text-white transition-colors text-sm">
+                    📚 Central de Ajuda
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/contato" className="text-gray-300 hover:text-white transition-colors text-sm">
+                    📞 Contato
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Bottom Section */}
+          <div className="border-t border-white/10 mt-8 pt-8">
+            <div className="flex flex-col md:flex-row justify-between items-center">
+              <div className="text-gray-400 text-sm mb-4 md:mb-0">
+                <p>© 2025 Dropa! Colecionáveis Digitais. Todos os direitos reservados.</p>
+              </div>
+              <div className="flex items-center space-x-4 text-sm text-gray-400">
+                <span>•</span>
+                <Link href="/como-funciona" className="text-purple-400 hover:text-purple-300 transition-colors font-medium">
+                  📖 Entenda o Sistema
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

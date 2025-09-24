@@ -459,18 +459,19 @@ export default function Achievements() {
                   <span className="mr-2">📂</span>
                   Categorias
                 </h4>
-                <div className="flex flex-wrap gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
                   {categories.map(category => (
                     <button
                       key={category.key}
                       onClick={() => setSelectedCategory(category.key)}
-                      className={`px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold border-2 ${
+                      className={`px-4 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold border-2 text-sm sm:text-base ${
                         selectedCategory === category.key
                           ? 'bg-gradient-to-r from-white/30 to-gray-300/30 text-white border-white/50'
                           : 'bg-white/10 text-gray-300 hover:bg-white/20 border-transparent'
                       }`}
                     >
-                      {category.icon} {category.name}
+                      <span className="block sm:inline">{category.icon}</span>
+                      <span className="block sm:inline sm:ml-1 text-xs sm:text-sm">{category.name}</span>
                     </button>
                   ))}
                 </div>
@@ -482,7 +483,7 @@ export default function Achievements() {
                   <span className="mr-2">📊</span>
                   Status
                 </h4>
-                <div className="flex flex-wrap gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {[
                     { key: 'ALL', name: 'Todas', icon: '🌏' },
                     { key: 'COMPLETED', name: 'Completas', icon: '✅' },
@@ -491,7 +492,7 @@ export default function Achievements() {
                     <button
                       key={f.key}
                       onClick={() => setFilter(f.key as typeof filter)}
-                      className={`px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold border-2 ${
+                      className={`px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold border-2 text-center ${
                         filter === f.key
                           ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-purple-400/50'
                           : 'bg-white/10 text-gray-300 hover:bg-white/20 border-transparent'
