@@ -51,10 +51,36 @@ export function clearItemsCache(): void {
   cacheTimestamp = 0
 }
 
-export function selectRandomRarity(probabilities: PackProbability[]): Rarity {
+export function selectRandomRarity(probabilities: any[]): Rarity {
+  // Verificar se existem probabilidades válidas
+  if (!probabilities || probabilities.length === 0) {
+    console.error('No probabilities provided, defaulting to COMUM')
+    return Rarity.COMUM
+  }
+
+  // Filtrar probabilidades válidas e converter para formato esperado
+  const validProbs = probabilities
+    .filter(prob => prob.percentage != null && prob.percentage > 0)
+    .map(prob => ({
+      rarity: prob.rarity,
+      percentage: Number(prob.percentage)
+    }))
+
+  // Se não há probabilidades válidas, usar fallback
+  if (validProbs.length === 0) {
+    console.error('No valid probabilities found, defaulting to COMUM')
+    return Rarity.COMUM
+  }
+
   // Normalize probabilities to ensure they add up to 100
-  const total = probabilities.reduce((sum, prob) => sum + prob.percentage, 0)
-  const normalizedProbs = probabilities.map(prob => ({
+  const total = validProbs.reduce((sum, prob) => sum + prob.percentage, 0)
+  
+  if (total === 0) {
+    console.error('Total probability is 0, defaulting to COMUM')
+    return Rarity.COMUM
+  }
+
+  const normalizedProbs = validProbs.map(prob => ({
     ...prob,
     percentage: (prob.percentage / total) * 100
   }))

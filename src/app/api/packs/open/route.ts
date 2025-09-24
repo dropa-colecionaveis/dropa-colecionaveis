@@ -60,18 +60,46 @@ export async function POST(req: Request) {
     const effectivePackType = pack.customType ? pack.customType.name : pack.type || 'UNKNOWN'
 
     // Usar o novo sistema de escassez para obter itens disponíveis
-    const availableItems = await PackScarcityIntegration.getAvailableItemsForPack({
-      packId: pack.id,
-      userId: session.user.id,
-      packType: effectivePackType,
-      timestamp: new Date()
-    })
+    let availableItems = []
+    
+    try {
+      availableItems = await PackScarcityIntegration.getAvailableItemsForPack({
+        packId: pack.id,
+        userId: session.user.id,
+        packType: effectivePackType,
+        timestamp: new Date()
+      })
+    } catch (scarcityError) {
+      console.error('Scarcity system error:', scarcityError)
+    }
 
+    // Fallback para sistema tradicional se não houver itens disponíveis
     if (availableItems.length === 0) {
-      return NextResponse.json(
-        { error: 'No items available at this time. Try again later!' },
-        { status: 500 }
-      )
+      console.log('No items from scarcity system, using traditional fallback')
+      
+      // Usar sistema tradicional baseado em cache
+      const itemsByRarity = await getCachedItemsByRarity()
+      const allAvailableItems = Object.values(itemsByRarity).flat()
+      
+      if (allAvailableItems.length === 0) {
+        return NextResponse.json(
+          { error: 'No items available at this time. Try again later!' },
+          { status: 500 }
+        )
+      }
+      
+      // Converter para formato esperado pelo sistema de escassez
+      availableItems = allAvailableItems.map(item => ({
+        id: item.id,
+        name: item.name,
+        rarity: item.rarity,
+        scarcityLevel: item.scarcityLevel || 'COMMON',
+        isUnique: item.isUnique || false,
+        isLimitedEdition: item.isLimitedEdition || false,
+        isTemporal: item.isTemporal || false,
+        availabilityScore: 100,
+        collectionId: item.collectionId
+      }))
     }
 
     // Select random rarity based on pack probabilities

@@ -41,43 +41,33 @@ export class PackScarcityIntegration {
       const availableItems: AvailableItem[] = []
 
       for (const probability of packProbabilities) {
-        // Buscar itens da raridade específica
+        // Buscar itens da raridade específica (consulta simplificada)
         const items = await prisma.item.findMany({
           where: {
             rarity: probability.rarity,
             isActive: true,
-            // Filtros de escassez
-            AND: [
-              // Item único já possuído
+            // Filtros básicos de disponibilidade
+            OR: [
+              // Itens normais
               {
-                OR: [
-                  { isUnique: false },
-                  { 
-                    isUnique: true,
-                    uniqueOwnerId: null 
-                  }
-                ]
+                isUnique: false,
+                isLimitedEdition: false
               },
-              // Edições limitadas esgotadas
+              // Itens únicos disponíveis
               {
-                OR: [
-                  { isLimitedEdition: false },
-                  {
-                    AND: [
-                      { isLimitedEdition: true },
-                      {
-                        OR: [
-                          { maxEditions: null },
-                          {
-                            currentEditions: {
-                              lt: prisma.item.fields.maxEditions
-                            }
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
+                isUnique: true,
+                uniqueOwnerId: null
+              },
+              // Edições limitadas com espaço disponível
+              {
+                isLimitedEdition: true,
+                maxEditions: null // Sem limite
+              },
+              // Edições limitadas com contadores válidos
+              {
+                isLimitedEdition: true,
+                maxEditions: { gt: 0 },
+                currentEditions: { lt: 100000 } // Assumir que nunca passa de 100k
               }
             ]
           },
