@@ -627,6 +627,160 @@ export default function Dashboard() {
         </div>
       </main>
 
+      {/* Footer */}
+      <footer className="relative z-10 bg-black/30 backdrop-blur-lg border-t border-white/10 mt-16">
+        <div className="container mx-auto px-4 sm:px-6 py-12">
+          <div className="grid md:grid-cols-4 gap-8">
+            {/* Brand Section */}
+            <div className="md:col-span-1">
+              <div className="flex items-center mb-4">
+                <Image
+                  src="/Dropa!.png"
+                  alt="Dropa!"
+                  width={120}
+                  height={60}
+                  className="filter drop-shadow-lg"
+                />
+              </div>
+              <p className="text-gray-300 text-sm leading-relaxed mb-4">
+                A plataforma definitiva de colecionáveis digitais com sistema revolucionário de escassez multi-camadas.
+              </p>
+              <div className="flex space-x-4">
+                <div className="text-purple-400 hover:text-purple-300 transition-colors cursor-pointer">
+                  <span className="text-2xl">📧</span>
+                </div>
+                <div className="text-blue-400 hover:text-blue-300 transition-colors cursor-pointer">
+                  <span className="text-2xl">💬</span>
+                </div>
+                <div className="text-green-400 hover:text-green-300 transition-colors cursor-pointer">
+                  <span className="text-2xl">📱</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Navegação Rápida */}
+            <div>
+              <h4 className="text-white font-bold mb-4">Navegação</h4>
+              <ul className="space-y-2">
+                <li>
+                  <Link href="/packs" className="text-gray-300 hover:text-white transition-colors text-sm">
+                    📦 Loja de Pacotes
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/inventory" className="text-gray-300 hover:text-white transition-colors text-sm">
+                    🎒 Meu Inventário
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/collections" className="text-gray-300 hover:text-white transition-colors text-sm">
+                    📚 Minhas Coleções
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/marketplace" className="text-gray-300 hover:text-white transition-colors text-sm">
+                    🛒 Marketplace
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/achievements" className="text-gray-300 hover:text-white transition-colors text-sm">
+                    🏆 Conquistas
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/rankings" className="text-gray-300 hover:text-white transition-colors text-sm">
+                    📊 Rankings
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Conta & Perfil */}
+            <div>
+              <h4 className="text-white font-bold mb-4">Minha Conta</h4>
+              <ul className="space-y-2">
+                <li>
+                  <Link href="/profile/settings" className="text-gray-300 hover:text-white transition-colors text-sm">
+                    👤 Configurações do Perfil
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/credits/purchase" className="text-gray-300 hover:text-white transition-colors text-sm">
+                    💰 Comprar Créditos
+                  </Link>
+                </li>
+                <li>
+                  <span className="text-yellow-400 text-sm font-semibold">
+                    🌟 Genesis Collection
+                  </span>
+                </li>
+                <li>
+                  <span className="text-gray-300 text-sm">
+                    110 Itens Disponíveis
+                  </span>
+                </li>
+                <li>
+                  <span className="text-pink-400 text-sm">
+                    5 Itens Únicos Mundiais
+                  </span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Suporte & Legal */}
+            <div>
+              <h4 className="text-white font-bold mb-4">Suporte & Legal</h4>
+              <ul className="space-y-2">
+                <li>
+                  <Link href="/terms" className="text-gray-500 text-sm cursor-not-allowed">
+                    Termos de Uso (Em Breve)
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/privacy" className="text-gray-500 text-sm cursor-not-allowed">
+                    Política de Privacidade (Em Breve)
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/suporte" className="text-gray-300 hover:text-white transition-colors text-sm">
+                    📚 Central de Ajuda
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/contato" className="text-gray-300 hover:text-white transition-colors text-sm">
+                    📞 Contato
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/como-funciona" className="text-purple-400 hover:text-purple-300 transition-colors text-sm font-semibold">
+                    📖 Como Funciona
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Bottom Section */}
+          <div className="border-t border-white/10 mt-8 pt-8">
+            <div className="flex flex-col md:flex-row justify-between items-center">
+              <div className="text-gray-400 text-sm mb-4 md:mb-0">
+                <p>© 2025 Dropa! Colecionáveis Digitais. Todos os direitos reservados.</p>
+              </div>
+              <div className="flex items-center space-x-4 text-sm text-gray-400">
+                <span>•</span>
+                <span className="text-purple-400">
+                  Logado como: {session?.user?.name || session?.user?.email}
+                </span>
+                <span>•</span>
+                <span className="text-green-400">
+                  {userProfile?.credits || 0} créditos disponíveis
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
+
       {/* Fixed Position User Menu */}
       {showUserMenu && (
         <div
