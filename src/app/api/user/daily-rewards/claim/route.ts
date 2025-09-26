@@ -195,7 +195,8 @@ export async function POST() {
         rewardDetails,
         currentStreak,
         cycleDay,
-        bonusMultiplier
+        bonusCredits,
+        bonusTier
       }
     })
 
