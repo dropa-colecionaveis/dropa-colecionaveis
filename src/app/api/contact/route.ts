@@ -177,47 +177,34 @@ export async function POST(request: NextRequest) {
       </div>
     `
 
-    // LIMITAÇÃO RESEND GRATUITO: Aplicar mesma lógica do sistema de reset
-    const authorizedEmails = [
-      'mateusreys@gmail.com', // Email da conta Resend
-      'dropacolecionaveis@gmail.com' // Email oficial da equipe
-    ]
+    // LIMITAÇÃO RESEND GRATUITO: Só pode enviar para mateusreys@gmail.com
+    const authorizedEmail = 'mateusreys@gmail.com' // Único email autorizado no Resend
+    
+    // SEMPRE enviar para o email autorizado, mas identificar os destinatários originais
+    const teamEmail = authorizedEmail // Sempre mateusreys@gmail.com
+    const userEmail = authorizedEmail // Sempre mateusreys@gmail.com
 
-    const teamEmail = authorizedEmails.includes('dropacolecionaveis@gmail.com') 
-      ? 'dropacolecionaveis@gmail.com' 
-      : 'mateusreys@gmail.com'
-
-    const userEmail = authorizedEmails.includes(email) ? email : 'mateusreys@gmail.com'
-
-    // Modificar assuntos se redirecionado
-    let teamSubject = `[${priorityInfo.icon} ${priorityInfo.name}] ${categoryInfo.icon} ${categoryInfo.name}: ${subject}`
-    let userSubject = '✅ Mensagem recebida - Dropa! Colecionáveis'
-    let modifiedTeamEmail = emailToTeam
-    let modifiedUserEmail = emailToUser
-
-    if (teamEmail !== 'dropacolecionaveis@gmail.com') {
-      teamSubject = `[PARA: dropacolecionaveis@gmail.com] ${teamSubject}`
-      modifiedTeamEmail = `
-        <div style="background: #ff6b6b; color: white; padding: 15px; margin-bottom: 20px; border-radius: 10px; text-align: center;">
-          <h3>⚠️ RESEND LIMITAÇÃO - PLANO GRATUITO</h3>
-          <p><strong>Este email era para:</strong> dropacolecionaveis@gmail.com</p>
-          <p>Encaminhe manualmente ou configure domínio verificado</p>
-        </div>
-        ${emailToTeam}
-      `
-    }
-
-    if (userEmail !== email) {
-      userSubject = `[PARA: ${email}] ${userSubject}`
-      modifiedUserEmail = `
-        <div style="background: #ff6b6b; color: white; padding: 15px; margin-bottom: 20px; border-radius: 10px; text-align: center;">
-          <h3>⚠️ RESEND LIMITAÇÃO - PLANO GRATUITO</h3>
-          <p><strong>Este email era para:</strong> ${email}</p>
-          <p>Encaminhe manualmente ou configure domínio verificado</p>
-        </div>
-        ${emailToUser}
-      `
-    }
+    // SEMPRE modificar assuntos e conteúdo para identificar destinatários originais
+    let teamSubject = `[EQUIPE: dropacolecionaveis@gmail.com] [${priorityInfo.icon} ${priorityInfo.name}] ${categoryInfo.icon} ${categoryInfo.name}: ${subject}`
+    let userSubject = `[USUÁRIO: ${email}] ✅ Mensagem recebida - Dropa! Colecionáveis`
+    
+    let modifiedTeamEmail = `
+      <div style="background: #3B82F6; color: white; padding: 15px; margin-bottom: 20px; border-radius: 10px; text-align: center;">
+        <h3>📧 EMAIL PARA EQUIPE</h3>
+        <p><strong>Destinatário original:</strong> dropacolecionaveis@gmail.com</p>
+        <p><strong>Remetente do formulário:</strong> ${name} (${email})</p>
+      </div>
+      ${emailToTeam}
+    `
+    
+    let modifiedUserEmail = `
+      <div style="background: #10B981; color: white; padding: 15px; margin-bottom: 20px; border-radius: 10px; text-align: center;">
+        <h3>✅ CONFIRMAÇÃO PARA USUÁRIO</h3>
+        <p><strong>Este email era para:</strong> ${email}</p>
+        <p><strong>Status:</strong> Mensagem recebida com sucesso!</p>
+      </div>
+      ${emailToUser}
+    `
 
     // Enviar email para a equipe
     const emailToTeamResult = await resend.emails.send({
