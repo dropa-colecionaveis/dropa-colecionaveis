@@ -27,10 +27,10 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       console.log('❌ Usuário não encontrado:', email)
-      // Por segurança, não revelamos se o email existe ou não
+      // Informar claramente que o email não existe
       return NextResponse.json(
-        { message: 'Se o email existir em nossa base, você receberá um link de recuperação.' },
-        { status: 200 }
+        { error: 'Email não encontrado em nossa base de dados. Verifique se digitou corretamente ou cadastre-se primeiro.' },
+        { status: 404 }
       )
     }
 

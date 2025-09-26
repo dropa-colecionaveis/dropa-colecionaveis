@@ -28,9 +28,14 @@ export default function ForgotPassword() {
       const data = await response.json()
 
       if (response.ok) {
-        setMessage('Email de recuperação enviado! Verifique sua caixa de entrada.')
+        setMessage('Email de recuperação enviado! Verifique sua caixa de entrada e pasta de spam.')
       } else {
-        setError(data.error || 'Algo deu errado. Tente novamente.')
+        // Mensagens específicas baseadas no status
+        if (response.status === 404) {
+          setError(data.error || 'Email não encontrado. Verifique se digitou corretamente ou crie uma conta primeiro.')
+        } else {
+          setError(data.error || 'Algo deu errado. Tente novamente em alguns minutos.')
+        }
       }
     } catch (error) {
       setError('Erro ao enviar email. Tente novamente.')
@@ -156,6 +161,17 @@ export default function ForgotPassword() {
                   className="text-purple-400 hover:text-purple-300 font-semibold transition-colors duration-200 hover:underline"
                 >
                   Voltar ao login 🔙
+                </Link>
+              </p>
+              
+              {/* Link for registration when email not found */}
+              <p className="text-gray-300 mb-4">
+                Não tem conta ainda?{' '}
+                <Link 
+                  href="/auth/signup" 
+                  className="text-green-400 hover:text-green-300 font-semibold transition-colors duration-200 hover:underline"
+                >
+                  Criar conta grátis 🚀
                 </Link>
               </p>
               
