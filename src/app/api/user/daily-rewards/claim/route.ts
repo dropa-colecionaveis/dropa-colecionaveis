@@ -213,7 +213,8 @@ export async function POST() {
             streak: currentStreak,
             rewardType: todayReward.rewardType,
             value: adjustedValue,
-            bonusMultiplier
+            bonusCredits,
+            bonusTier
           }
         })
 
@@ -232,7 +233,8 @@ export async function POST() {
         description: todayReward.description,
         value: adjustedValue,
         originalValue: todayReward.rewardValue,
-        bonusMultiplier,
+        bonusCredits,
+        bonusTier,
         details: result.rewardDetails
       },
       currentStreak,
