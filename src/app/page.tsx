@@ -447,7 +447,7 @@ export default function Home() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Valor:</span>
-                  <span className="text-green-400 font-semibold">500 créditos</span>
+                  <span className="text-green-400 font-semibold">2.250 créditos</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Status:</span>
@@ -473,7 +473,7 @@ export default function Home() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Valor:</span>
-                  <span className="text-green-400 font-semibold">500 créditos</span>
+                  <span className="text-green-400 font-semibold">2.250 créditos</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Status:</span>
@@ -499,7 +499,7 @@ export default function Home() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Valor:</span>
-                  <span className="text-green-400 font-semibold">500 créditos</span>
+                  <span className="text-green-400 font-semibold">2.250 créditos</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Status:</span>
@@ -525,7 +525,7 @@ export default function Home() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Valor:</span>
-                  <span className="text-green-400 font-semibold">500 créditos</span>
+                  <span className="text-green-400 font-semibold">2.250 créditos</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Status:</span>
@@ -551,7 +551,7 @@ export default function Home() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Valor:</span>
-                  <span className="text-green-400 font-semibold">500 créditos</span>
+                  <span className="text-green-400 font-semibold">2.250 créditos</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Status:</span>
@@ -781,11 +781,6 @@ export default function Home() {
                 <li>
                   <Link href="/como-funciona" className="text-purple-400 hover:text-purple-300 transition-colors text-sm font-semibold">
                     📚 Como Funciona
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/marketplace" className="text-gray-300 hover:text-white transition-colors text-sm">
-                    🛒 Marketplace
                   </Link>
                 </li>
               </ul>

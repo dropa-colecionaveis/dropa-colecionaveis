@@ -161,19 +161,18 @@ export async function sendPasswordResetEmail(email: string, resetToken: string) 
       subject: template.subject,
       html: template.html,
       text: template.text,
+      replyTo: 'dropacolecionaveis@gmail.com', // Para respostas irem para seu email oficial
     }
     
     console.log('🔑 Dados do email:', {
       from: emailData.from,
       to: emailData.to,
-      subject: emailData.subject
+      subject: emailData.subject,
+      replyTo: emailData.replyTo
     })
     
-    // Em desenvolvimento, redirecionar para email verificado
-    if (process.env.NODE_ENV !== 'production') {
-      emailData.to = ['mateusreys@gmail.com']
-      console.log('🔄 Modo desenvolvimento: email redirecionado para mateusreys@gmail.com')
-    }
+    // REMOVIDO: Redirecionamento forçado em desenvolvimento
+    // Agora emails vão direto para os usuários em qualquer ambiente
     
     const resendClient = getResend()
     const { data, error } = await resendClient.emails.send(emailData)

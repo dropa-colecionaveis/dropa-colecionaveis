@@ -36,11 +36,29 @@ export default function Contato() {
     e.preventDefault()
     setIsSubmitting(true)
 
-    // Simular envio do formulário
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setSubmitted(true)
+      } else {
+        console.error('Erro ao enviar mensagem:', data.error)
+        alert(`Erro: ${data.error}`)
+      }
+    } catch (error) {
+      console.error('Erro de rede:', error)
+      alert('Erro de conexão. Verifique sua internet e tente novamente.')
+    } finally {
       setIsSubmitting(false)
-      setSubmitted(true)
-    }, 2000)
+    }
   }
 
   if (submitted) {
@@ -127,7 +145,7 @@ export default function Contato() {
                     <span className="text-2xl">📧</span>
                     <div>
                       <div className="text-white font-medium">Email</div>
-                      <div className="text-gray-300 text-sm">suporte@dropa.com</div>
+                      <div className="text-gray-300 text-sm">dropacolecionaveis@gmail.com</div>
                     </div>
                   </div>
 

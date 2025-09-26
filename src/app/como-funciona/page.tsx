@@ -365,37 +365,140 @@ export default function ComoFunciona() {
                   </div>
                 </div>
 
-                {/* Exemplo Prático */}
-                <div className="mt-8 bg-gradient-to-r from-blue-900/30 to-purple-900/30 rounded-xl p-6 border border-blue-500/20">
-                  <h3 className="text-xl font-bold text-blue-400 mb-4">💡 Exemplo Prático do Sistema Duplo</h3>
+                {/* Multiplicadores de Valor */}
+                <div className="mt-8 bg-gradient-to-r from-green-900/30 to-emerald-900/30 rounded-xl p-6 border border-green-500/20">
+                  <h3 className="text-xl font-bold text-green-400 mb-4">💰 Sistema de Multiplicadores de Valor</h3>
+                  <p className="text-gray-300 mb-4 text-sm leading-relaxed">
+                    O valor de cada item é calculado usando <span className="text-green-400 font-semibold">valor base da raridade</span> multiplicado por
+                    <span className="text-blue-400 font-semibold"> multiplicadores de escassez</span>, criando uma economia realista onde
+                    <span className="text-yellow-400 font-semibold"> escassez = valor</span>.
+                  </p>
+                  
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="bg-black/30 rounded-lg p-4">
-                      <h4 className="text-purple-400 font-semibold mb-2">📦 Pacote sorteia "COMUM" (60% chance)</h4>
+                      <h4 className="text-blue-400 font-semibold mb-3">💎 Valores Base por Raridade</h4>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-gray-300">Item A: Comum + COMMON</span>
-                          <span className="text-green-400">100% chance</span>
+                          <span className="text-gray-300">⚪ COMUM:</span>
+                          <span className="text-green-400 font-bold">5 créditos</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-300">Item B: Comum + RARE</span>
-                          <span className="text-yellow-400">80% chance</span>
+                          <span className="text-green-300">🟢 INCOMUM:</span>
+                          <span className="text-green-400 font-bold">15 créditos</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-300">Item C: Comum + UNIQUE</span>
-                          <span className="text-red-400">40% chance</span>
+                          <span className="text-blue-300">🔵 RARO:</span>
+                          <span className="text-green-400 font-bold">40 créditos</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-purple-300">🟣 ÉPICO:</span>
+                          <span className="text-green-400 font-bold">100 créditos</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-yellow-300">🟡 LENDÁRIO:</span>
+                          <span className="text-green-400 font-bold">500 créditos</span>
                         </div>
                       </div>
                     </div>
+                    
                     <div className="bg-black/30 rounded-lg p-4">
-                      <h4 className="text-red-400 font-semibold mb-2">🎯 Resultado</h4>
-                      <p className="text-gray-300 text-sm leading-relaxed">
-                        Mesmo sendo todos <span className="text-gray-400">"COMUM"</span>, o
-                        <span className="text-pink-400"> Item C (UNIQUE)</span> é
-                        <span className="text-red-400 font-semibold"> muito mais raro</span> que o Item A!
-                        <br/><br/>
-                        <span className="text-yellow-400">Isso cria sub-níveis dentro da mesma raridade!</span>
+                      <h4 className="text-purple-400 font-semibold mb-3">⚡ Multiplicadores de Escassez</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">COMMON:</span>
+                          <span className="text-white font-bold">1.0x (base)</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-green-300">UNCOMMON:</span>
+                          <span className="text-green-400 font-bold">1.2x (+20%)</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-blue-300">RARE:</span>
+                          <span className="text-blue-400 font-bold">1.4x (+40%)</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-yellow-300">LEGENDARY:</span>
+                          <span className="text-yellow-400 font-bold">2.0x (+100%)</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-red-300">MYTHIC:</span>
+                          <span className="text-red-400 font-bold">2.5x (+150%)</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-pink-300">UNIQUE:</span>
+                          <span className="text-pink-400 font-bold">3.0x (+200%)</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 bg-gradient-to-r from-yellow-900/20 to-orange-900/20 rounded-lg p-4 border border-yellow-500/30">
+                    <h4 className="text-yellow-400 font-semibold mb-2">🌟 Bônus Especiais:</h4>
+                    <div className="grid md:grid-cols-2 gap-4 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-300">👑 Itens Únicos:</span>
+                        <span className="text-pink-400 font-bold">+50% adicional</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-300">🎫 Edições Limitadas:</span>
+                        <span className="text-blue-400 font-bold">+30% adicional</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Exemplo Prático */}
+                <div className="mt-8 bg-gradient-to-r from-blue-900/30 to-purple-900/30 rounded-xl p-6 border border-blue-500/20">
+                  <h3 className="text-xl font-bold text-blue-400 mb-4">💡 Exemplos Práticos de Valor</h3>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="bg-black/30 rounded-lg p-4">
+                      <h4 className="text-purple-400 font-semibold mb-2">📦 Mesmo Item, Escassez Diferente</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">Item A: Comum/COMMON</span>
+                          <span className="text-green-400">5 créditos</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">Item B: Comum/UNCOMMON</span>
+                          <span className="text-blue-400">6 créditos</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">Item C: Comum/UNIQUE 👑</span>
+                          <span className="text-pink-400">23 créditos</span>
+                        </div>
+                      </div>
+                      <p className="text-yellow-400 text-xs mt-2">
+                        * Item C é único = 5 × 3.0 × 1.5 = 23 créditos
                       </p>
                     </div>
+                    
+                    <div className="bg-black/30 rounded-lg p-4">
+                      <h4 className="text-green-400 font-semibold mb-2">🏆 Top Valores da Plataforma</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-pink-300">Lendário/UNIQUE 👑</span>
+                          <span className="text-pink-400 font-bold">2.250 créditos</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-red-300">Lendário/MYTHIC 🎫</span>
+                          <span className="text-red-400 font-bold">1.625 créditos</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-purple-300">Épico/MYTHIC 🎫</span>
+                          <span className="text-purple-400 font-bold">325 créditos</span>
+                        </div>
+                      </div>
+                      <p className="text-cyan-400 text-xs mt-2">
+                        👑 = Único | 🎫 = Limitado 1000 exemplares
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 p-3 bg-gradient-to-r from-orange-900/20 to-yellow-900/20 rounded-lg border border-orange-500/30">
+                    <p className="text-orange-400 text-sm text-center">
+                      💡 <span className="font-semibold">Sistema Balanceado:</span> Escassez impacta diretamente no valor, 
+                      criando uma economia onde <span className="text-yellow-400 font-bold">raridade = valor real</span>!
+                    </p>
                   </div>
                 </div>
               </div>
@@ -856,23 +959,23 @@ export default function ComoFunciona() {
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-gray-300">⚪ COMUM:</span>
-                          <span className="text-green-400">30 itens (27.3%)</span>
+                          <span className="text-green-400">45 itens (40.9%)</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-green-300">🟢 INCOMUM:</span>
-                          <span className="text-green-400">25 itens (22.7%)</span>
+                          <span className="text-green-400">30 itens (27.3%)</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-blue-300">🔵 RARO:</span>
-                          <span className="text-green-400">25 itens (22.7%)</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-purple-300">🟣 ÉPICO:</span>
                           <span className="text-green-400">20 itens (18.2%)</span>
                         </div>
                         <div className="flex justify-between">
+                          <span className="text-purple-300">🟣 ÉPICO:</span>
+                          <span className="text-green-400">8 itens (7.3%)</span>
+                        </div>
+                        <div className="flex justify-between">
                           <span className="text-yellow-300">🟡 LENDÁRIO:</span>
-                          <span className="text-green-400">10 itens (9.1%)</span>
+                          <span className="text-green-400">7 itens (6.4%)</span>
                         </div>
                       </div>
                     </div>
@@ -881,23 +984,23 @@ export default function ComoFunciona() {
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-gray-300">COMMON:</span>
-                          <span className="text-green-400">20 itens</span>
+                          <span className="text-green-400">75 itens</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-green-300">UNCOMMON:</span>
-                          <span className="text-blue-400">10 itens</span>
+                          <span className="text-blue-400">16 itens</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-blue-300">RARE:</span>
-                          <span className="text-purple-400">25 itens</span>
+                          <span className="text-purple-400">8 itens</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-yellow-300">LEGENDARY:</span>
-                          <span className="text-orange-400">30 itens</span>
+                          <span className="text-orange-400">5 itens</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-red-300">MYTHIC:</span>
-                          <span className="text-red-400">20 itens</span>
+                          <span className="text-red-400">5 itens</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-pink-300">UNIQUE:</span>
@@ -914,8 +1017,11 @@ export default function ComoFunciona() {
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
                       <p className="text-gray-300 mb-4 text-sm">
-                        Além dos itens únicos, a Genesis Collection possui <span className="text-blue-400 font-bold">5 itens especiais de edição limitada</span>.
+                        Além dos 5 itens únicos mundiais, a Genesis Collection possui <span className="text-blue-400 font-bold">5 itens especiais de edição limitada</span>.
                         Cada um terá exatamente <span className="text-cyan-400 font-semibold">1.000 unidades numeradas</span> disponíveis.
+                        <br/><br/>
+                        Estes 5 itens limitados possuem <span className="text-red-400 font-semibold">escassez MYTHIC</span>, tornando-os 
+                        <span className="text-purple-400 font-semibold"> os mais raros e valiosos</span> além dos únicos.
                       </p>
                       <div className="bg-gradient-to-r from-yellow-900/20 to-orange-900/20 rounded-lg p-4 border border-yellow-500/30">
                         <h4 className="text-yellow-400 font-semibold mb-2">📝 Características:</h4>
@@ -926,12 +1032,33 @@ export default function ComoFunciona() {
                           <li>• Certificado de autenticidade digital</li>
                         </ul>
                       </div>
+                      
+                      <div className="mt-4 bg-gradient-to-r from-red-900/20 to-purple-900/20 rounded-lg p-4 border border-red-500/30">
+                        <h4 className="text-red-400 font-semibold mb-2">💎 Valores dos Itens MYTHIC Limitados:</h4>
+                        <div className="space-y-2 text-xs">
+                          <div className="flex justify-between">
+                            <span className="text-red-300">🔥 Lendário/MYTHIC:</span>
+                            <span className="text-red-400 font-bold">1.625 créditos</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-purple-300">🟣 Épico/MYTHIC:</span>
+                            <span className="text-purple-400 font-bold">325 créditos</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-blue-300">🔵 Raro/MYTHIC:</span>
+                            <span className="text-blue-400 font-bold">130 créditos</span>
+                          </div>
+                        </div>
+                        <div className="text-center mt-2 text-yellow-400 text-xs">
+                          💡 <span className="font-semibold">Total:</span> 5 itens × 1.000 exemplares = 5.000 unidades
+                        </div>
+                      </div>
                     </div>
                     <div className="bg-black/30 rounded-lg p-4">
                       <h4 className="text-cyan-400 font-semibold mb-3 text-center">🎯 Status dos Itens Limitados</h4>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between items-center bg-green-900/20 rounded-lg p-2">
-                          <span className="text-gray-300">📦 Total de Itens:</span>
+                          <span className="text-gray-300">📦 Itens Limitados:</span>
                           <span className="text-green-400 font-bold">5 itens</span>
                         </div>
                         <div className="flex justify-between items-center bg-blue-900/20 rounded-lg p-2">
@@ -941,6 +1068,10 @@ export default function ComoFunciona() {
                         <div className="flex justify-between items-center bg-purple-900/20 rounded-lg p-2">
                           <span className="text-gray-300">📊 Total Disponível:</span>
                           <span className="text-purple-400 font-bold">5.000 unidades</span>
+                        </div>
+                        <div className="flex justify-between items-center bg-red-900/20 rounded-lg p-2">
+                          <span className="text-gray-300">✨ Escassez:</span>
+                          <span className="text-red-400 font-bold">Todos MYTHIC</span>
                         </div>
                         <div className="flex justify-between items-center bg-yellow-900/20 rounded-lg p-2">
                           <span className="text-gray-300">🎪 Status:</span>
@@ -962,27 +1093,32 @@ export default function ComoFunciona() {
                     <div className="bg-black/30 rounded-lg p-4 text-center">
                       <div className="text-3xl mb-2">💎</div>
                       <h4 className="text-yellow-400 font-semibold text-sm">Cristal do Gênesis</h4>
-                      <p className="text-green-400 text-xs">500 créditos</p>
+                      <p className="text-pink-400 text-xs font-bold">2.250 créditos</p>
+                      <p className="text-gray-400 text-xs">LENDÁRIO/UNIQUE 👑</p>
                     </div>
                     <div className="bg-black/30 rounded-lg p-4 text-center">
                       <div className="text-3xl mb-2">👑</div>
                       <h4 className="text-purple-400 font-semibold text-sm">Coroa Primordial</h4>
-                      <p className="text-green-400 text-xs">500 créditos</p>
+                      <p className="text-pink-400 text-xs font-bold">2.250 créditos</p>
+                      <p className="text-gray-400 text-xs">LENDÁRIO/UNIQUE 👑</p>
                     </div>
                     <div className="bg-black/30 rounded-lg p-4 text-center">
                       <div className="text-3xl mb-2">🌟</div>
                       <h4 className="text-blue-400 font-semibold text-sm">Essência da Origem</h4>
-                      <p className="text-green-400 text-xs">500 créditos</p>
+                      <p className="text-pink-400 text-xs font-bold">2.250 créditos</p>
+                      <p className="text-gray-400 text-xs">LENDÁRIO/UNIQUE 👑</p>
                     </div>
                     <div className="bg-black/30 rounded-lg p-4 text-center">
                       <div className="text-3xl mb-2">🗝️</div>
                       <h4 className="text-indigo-400 font-semibold text-sm">Chave do Cosmos</h4>
-                      <p className="text-green-400 text-xs">500 créditos</p>
+                      <p className="text-pink-400 text-xs font-bold">2.250 créditos</p>
+                      <p className="text-gray-400 text-xs">LENDÁRIO/UNIQUE 👑</p>
                     </div>
                     <div className="bg-black/30 rounded-lg p-4 text-center">
                       <div className="text-3xl mb-2">🔥</div>
                       <h4 className="text-red-400 font-semibold text-sm">Alma do Primeiro</h4>
-                      <p className="text-green-400 text-xs">500 créditos</p>
+                      <p className="text-pink-400 text-xs font-bold">2.250 créditos</p>
+                      <p className="text-gray-400 text-xs">LENDÁRIO/UNIQUE 👑</p>
                     </div>
                   </div>
                 </div>
