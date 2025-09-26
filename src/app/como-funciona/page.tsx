@@ -622,7 +622,7 @@ export default function ComoFunciona() {
                         <ul className="text-gray-300 text-sm space-y-1">
                           <li>• Faça login todos os dias consecutivos</li>
                           <li>• Não perca um dia ou volta ao dia 1</li>
-                          <li>• Multiplicadores de créditos são aplicados a cada 7 dias</li>
+                          <li>• Bônus fixos de créditos aumentam com streak longo</li>
                           <li>• Ganhe créditos diários + pacotes especiais</li>
                         </ul>
                       </div>
@@ -672,19 +672,36 @@ export default function ComoFunciona() {
                       </div>
                     </div>
                     <div>
-                      <h4 className="text-purple-400 font-semibold mb-3">⚡ Multiplicadores de Streak</h4>
+                      <h4 className="text-purple-400 font-semibold mb-3">⚡ Bônus Fixos de Streak</h4>
                       <div className="space-y-2">
                         <div className="bg-blue-700/20 rounded-lg p-3">
-                          <div className="text-blue-400 font-semibold">Streak 8+ dias</div>
-                          <div className="text-gray-300 text-sm">+8% bonus em créditos</div>
+                          <div className="text-blue-400 font-semibold flex items-center gap-2">
+                            🥉 Streak 8+ dias (Bronze)
+                          </div>
+                          <div className="text-gray-300 text-sm">+1 crédito extra em todas as recompensas</div>
                         </div>
                         <div className="bg-purple-700/20 rounded-lg p-3">
-                          <div className="text-purple-400 font-semibold">Streak 15+ dias</div>
-                          <div className="text-gray-300 text-sm">+15% bonus em créditos</div>
+                          <div className="text-purple-400 font-semibold flex items-center gap-2">
+                            🥈 Streak 15+ dias (Prata)
+                          </div>
+                          <div className="text-gray-300 text-sm">+2 créditos extras em todas as recompensas</div>
                         </div>
                         <div className="bg-yellow-700/20 rounded-lg p-3">
-                          <div className="text-yellow-400 font-semibold">Streak 31+ dias</div>
-                          <div className="text-gray-300 text-sm">+25% bonus em créditos</div>
+                          <div className="text-yellow-400 font-semibold flex items-center gap-2">
+                            🥇 Streak 31+ dias (Ouro)
+                          </div>
+                          <div className="text-gray-300 text-sm">+3 créditos extras em todas as recompensas</div>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-4 bg-green-900/20 rounded-lg p-3 border border-green-500/30">
+                        <div className="text-green-400 font-semibold mb-2 flex items-center gap-2">
+                          💡 Exemplo Prático
+                        </div>
+                        <div className="text-gray-300 text-sm space-y-1">
+                          <p>• Recompensa normal: 5 créditos</p>
+                          <p>• Com streak 15+: 5 + 2 = <span className="text-green-400 font-semibold">7 créditos</span></p>
+                          <p>• Com streak 31+: 5 + 3 = <span className="text-yellow-400 font-semibold">8 créditos</span></p>
                         </div>
                       </div>
                     </div>
@@ -697,11 +714,15 @@ export default function ComoFunciona() {
                   <div className="space-y-4 text-sm">
                     <div>
                       <h4 className="text-yellow-400 font-semibold mb-1">P: O que acontece se eu perder um dia de streak?</h4>
-                      <p className="text-gray-300">R: Seu streak volta para o dia 1 e você perde os multiplicadores de bonus.</p>
+                      <p className="text-gray-300">R: Seu streak volta para o dia 1 e você perde os bônus fixos de créditos extras.</p>
                     </div>
                     <div>
                       <h4 className="text-yellow-400 font-semibold mb-1">P: O streak reseta automaticamente após 7 dias?</h4>
-                      <p className="text-gray-300">R: Sim, o ciclo de recompensas se reinicia a cada 7 dias, mas os multiplicadores continuam.</p>
+                      <p className="text-gray-300">R: Sim, o ciclo de recompensas se reinicia a cada 7 dias, mas os bônus de streak continuam.</p>
+                    </div>
+                    <div>
+                      <h4 className="text-yellow-400 font-semibold mb-1">P: Os bônus se aplicam apenas aos créditos?</h4>
+                      <p className="text-gray-300">R: Sim, os bônus fixos (+1, +2, +3) se aplicam apenas às recompensas de créditos, não aos pacotes.</p>
                     </div>
                     <div>
                       <h4 className="text-yellow-400 font-semibold mb-1">P: Posso acumular pacotes grátis não reclamados?</h4>

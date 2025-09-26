@@ -14,10 +14,10 @@ export default function Suporte() {
       title: 'Primeiros Passos',
       icon: '🚀',
       articles: [
-        { id: 1, title: 'Como criar uma conta no Dropa!', content: 'Para criar sua conta no Dropa!, clique em "Criar Conta" no topo da página inicial. Preencha seus dados pessoais, escolha um nome de usuário único e confirme seu email. Sua conta será ativada instantaneamente!' },
+        { id: 1, title: 'Como criar uma conta no Dropa!', content: 'Para criar sua conta no Dropa!, clique em "Iniciar jornada" no topo da página inicial. Dê preferencia para logar com sua conta Google ou  Preencha seus dados pessoais, escolha um nome de usuário único e confirme seu email. Sua conta será ativada instantaneamente!' },
         { id: 2, title: 'Como comprar créditos', content: 'Após fazer login, acesse "Comprar Créditos" no seu dashboard. Escolha o valor desejado e pague via PIX. Seus créditos são creditados automaticamente após confirmação do pagamento.' },
         { id: 3, title: 'Como abrir seu primeiro pacote', content: 'Com créditos em sua conta, vá para "Loja de Pacotes". Escolha um tipo de pacote (Bronze, Prata, Ouro, Platina ou Diamante) e clique em "Abrir Pacote". Aproveite a animação e descubra seu item!' },
-        { id: 4, title: 'Entendendo seu inventário', content: 'Acesse "Inventário" para ver todos os itens que você coletou. Você pode filtrar por raridade, coleção ou buscar por nome específico.' }
+        { id: 4, title: 'Entendendo seu inventário', content: 'Acesse "Inventário" para ver todos os itens que você coletou. Você pode filtrar por raridade ou coleção' }
       ]
     },
     {
@@ -25,9 +25,9 @@ export default function Suporte() {
       title: 'Sistema de Raridade',
       icon: '💎',
       articles: [
-        { id: 5, title: 'O que é Raridade vs Escassez?', content: 'Raridade define a dificuldade de encontrar um item (Comum, Incomum, Raro, Épico, Lendário). Escassez define quantas cópias existem (Common, Uncommon, Rare, Legendary, Mythic, Unique). Um item pode ser Lendário em raridade mas Common em escassez.' },
-        { id: 6, title: 'Como funciona o sistema duplo?', content: 'Cada item tem DUAS classificações independentes: Raridade (chance de aparecer nos pacotes) e Escassez (quantas unidades existem). Isso cria 30 combinações únicas possíveis!' },
-        { id: 7, title: 'Itens Únicos: o que são?', content: 'Itens com escassez "Unique" existem apenas 1 vez no mundo inteiro. Apenas UMA pessoa pode possuir cada item único. Na Genesis Collection temos 5 itens únicos que valem 500 créditos cada.' },
+        { id: 5, title: 'O que é Raridade vs Escassez?', content: 'Raridade define a dificuldade de encontrar um item (Comum, Incomum, Raro, Épico, Lendário). Escassez é outra camada de raridade, só que mais específica (Common, Uncommon, Rare, Legendary, Mythic, Unique). Um item pode ser Lendário em raridade mas Common em escassez.' },
+        { id: 6, title: 'Como funciona o sistema duplo?', content: 'Cada item tem DUAS classificações independentes: Raridade (chance de aparecer nos pacotes) e Escassez define se o item é mais difícil de ser descoberto dentro da mesma raridade' },
+        { id: 7, title: 'Itens Únicos: o que são?', content: 'Itens com escassez "Unique" existem apenas 1 exemplar no mundo inteiro. Apenas UMA pessoa pode possuir cada item único. Na Genesis Collection temos 5 itens únicos que valem 2.250 créditos base, cada item único.' },
         { id: 8, title: 'Probabilidades dos pacotes', content: 'Bronze: 60% Comum, 25% Incomum, 10% Raro, 4% Épico, 1% Lendário. Diamante: 32% Comum, 30% Incomum, 28% Raro, 30% Épico, 10% Lendário. Pacotes melhores = mais chances de itens raros!' }
       ]
     },
@@ -39,7 +39,7 @@ export default function Suporte() {
         { id: 9, title: 'Como funciona o sistema de XP?', content: 'Você ganha XP completando conquistas (5-2000 XP cada). Seu nível é calculado por: Nível = √(XP Total ÷ 100) + 1. Exemplo: 400 XP = Nível 3.' },
         { id: 10, title: 'Categorias de conquistas', content: 'Temos 6 categorias: Colecionador (coletar itens), Explorador (abrir pacotes), Comerciante (atividades de mercado), Marcos (grandes feitos), Diárias (atividades diárias), Especiais (conquistas secretas).' },
         { id: 11, title: 'Conquistas secretas', content: 'Algumas conquistas são secretas e só aparecem após serem desbloqueadas. Temos conquistas que dão até 2000 XP! Experimente diferentes ações para descobrir conquistas ocultas.' },
-        { id: 12, title: 'Sistema de streak diário', content: 'Faça login diariamente para manter seu streak. No 3º dia consecutivo ganha multiplicador de 8%, no 5º dia 15%, no 7º dia 25%. Além disso, recebe pacotes grátis nos dias 3, 5 e 7!' }
+        { id: 12, title: 'Conquistas que dão XP', content: 'Todas as conquistas dão XP, mas algumas são mais difíceis de serem desbloqueadas. Quanto mais difícil for, mais XP você ganha.' }
       ]
     },
     {
@@ -47,10 +47,10 @@ export default function Suporte() {
       title: 'Pagamentos & Créditos',
       icon: '💳',
       articles: [
-        { id: 13, title: 'Métodos de pagamento aceitos', content: 'Atualmente aceitamos PIX para compra de créditos. O pagamento é instantâneo e seguro. Em breve teremos outras opções como cartão de crédito e PayPal.' },
-        { id: 14, title: 'Como funcionam os créditos?', content: 'Créditos são a moeda interna do Dropa!. Use para comprar pacotes, participar de eventos especiais e futuramente no marketplace. 1 crédito = R$ 0,10 (aproximadamente).' },
-        { id: 15, title: 'Política de reembolso', content: 'Créditos comprados podem ser reembolsados em até 7 dias se não foram utilizados. Entre em contato pelo suporte para solicitar reembolso com justificativa.' },
-        { id: 16, title: 'Segurança nos pagamentos', content: 'Todos os pagamentos são processados com criptografia SSL. Não armazenamos dados de cartão. PIX é processado via gateway seguro certificado.' }
+        { id: 13, title: 'Métodos de pagamento aceitos', content: 'Atualmente aceitamos PIX para compra de créditos. O pagamento é instantâneo e seguro. Futuramente, pretendemos implementar outras opções como cartão de crédito e PayPal.' },
+        { id: 14, title: 'Como funcionam os créditos?', content: 'Créditos são a moeda interna do Dropa!. Use para comprar pacotes, participar de eventos especiais e comprar itens no marketplace. No pacote de crédito mais barato, R$2 são 30 créditos, quanto mais caro é o pacote, mais créditos você recebe, verifique a taxa de conversão dos pacotes.' },
+        { id: 15, title: 'Política de reembolso', content: 'Não há política de reembolso, créditos comprados não podem ser reembolsados, mas podemos resolver qualquer problema que você possa ter.' },
+        { id: 16, title: 'Segurança nos pagamentos', content: 'Todos os pagamentos são processados com criptografia TLS, PIX é processado via gateway seguro certificado.' }
       ]
     },
     {
@@ -59,20 +59,20 @@ export default function Suporte() {
       icon: '🔧',
       articles: [
         { id: 17, title: 'Não recebi meus créditos após pagamento PIX', content: 'PIX pode levar até 5 minutos para processar. Verifique seu email de confirmação. Se após 10 minutos não recebeu, entre em contato enviando comprovante.' },
-        { id: 18, title: 'Erro ao abrir pacotes', content: 'Certifique-se de ter créditos suficientes e conexão estável. Feche e abra o navegador. Se persistir, entre em contato - reembolsaremos seu pacote.' },
-        { id: 19, title: 'Item não apareceu no inventário', content: 'Alguns itens demoram até 30 segundos para aparecer. Atualize a página. Se não apareceu em 2 minutos, entre em contato com captura de tela do problema.' },
+        { id: 18, title: 'Erro ao abrir pacotes', content: 'Certifique-se de ter créditos suficientes e conexão estável. Feche e abra o navegador. Se persistir, entre em contato.' },
+        { id: 19, title: 'Item não apareceu no inventário', content: 'Alguns itens podem demorar até cerca de 30 segundos para aparecer. Atualize a página. Se não apareceu em 2 minutos, entre em contato com captura de tela do problema.' },
         { id: 20, title: 'Problemas de login', content: 'Verifique email/senha. Use "Esqueci minha senha" se necessário. Limpe cache do navegador. Tente navegador anônimo. Se persistir, entre em contato.' }
       ]
     },
     {
       key: 'marketplace',
-      title: 'Marketplace (Em Breve)',
+      title: 'Marketplace',
       icon: '🛒',
       articles: [
-        { id: 21, title: 'Quando o Marketplace estará disponível?', content: 'O Marketplace está em desenvolvimento ativo e será lançado em breve. Permitirá compra/venda de itens entre jogadores, leilões, e ofertas especiais.' },
-        { id: 22, title: 'Como funcionará a venda de itens?', content: 'Você poderá colocar seus itens à venda por créditos. Haverá taxa de transação pequena. Itens únicos e raros terão seções especiais de destaque.' },
-        { id: 23, title: 'Sistema de avaliação e segurança', content: 'Teremos sistema de avaliação de vendedores, histórico de transações e garantia anti-fraude para proteger compradores e vendedores.' },
-        { id: 24, title: 'Recursos avançados planejados', content: 'Leilões ao vivo, ofertas automáticas, alertas de preço, gráficos de histórico de valor, e sistema de troca direta entre jogadores.' }
+        { id: 21, title: 'Como funciona o Marketplace?', content: 'No Marketplace é permitido a compra/venda de itens entre jogadores.' },
+        { id: 22, title: 'Como funcionará a venda de itens?', content: 'Você poderá colocar seus itens à venda por créditos. Haverá taxa de transação pequena.' },
+        { id: 23, title: 'Sistema de Histórico de compra e venda', content: 'É possível verificar todo o histórico de compra e venda de itens.' },
+        { id: 24, title: 'Recursos avançados planejados', content: 'Leilões ao vivo, ofertas automáticas, alertas de preço, gráficos de histórico de valor, sistema de troca direta entre jogadores, iens únicos e raros terão seções especiais de destaque, sistema de avaliação de vendedores.' }
       ]
     }
   ]
@@ -257,7 +257,7 @@ export default function Suporte() {
             <Link href="/marketplace" className="group bg-gradient-to-br from-purple-900/20 to-pink-900/20 backdrop-blur-lg rounded-2xl p-6 border border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 hover:transform hover:scale-105">
               <div className="text-4xl mb-3 group-hover:animate-bounce">🛒</div>
               <h3 className="text-xl font-bold text-purple-400 mb-2">Marketplace</h3>
-              <p className="text-gray-300 text-sm">Compre e venda itens (Em Breve)</p>
+              <p className="text-gray-300 text-sm">Compre e venda itens</p>
             </Link>
           </div>
         </div>

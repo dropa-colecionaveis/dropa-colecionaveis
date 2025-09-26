@@ -17,12 +17,13 @@ import {
 } from '@/components/SkeletonLoader'
 
 // Fixed selling percentages by rarity (same as auto-sell system)
+// Sistema Equilibrado - reduz regressividade e torna mais justo para itens raros
 const FIXED_SELLING_PERCENTAGES = {
-  COMUM: 30,      // 30% of 5 credits = 1.5 credits
-  INCOMUM: 25,    // 25% of 15 credits = 3.75 credits  
-  RARO: 20,       // 20% of 40 credits = 8 credits
-  EPICO: 15,      // 15% of 100 credits = 15 credits
-  LENDARIO: 10    // 10% of 500 credits = 50 credits
+  COMUM: 35,      // 35% de 5 créditos = 1.75 → 2 créditos (perda 60%)
+  INCOMUM: 40,    // 40% de 15 créditos = 6 créditos (perda 60%)
+  RARO: 45,       // 45% de 40 créditos = 18 créditos (perda 55%)
+  EPICO: 50,      // 50% de 100 créditos = 50 créditos (perda 50%)
+  LENDARIO: 55    // 55% de 500 créditos = 275 créditos (perda 45%)
 } as const
 
 interface UserItem {

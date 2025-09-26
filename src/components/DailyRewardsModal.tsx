@@ -20,7 +20,8 @@ interface DailyReward {
   adjustedValue: number
   description: string
   packType?: PackType
-  bonusMultiplier: number
+  bonusCredits: number
+  bonusTier: string
   isCurrent: boolean
   canClaim: boolean
   claimed?: boolean
@@ -30,7 +31,8 @@ interface DailyReward {
 interface DailyRewardsData {
   currentStreak: number
   cycleDay: number
-  bonusMultiplier: number
+  bonusCredits: number
+  bonusTier: string
   todayReward: DailyReward | null
   upcomingRewards: DailyReward[]
   hasClaimedToday: boolean
@@ -177,10 +179,9 @@ export default function DailyRewardsModal({ isOpen, onClose, onRewardClaimed }: 
     }
   }
 
-  const formatBonusText = (bonusMultiplier: number) => {
-    if (bonusMultiplier <= 1) return ''
-    const bonus = Math.round((bonusMultiplier - 1) * 100)
-    return `+${bonus}% bonus`
+  const formatBonusText = (bonusCredits: number, bonusTier: string) => {
+    if (bonusCredits <= 0) return ''
+    return `+${bonusCredits} crédito${bonusCredits > 1 ? 's' : ''} (${bonusTier})`
   }
 
   const closeClaimAnimation = () => {
@@ -222,9 +223,9 @@ export default function DailyRewardsModal({ isOpen, onClose, onRewardClaimed }: 
                   <div className="text-sm text-gray-300">
                     Streak atual: <span className="font-bold text-yellow-400">{rewardsData.currentStreak}</span> dias
                   </div>
-                  {rewardsData.bonusMultiplier > 1 && (
+                  {rewardsData.bonusCredits > 0 && (
                     <div className="text-sm text-green-400 font-semibold">
-                      {formatBonusText(rewardsData.bonusMultiplier)}
+                      {formatBonusText(rewardsData.bonusCredits, rewardsData.bonusTier)}
                     </div>
                   )}
                 </div>
@@ -337,10 +338,10 @@ export default function DailyRewardsModal({ isOpen, onClose, onRewardClaimed }: 
                         <div className="text-xs sm:text-sm text-gray-300 break-words">
                           Continue sua sequência de login!
                         </div>
-                        {rewardsData.bonusMultiplier > 1 && (
+                        {rewardsData.bonusCredits > 0 && rewardsData.todayReward.rewardType === 'CREDITS' && (
                           <div className="text-xs sm:text-sm text-green-400 mt-1">
                             Valor original: {rewardsData.todayReward.rewardValue} 
-                            → Com bonus: {rewardsData.todayReward.adjustedValue}
+                            → Com bônus: {rewardsData.todayReward.adjustedValue}
                           </div>
                         )}
                       </div>
@@ -410,7 +411,7 @@ export default function DailyRewardsModal({ isOpen, onClose, onRewardClaimed }: 
               </div>
               
               <div className="text-[10px] sm:text-xs text-gray-400 text-center mt-3 px-2">
-                💡 Mantenha seu streak para multiplicadores de bonus: 8+ dias (+8%), 15+ dias (+15%), 31+ dias (+25%)
+                💡 Mantenha seu streak para bônus fixos: 8+ dias (+1 crédito), 15+ dias (+2 créditos), 31+ dias (+3 créditos)
               </div>
             </div>
 
@@ -487,11 +488,11 @@ export default function DailyRewardsModal({ isOpen, onClose, onRewardClaimed }: 
                     )}
                   </div>
                   
-                  {claimedReward.bonusMultiplier > 1 && (
+                  {claimedReward.bonusCredits > 0 && (
                     <div className="bg-green-500/20 rounded-lg p-2 border border-green-400/30">
                       <div className="text-green-300 text-lg font-semibold flex items-center justify-center gap-2">
                         <span className="text-xl">🚀</span>
-                        <span>{formatBonusText(claimedReward.bonusMultiplier)}</span>
+                        <span>{formatBonusText(claimedReward.bonusCredits, claimedReward.bonusTier)}</span>
                       </div>
                     </div>
                   )}

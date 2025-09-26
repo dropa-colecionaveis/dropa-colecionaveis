@@ -78,14 +78,18 @@ export async function GET() {
       hasClaimedToday = !!todayClaim
     }
 
-    // Calcular multiplicador de bonus baseado no streak
-    let bonusMultiplier = 1
+    // Calcular bônus fixo baseado no streak
+    let bonusCredits = 0
+    let bonusTier = ''
     if (currentStreak >= 31) {
-      bonusMultiplier = 1.25 // 25% bonus
+      bonusCredits = 3  // +3 créditos (Ouro)
+      bonusTier = 'Ouro'
     } else if (currentStreak >= 15) {
-      bonusMultiplier = 1.15 // 15% bonus
+      bonusCredits = 2  // +2 créditos (Prata)
+      bonusTier = 'Prata'
     } else if (currentStreak >= 8) {
-      bonusMultiplier = 1.08 // 8% bonus
+      bonusCredits = 1  // +1 crédito (Bronze)
+      bonusTier = 'Bronze'
     }
 
     // Preparar próximas recompensas (preview dos próximos 7 dias)
@@ -93,11 +97,16 @@ export async function GET() {
     for (let i = 1; i <= 7; i++) {
       const dayReward = allRewards.find(r => r.day === i)
       if (dayReward) {
-        const adjustedValue = Math.floor(dayReward.rewardValue * bonusMultiplier)
+        // Só aplicar bônus em recompensas de créditos
+        const adjustedValue = dayReward.rewardType === 'CREDITS' 
+          ? dayReward.rewardValue + bonusCredits
+          : dayReward.rewardValue
+        
         upcomingRewards.push({
           ...dayReward,
           adjustedValue,
-          bonusMultiplier,
+          bonusCredits,
+          bonusTier,
           isCurrent: i === cycleDay,
           canClaim: i === cycleDay && !hasClaimedToday
         })
@@ -107,10 +116,13 @@ export async function GET() {
     return NextResponse.json({
       currentStreak,
       cycleDay,
-      bonusMultiplier,
+      bonusCredits,
+      bonusTier,
       todayReward: todayReward ? {
         ...todayReward,
-        adjustedValue: Math.floor(todayReward.rewardValue * bonusMultiplier),
+        adjustedValue: todayReward.rewardType === 'CREDITS' 
+          ? todayReward.rewardValue + bonusCredits 
+          : todayReward.rewardValue,
         canClaim: !hasClaimedToday,
         claimed: hasClaimedToday,
         claimedAt: todayClaim?.claimedAt || null

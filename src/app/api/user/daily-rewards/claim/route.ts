@@ -86,24 +86,29 @@ export async function POST() {
       )
     }
 
-    // Calcular multiplicador de bonus conforme documentação
-    let bonusMultiplier = 1
+    // Calcular bônus fixo conforme streak
+    let bonusCredits = 0
+    let bonusTier = ''
     if (currentStreak >= 31) {
-      bonusMultiplier = 1.25  // +25% Ouro
+      bonusCredits = 3  // +3 créditos (Ouro)
+      bonusTier = 'Ouro'
     } else if (currentStreak >= 15) {
-      bonusMultiplier = 1.15  // +15% Prata
+      bonusCredits = 2  // +2 créditos (Prata)
+      bonusTier = 'Prata'
     } else if (currentStreak >= 8) {
-      bonusMultiplier = 1.08  // +8% Bronze
+      bonusCredits = 1  // +1 crédito (Bronze)
+      bonusTier = 'Bronze'
     }
 
-    const adjustedValue = Math.floor(todayReward.rewardValue * bonusMultiplier)
+    const adjustedValue = todayReward.rewardValue + bonusCredits
 
     // Processar recompensa em uma transação
     const result = await prisma.$transaction(async (tx) => {
       let rewardDetails: any = {
         type: todayReward.rewardType,
         value: adjustedValue,
-        bonusMultiplier,
+        bonusCredits,
+        bonusTier,
         originalValue: todayReward.rewardValue
       }
 
