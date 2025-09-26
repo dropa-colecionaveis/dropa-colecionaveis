@@ -44,6 +44,19 @@ export default withAuth(
           return true
         }
 
+        // Allow access to contact API (public form)
+        if (req.nextUrl.pathname.startsWith('/api/contact')) {
+          return true
+        }
+
+        // Allow access to public pages APIs
+        if (req.nextUrl.pathname.startsWith('/api/como-funciona') ||
+            req.nextUrl.pathname.startsWith('/api/suporte') ||
+            req.nextUrl.pathname.startsWith('/api/privacy') ||
+            req.nextUrl.pathname.startsWith('/api/terms')) {
+          return true
+        }
+
         // Require authentication for dashboard, admin, and other protected routes
         if (req.nextUrl.pathname.startsWith('/dashboard') ||
             req.nextUrl.pathname.startsWith('/admin') ||

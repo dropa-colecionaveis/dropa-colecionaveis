@@ -177,21 +177,63 @@ export async function POST(request: NextRequest) {
       </div>
     `
 
+    // LIMITAÇÃO RESEND GRATUITO: Aplicar mesma lógica do sistema de reset
+    const authorizedEmails = [
+      'mateusreys@gmail.com', // Email da conta Resend
+      'dropacolecionaveis@gmail.com' // Email oficial da equipe
+    ]
+
+    const teamEmail = authorizedEmails.includes('dropacolecionaveis@gmail.com') 
+      ? 'dropacolecionaveis@gmail.com' 
+      : 'mateusreys@gmail.com'
+
+    const userEmail = authorizedEmails.includes(email) ? email : 'mateusreys@gmail.com'
+
+    // Modificar assuntos se redirecionado
+    let teamSubject = `[${priorityInfo.icon} ${priorityInfo.name}] ${categoryInfo.icon} ${categoryInfo.name}: ${subject}`
+    let userSubject = '✅ Mensagem recebida - Dropa! Colecionáveis'
+    let modifiedTeamEmail = emailToTeam
+    let modifiedUserEmail = emailToUser
+
+    if (teamEmail !== 'dropacolecionaveis@gmail.com') {
+      teamSubject = `[PARA: dropacolecionaveis@gmail.com] ${teamSubject}`
+      modifiedTeamEmail = `
+        <div style="background: #ff6b6b; color: white; padding: 15px; margin-bottom: 20px; border-radius: 10px; text-align: center;">
+          <h3>⚠️ RESEND LIMITAÇÃO - PLANO GRATUITO</h3>
+          <p><strong>Este email era para:</strong> dropacolecionaveis@gmail.com</p>
+          <p>Encaminhe manualmente ou configure domínio verificado</p>
+        </div>
+        ${emailToTeam}
+      `
+    }
+
+    if (userEmail !== email) {
+      userSubject = `[PARA: ${email}] ${userSubject}`
+      modifiedUserEmail = `
+        <div style="background: #ff6b6b; color: white; padding: 15px; margin-bottom: 20px; border-radius: 10px; text-align: center;">
+          <h3>⚠️ RESEND LIMITAÇÃO - PLANO GRATUITO</h3>
+          <p><strong>Este email era para:</strong> ${email}</p>
+          <p>Encaminhe manualmente ou configure domínio verificado</p>
+        </div>
+        ${emailToUser}
+      `
+    }
+
     // Enviar email para a equipe
     const emailToTeamResult = await resend.emails.send({
       from: 'Dropa! Contato <noreply@resend.dev>',
-      to: 'dropacolecionaveis@gmail.com', // Email oficial da equipe
-      subject: `[${priorityInfo.icon} ${priorityInfo.name}] ${categoryInfo.icon} ${categoryInfo.name}: ${subject}`,
-      html: emailToTeam,
+      to: teamEmail,
+      subject: teamSubject,
+      html: modifiedTeamEmail,
       replyTo: email // Para responder diretamente ao usuário
     })
 
     // Enviar confirmação para o usuário
     const emailToUserResult = await resend.emails.send({
       from: 'Dropa! Suporte <noreply@resend.dev>',
-      to: email,
-      subject: '✅ Mensagem recebida - Dropa! Colecionáveis',
-      html: emailToUser
+      to: userEmail,
+      subject: userSubject,
+      html: modifiedUserEmail
     })
 
     console.log('📧 Email enviado para equipe:', emailToTeamResult)

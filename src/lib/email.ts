@@ -161,18 +161,39 @@ export async function sendPasswordResetEmail(email: string, resetToken: string) 
       subject: template.subject,
       html: template.html,
       text: template.text,
-      replyTo: 'dropacolecionaveis@gmail.com', // Para respostas irem para seu email oficial
+      replyTo: 'dropacolecionaveis@gmail.com',
+    }
+    
+    // LIMITAÇÃO RESEND GRATUITO: Só pode enviar para email verificado
+    const authorizedEmails = [
+      'mateusreys@gmail.com', // Email da conta Resend
+      'dropacolecionaveis@gmail.com' // Adicione outros emails autorizados aqui
+    ]
+    
+    const originalEmail = email
+    if (!authorizedEmails.includes(email)) {
+      emailData.to = ['mateusreys@gmail.com'] // Redirecionar para email autorizado
+      console.log(`🔄 RESEND LIMITAÇÃO: Email de ${originalEmail} redirecionado para ${emailData.to[0]}`)
+      
+      // Modificar template para incluir email original
+      const modifiedTemplate = getPasswordResetTemplate(originalEmail, resetToken)
+      emailData.subject = `[PARA: ${originalEmail}] ${modifiedTemplate.subject}`
+      emailData.html = `
+        <div style="background: #ff6b6b; color: white; padding: 15px; margin-bottom: 20px; border-radius: 10px; text-align: center;">
+          <h3>⚠️ RESEND LIMITAÇÃO - PLANO GRATUITO</h3>
+          <p><strong>Este email era para:</strong> ${originalEmail}</p>
+          <p>Encaminhe manualmente ou configure domínio verificado</p>
+        </div>
+        ${modifiedTemplate.html}
+      `
     }
     
     console.log('🔑 Dados do email:', {
       from: emailData.from,
       to: emailData.to,
-      subject: emailData.subject,
-      replyTo: emailData.replyTo
+      originalRecipient: originalEmail,
+      subject: emailData.subject
     })
-    
-    // REMOVIDO: Redirecionamento forçado em desenvolvimento
-    // Agora emails vão direto para os usuários em qualquer ambiente
     
     const resendClient = getResend()
     const { data, error } = await resendClient.emails.send(emailData)
