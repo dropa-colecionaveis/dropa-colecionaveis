@@ -488,7 +488,7 @@ export default function DailyRewardsModal({ isOpen, onClose, onRewardClaimed }: 
                     )}
                   </div>
                   
-                  {claimedReward.bonusCredits > 0 && (
+                  {claimedReward.bonusCredits > 0 && claimedReward.type === 'CREDITS' && (
                     <div className="bg-green-500/20 rounded-lg p-2 border border-green-400/30">
                       <div className="text-green-300 text-lg font-semibold flex items-center justify-center gap-2">
                         <span className="text-xl">🚀</span>
