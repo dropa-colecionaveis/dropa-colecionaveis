@@ -237,7 +237,7 @@ export async function POST(req: Request) {
             selectedItem.rarity,
             true
           ),
-          // Add missing achievement check for PACK_OPENED
+          // Achievement check for PACK_OPENED
           achievementEngine.checkAchievements({
             type: 'PACK_OPENED',
             userId: session.user.id,
@@ -252,6 +252,16 @@ export async function POST(req: Request) {
                 rarity: selectedItem.rarity,
                 name: selectedItem.name 
               }]
+            }
+          }),
+          // Achievement check for ITEM_OBTAINED (MISSING!)
+          achievementEngine.checkAchievements({
+            type: 'ITEM_OBTAINED',
+            userId: session.user.id,
+            data: {
+              itemId: selectedItem.id,
+              rarity: selectedItem.rarity,
+              isFirstItem: isFirstPack // Approximate - ideally should check if it's truly first item
             }
           })
         ])

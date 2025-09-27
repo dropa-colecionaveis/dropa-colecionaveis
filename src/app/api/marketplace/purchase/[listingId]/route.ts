@@ -180,7 +180,8 @@ export async function POST(
       await userStatsService.trackMarketplaceSale(
         listing.sellerId,
         listing.userItem.item.id,
-        listing.price
+        listing.price,
+        listing.userItem.item.value // Pass item's base value for price multiplier calculation
       )
     } catch (statsError) {
       console.error('Error tracking achievement progress:', statsError)

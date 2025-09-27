@@ -322,6 +322,20 @@ export default function AdminPanel() {
                 Configurar
               </Link>
             </div>
+
+            <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 text-white">
+              <div className="text-4xl mb-4">🏅</div>
+              <h2 className="text-xl font-semibold mb-2">Sistema de Conquistas</h2>
+              <p className="text-gray-300 mb-4">
+                Monitorar saúde e desempenho das conquistas
+              </p>
+              <Link
+                href="/admin/achievements"
+                className="block w-full text-center px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded-lg transition duration-200"
+              >
+                Monitorar
+              </Link>
+            </div>
           </div>
 
           {/* Security Management Section */}

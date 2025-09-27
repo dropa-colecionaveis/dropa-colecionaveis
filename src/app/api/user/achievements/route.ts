@@ -29,29 +29,39 @@ export async function GET(req: Request) {
     
     // Calcular progresso global de cada conquista (quantos % dos jogadores completaram)
     const { prisma } = await import('@/lib/prisma')
-    const totalUsers = await prisma.user.count()
+    const { achievementCache } = await import('@/lib/achievement-cache')
     
-    const achievementGlobalStats = await Promise.all(
-      allAchievements.map(async (achievement) => {
-        const completedCount = await prisma.userAchievement.count({
-          where: {
+    // Tentar buscar stats globais do cache primeiro
+    let achievementGlobalStats = achievementCache.getAchievementStats()
+    
+    if (!achievementGlobalStats) {
+      const totalUsers = await prisma.user.count()
+      
+      achievementGlobalStats = await Promise.all(
+        allAchievements.map(async (achievement) => {
+          const completedCount = await prisma.userAchievement.count({
+            where: {
+              achievementId: achievement.id,
+              isCompleted: true
+            }
+          })
+          
+          const globalCompletionRate = totalUsers > 0 
+            ? Math.round((completedCount / totalUsers) * 100)
+            : 0
+            
+          return {
             achievementId: achievement.id,
-            isCompleted: true
+            globalCompletionRate,
+            completedCount,
+            totalUsers
           }
         })
-        
-        const globalCompletionRate = totalUsers > 0 
-          ? Math.round((completedCount / totalUsers) * 100)
-          : 0
-          
-        return {
-          achievementId: achievement.id,
-          globalCompletionRate,
-          completedCount,
-          totalUsers
-        }
-      })
-    )
+      )
+      
+      // Salvar no cache por 10 minutos (stats globais mudam menos frequentemente)
+      achievementCache.setAchievementStats(achievementGlobalStats, 10 * 60 * 1000)
+    }
     
     // Criar mapa para lookup rápido
     const globalStatsMap = new Map(

@@ -1,5 +1,6 @@
 import { prisma } from './prisma'
 import { AchievementCategory, AchievementType, Rarity } from '@prisma/client'
+import { achievementCache } from './achievement-cache'
 
 export interface GameEvent {
   type: string
@@ -9,11 +10,15 @@ export interface GameEvent {
 }
 
 export interface AchievementCondition {
-  type: 'count' | 'value' | 'streak' | 'rarity' | 'collection' | 'time' | 'first' | 'first-purchase' | 'daily_login' | 'daily_streak' | 'daily_rewards_claimed'
+  type: 'count' | 'value' | 'streak' | 'rarity' | 'collection' | 'time' | 'first' | 'first-purchase' | 'daily_login' | 'daily_streak' | 'daily_rewards_claimed' | 'early_bird' | 'weekend_warrior' | 'comeback'
   target?: number
   rarity?: Rarity
   collectionId?: string
   timeframe?: string // 'daily', 'weekly', 'monthly'
+  time_start?: string
+  time_end?: string
+  weekends_in_month?: number
+  previous_streak_min?: number
 }
 
 export interface AchievementDefinition {
@@ -353,9 +358,23 @@ export class AchievementEngine {
   async checkAchievements(event: GameEvent): Promise<string[]> {
     const unlockedAchievements: string[] = []
     
+    // Sistema de debug logging
+    const debugLog = (message: string, data?: any) => {
+      console.log(`🏆 [ACHIEVEMENT DEBUG] ${message}`, data || '')
+    }
+    
+    debugLog(`Processing event: ${event.type} for user ${event.userId}`, {
+      eventData: event.data,
+      timestamp: event.timestamp
+    })
+    
     // Buscar conquistas relevantes para o evento
     const relevantAchievements = ACHIEVEMENT_DEFINITIONS.filter(achievement => 
       this.isRelevantForEvent(achievement, event)
+    )
+    
+    debugLog(`Found ${relevantAchievements.length} relevant achievements`, 
+      relevantAchievements.map(a => ({ id: a.id, name: a.name }))
     )
 
     for (const achievementDef of relevantAchievements) {
@@ -375,7 +394,12 @@ export class AchievementEngine {
         }
       })
 
-      if (existingUserAchievement?.isCompleted) continue
+      if (existingUserAchievement?.isCompleted) {
+        debugLog(`Skipping ${achievement.name} - already completed`)
+        continue
+      }
+
+      debugLog(`Evaluating conditions for: ${achievement.name}`)
 
       // Verificar condições
       const shouldUnlock = await this.checkAchievementConditions(
@@ -385,8 +409,11 @@ export class AchievementEngine {
       )
 
       if (shouldUnlock) {
+        debugLog(`🎉 UNLOCKING ACHIEVEMENT: ${achievement.name} for user ${event.userId}`)
         await this.unlockAchievement(event.userId, achievement.id)
         unlockedAchievements.push(achievement.id)
+      } else {
+        debugLog(`Conditions not met for: ${achievement.name}`)
       }
     }
 
@@ -433,6 +460,22 @@ export class AchievementEngine {
       return event.type === 'DAILY_REWARD_CLAIMED'
     }
 
+    // Verificações para conquistas customizadas baseadas em condições
+    if (achievement.category === 'DAILY') {
+      // Verificar tipo de condição para determinar evento relevante
+      const rawConditions = achievement.condition
+      let conditions = Array.isArray(rawConditions) ? rawConditions : [rawConditions]
+      
+      for (const condition of conditions) {
+        if (condition?.type === 'early_bird' || condition?.type === 'weekend_warrior') {
+          return event.type === 'DAILY_REWARD_CLAIMED'
+        }
+        if (condition?.type === 'comeback' || condition?.type === 'daily_streak') {
+          return event.type === 'DAILY_LOGIN'
+        }
+      }
+    }
+
     const eventTypeMap: Record<string, AchievementCategory[]> = {
       'USER_REGISTERED': ['MILESTONE'],
       'CREDITS_PURCHASED': ['MILESTONE'],
@@ -453,7 +496,19 @@ export class AchievementEngine {
     achievementDef: AchievementDefinition,
     event: GameEvent
   ): Promise<boolean> {
-    const conditions = achievement.condition as AchievementCondition[]
+    const rawConditions = achievement.condition
+    
+    // Tratar tanto arrays quanto objetos simples para compatibilidade
+    let conditions: AchievementCondition[]
+    if (Array.isArray(rawConditions)) {
+      conditions = rawConditions
+    } else if (rawConditions && typeof rawConditions === 'object') {
+      // Converter objeto único para array
+      conditions = [rawConditions]
+    } else {
+      console.warn(`Invalid conditions format for achievement ${achievement.id}:`, rawConditions)
+      return false
+    }
     
     for (const condition of conditions) {
       const result = await this.evaluateCondition(condition, achievement.id, event)
@@ -501,6 +556,15 @@ export class AchievementEngine {
       
       case 'daily_rewards_claimed':
         return await this.evaluateDailyRewardsClaimedCondition(condition, achievementId, event)
+      
+      case 'early_bird':
+        return await this.evaluateEarlyBirdCondition(condition, achievementId, event)
+      
+      case 'weekend_warrior':
+        return await this.evaluateWeekendWarriorCondition(condition, achievementId, event)
+      
+      case 'comeback':
+        return await this.evaluateComebackCondition(condition, achievementId, event)
       
       default:
         return false
@@ -790,6 +854,92 @@ export class AchievementEngine {
     return false
   }
 
+  private async evaluateEarlyBirdCondition(
+    condition: AchievementCondition,
+    achievementId: string,
+    event: GameEvent
+  ): Promise<boolean> {
+    if (event.type === 'DAILY_REWARD_CLAIMED') {
+      const currentTime = new Date()
+      const hour = currentTime.getHours()
+      const minute = currentTime.getMinutes()
+      const currentTimeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
+      
+      const startTime = condition.time_start || '05:00'
+      const endTime = condition.time_end || '07:00'
+      
+      // Verificar se está no intervalo de tempo (considerando que pode ser dentro do mesmo dia)
+      return currentTimeStr >= startTime && currentTimeStr <= endTime
+    }
+    return false
+  }
+
+  private async evaluateWeekendWarriorCondition(
+    condition: AchievementCondition,
+    achievementId: string,
+    event: GameEvent
+  ): Promise<boolean> {
+    if (event.type === 'DAILY_REWARD_CLAIMED') {
+      const targetWeekends = condition.weekends_in_month || 4
+      const currentDate = new Date()
+      const currentMonth = currentDate.getMonth()
+      const currentYear = currentDate.getFullYear()
+      
+      // Verificar se é fim de semana (sábado ou domingo)
+      const dayOfWeek = currentDate.getDay()
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) return false // Não é fim de semana
+      
+      // Contar claims de fim de semana no mês atual
+      const startOfMonth = new Date(currentYear, currentMonth, 1)
+      const endOfMonth = new Date(currentYear, currentMonth + 1, 0)
+      
+      const weekendClaims = await prisma.dailyRewardClaim.findMany({
+        where: {
+          userId: event.userId,
+          claimedAt: {
+            gte: startOfMonth,
+            lte: endOfMonth
+          }
+        }
+      })
+      
+      // Contar quantos foram em fins de semana
+      const weekendClaimsCount = weekendClaims.filter(claim => {
+        const claimDay = claim.claimedAt.getDay()
+        return claimDay === 0 || claimDay === 6 // Domingo ou sábado
+      }).length
+      
+      return weekendClaimsCount >= targetWeekends
+    }
+    return false
+  }
+
+  private async evaluateComebackCondition(
+    condition: AchievementCondition,
+    achievementId: string,
+    event: GameEvent
+  ): Promise<boolean> {
+    if (event.type === 'DAILY_LOGIN') {
+      const minPreviousStreak = condition.previous_streak_min || 7
+      
+      // Verificar se o usuário teve um streak anterior de pelo menos X dias e agora está voltando
+      const userStats = await prisma.userStats.findUnique({
+        where: { userId: event.userId }
+      })
+      
+      if (!userStats) return false
+      
+      // Verificar se o streak atual é baixo (recomeçou) mas teve um streak alto antes
+      // Isso é uma aproximação - idealmente teríamos histórico de streaks
+      const currentStreak = userStats.currentStreak
+      const longestStreak = userStats.longestStreak || 0
+      
+      // Se o streak atual é baixo (1-3 dias) mas o maior streak foi significativo
+      return currentStreak <= 3 && longestStreak >= minPreviousStreak
+    }
+    return false
+  }
+
   // Desbloquear conquista
   async unlockAchievement(userId: string, achievementId: string): Promise<void> {
     const achievement = await prisma.achievement.findUnique({
@@ -848,6 +998,9 @@ export class AchievementEngine {
 
     console.log(`🏆 Achievement unlocked: ${achievement.name} (+${achievement.points} XP) for user ${userId}`)
     
+    // Invalidar cache quando achievement é desbloqueado
+    achievementCache.onAchievementUnlocked(userId)
+    
     // Atualizar rankings após conquistar achievement (XP afeta rankings)
     setTimeout(async () => {
       try {
@@ -870,21 +1023,43 @@ export class AchievementEngine {
 
   // Obter todas as conquistas disponíveis no sistema
   async getAllAchievements(): Promise<any[]> {
-    return await prisma.achievement.findMany({
+    const cached = achievementCache.get('all_achievements')
+    if (cached) {
+      return cached
+    }
+
+    const achievements = await prisma.achievement.findMany({
       where: { isActive: true },
       orderBy: { createdAt: 'asc' }
     })
+
+    // Cache por 15 minutos (conquistas mudam raramente)
+    achievementCache.set('all_achievements', achievements, 15 * 60 * 1000)
+    
+    return achievements
   }
 
   // Obter conquistas do usuário
   async getUserAchievements(userId: string): Promise<any[]> {
-    return await prisma.userAchievement.findMany({
+    // Tentar buscar do cache primeiro
+    const cached = achievementCache.getUserAchievements(userId)
+    if (cached) {
+      return cached
+    }
+
+    // Se não encontrou no cache, buscar do banco
+    const achievements = await prisma.userAchievement.findMany({
       where: { userId },
       include: {
         achievement: true
       },
       orderBy: { unlockedAt: 'desc' }
     })
+
+    // Salvar no cache por 5 minutos
+    achievementCache.setUserAchievements(userId, achievements)
+    
+    return achievements
   }
 
   // Obter progresso de conquistas específicas

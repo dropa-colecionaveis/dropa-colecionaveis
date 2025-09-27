@@ -15,13 +15,22 @@ export async function GET(req: Request) {
       )
     }
 
-    const userStats = await userStatsService.getRankingStats(session.user.id)
+    // Tentar buscar do cache primeiro
+    const { achievementCache } = await import('@/lib/achievement-cache')
+    let userStats = achievementCache.getUserStats(session.user.id)
     
     if (!userStats) {
-      return NextResponse.json(
-        { error: 'User stats not found' },
-        { status: 404 }
-      )
+      userStats = await userStatsService.getRankingStats(session.user.id)
+      
+      if (!userStats) {
+        return NextResponse.json(
+          { error: 'User stats not found' },
+          { status: 404 }
+        )
+      }
+
+      // Salvar no cache por 2 minutos
+      achievementCache.setUserStats(session.user.id, userStats, 2 * 60 * 1000)
     }
 
     // Calcular XP correto apenas das conquistas
