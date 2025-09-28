@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
       console.log('🔧 [DEV] CSRF validation failed, attempting token regeneration...')
 
       const { csrfProtection } = await import('@/lib/csrf-protection')
-      const freshToken = csrfProtection.generateToken(session.user.id, session.sessionId)
+      const freshToken = csrfProtection.generateToken(session.user.id)
 
       const mockHeaders = new Headers(req.headers)
       mockHeaders.set('x-csrf-token', freshToken)
