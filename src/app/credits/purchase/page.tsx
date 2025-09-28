@@ -635,16 +635,52 @@ export default function PurchaseCredits() {
 
           {/* Payment Methods */}
           <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 mb-8">
-            <h3 className="text-xl font-semibold text-white mb-4">Métodos de Pagamento</h3>
+            <h3 className="text-xl font-semibold text-white mb-4">Forma de Pagamento</h3>
             <div className="flex justify-center">
               <button
                 onClick={() => handlePaymentMethodSelect('PIX')}
-                className="border border-gray-600 rounded-lg p-6 text-center text-white cursor-pointer hover:bg-white/10 hover:border-green-400 transition duration-200 group max-w-xs w-full"
+                className="relative bg-gradient-to-r from-green-600/20 to-blue-600/20 border-2 border-green-400/50 rounded-xl p-6 text-center text-white cursor-pointer hover:from-green-600/30 hover:to-blue-600/30 hover:border-green-400 hover:shadow-lg hover:shadow-green-400/20 transition-all duration-300 group max-w-xs w-full transform hover:scale-105"
               >
-                <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">📱</div>
-                <div className="font-semibold text-lg">PIX</div>
-                <div className="text-sm text-gray-300 mt-2">Pagamento instantâneo e seguro</div>
-                <div className="text-xs text-green-400 mt-1">✓ Aprovação imediata</div>
+                {/* Indicador visual de que é clicável */}
+                <div className="absolute top-2 right-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                  <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+
+                {/* Ícone PIX */}
+                <div className="text-5xl mb-3 group-hover:scale-110 transition-transform duration-300">
+                  📱
+                </div>
+
+                {/* Texto principal */}
+                <div className="font-bold text-xl text-green-400 mb-2">
+                  PAGAR COM PIX
+                </div>
+
+                {/* Subtítulo */}
+                <div className="text-sm text-gray-200 mb-3">
+                  Clique para gerar QR Code
+                </div>
+
+                {/* Benefícios */}
+                <div className="space-y-1">
+                  <div className="text-xs text-green-300 flex items-center justify-center">
+                    <span className="mr-1">⚡</span>
+                    Aprovação instantânea
+                  </div>
+                  <div className="text-xs text-green-300 flex items-center justify-center">
+                    <span className="mr-1">🔒</span>
+                    100% seguro
+                  </div>
+                </div>
+
+                {/* Call to action */}
+                <div className="mt-4 px-4 py-2 bg-green-600/30 rounded-lg border border-green-400/30 group-hover:bg-green-600/40 transition-colors">
+                  <span className="text-sm font-semibold text-white">
+                    Clique aqui para continuar
+                  </span>
+                </div>
               </button>
             </div>
           </div>
