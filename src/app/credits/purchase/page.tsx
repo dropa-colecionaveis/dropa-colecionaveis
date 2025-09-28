@@ -290,8 +290,8 @@ export default function PurchaseCredits() {
         setPollCount(prev => {
           const newCount = prev + 1
           
-          // Stop polling after 10 minutes (200 polls * 3 seconds)
-          if (newCount >= 200) {
+          // Stop polling after 10 minutes (300 polls * 2 seconds)
+          if (newCount >= 300) {
             clearInterval(newPollInterval)
             setPollInterval(null)
             setAutoCheckingPayment(false)
@@ -305,6 +305,18 @@ export default function PurchaseCredits() {
         const response = await fetch(`/api/payments/status?paymentId=${paymentId}`)
         
         if (!response.ok) {
+          if (response.status === 429) {
+            console.warn('⚠️ Rate limit hit, stopping automatic polling')
+            clearInterval(newPollInterval)
+            setPollInterval(null)
+            setAutoCheckingPayment(false)
+
+            // Show message to user about manual checking
+            alert('⚠️ Muitas verificações automáticas. O sistema parou a verificação automática. Use o botão "Verificar Status" para checar manualmente.')
+
+            return
+          }
+
           console.error(`Failed to check payment status: ${response.status}`)
           return
         }
@@ -320,18 +332,20 @@ export default function PurchaseCredits() {
           clearInterval(newPollInterval)
           setPollInterval(null)
           setAutoCheckingPayment(false)
-          
+
           // Update payment response to show success state
           setPaymentResponse((prev: PaymentResponse | null) => prev ? { ...prev, status: 'APPROVED' } : null)
-          
+
           // Show integrated success state instead of alert
           setSuccessCredits(payment.credits || selectedPackage?.credits || 0)
           setShowSuccessState(true)
-          
-          // Refresh user profile in background to update credits display
-          await fetchUserProfile()
-          
-          console.log(`✅ Payment approved! ${payment.credits} credits added to account`)
+
+          // Refresh user profile to update credits display
+          try {
+            await fetchUserProfile()
+          } catch (error) {
+            console.error('Error refreshing user profile:', error)
+          }
           
         } else if (['REJECTED', 'CANCELLED', 'EXPIRED'].includes(payment.status)) {
           clearInterval(newPollInterval)
@@ -348,7 +362,7 @@ export default function PurchaseCredits() {
       } catch (error) {
         console.error('Error polling payment status:', error)
       }
-    }, 3000) // Poll every 3 seconds
+    }, 2000) // Poll every 2 seconds for faster response
     
     setPollInterval(newPollInterval)
 
@@ -384,7 +398,6 @@ export default function PurchaseCredits() {
         // Refresh user profile to update credits display
         await fetchUserProfile()
         
-        console.log(`✅ Manual check: Payment approved! ${payment.credits} credits added`)
         
         // Stop any auto-checking
         if (pollInterval) {

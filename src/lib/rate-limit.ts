@@ -10,7 +10,7 @@ const rateLimitCache = new Map<string, RateLimitEntry>()
 // Configurações de rate limiting por endpoint
 const RATE_LIMITS = {
   payment_create: { max: 5, windowMs: 15 * 60 * 1000 }, // 5 tentativas em 15 minutos
-  payment_status: { max: 30, windowMs: 5 * 60 * 1000 }, // 30 verificações em 5 minutos
+  payment_status: { max: 600, windowMs: 10 * 60 * 1000 }, // 600 verificações em 10 minutos (1 por segundo)
   default: { max: 10, windowMs: 10 * 60 * 1000 } // 10 requests em 10 minutos
 }
 
@@ -103,7 +103,9 @@ export function resetRateLimit(identifier?: string, endpoint?: string) {
   if (identifier && endpoint) {
     const key = `${endpoint}:${identifier}`
     rateLimitCache.delete(key)
+    console.log(`🔄 Rate limit reset for ${key}`)
   } else {
     rateLimitCache.clear()
+    console.log('🔄 All rate limits cleared')
   }
 }

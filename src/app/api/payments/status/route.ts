@@ -75,9 +75,9 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // Validate payment ID format (should be UUID)
-    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-    if (!uuidPattern.test(paymentId)) {
+    // Validate payment ID format (CUID from Prisma)
+    const cuidPattern = /^c[0-9a-z]{24}$/i
+    if (!cuidPattern.test(paymentId)) {
       await securityLogger.log({
         type: 'SUSPICIOUS_ACTIVITY',
         severity: 'HIGH',
@@ -89,7 +89,7 @@ export async function GET(req: NextRequest) {
         description: 'Invalid payment ID format provided',
         metadata: {
           providedPaymentId: paymentId.substring(0, 10) + '...', // Log partial ID for security
-          validationError: 'Invalid UUID format'
+          validationError: 'Invalid CUID format'
         }
       })
 
@@ -101,7 +101,7 @@ export async function GET(req: NextRequest) {
 
     // Get payment from database
     const payment = await prisma.payment.findFirst({
-      where: { 
+      where: {
         id: paymentId,
         userId: session.user.id // Ensure user can only check their own payments
       },
@@ -137,16 +137,11 @@ export async function GET(req: NextRequest) {
         const { getPaymentStatus, mapMercadoPagoStatus } = await import('@/lib/mercadopago')
         const { userStatsService } = await import('@/lib/user-stats')
         
-        console.log(`🔍 [PAYMENT STATUS] Checking payment ${payment.id} (MP ID: ${payment.externalId}) directly with Mercado Pago API`)
-        
         const mpPaymentStatus = await getPaymentStatus(payment.externalId)
         const newStatus = mapMercadoPagoStatus(mpPaymentStatus.status)
         
-        console.log(`📊 [PAYMENT STATUS] MP API returned: ${mpPaymentStatus.status} -> Mapped to DB status: ${newStatus} (Current: ${payment.status})`)
-        
         // If status changed, update in database
         if (newStatus !== payment.status) {
-          console.log(`🔄 [PAYMENT STATUS] Status changed from ${payment.status} to ${newStatus} for payment ${payment.id}, updating database...`)
           
           if (newStatus === 'APPROVED') {
             // Handle approved payment
@@ -192,7 +187,6 @@ export async function GET(req: NextRequest) {
               console.error('Error tracking achievement progress:', statsError)
             }
 
-            console.log(`✅ [PAYMENT STATUS] Payment ${payment.id} approved! ${payment.credits} credits added to user ${payment.userId}`)
             
             return NextResponse.json({
               ...payment,
@@ -215,7 +209,6 @@ export async function GET(req: NextRequest) {
               }
             })
             
-            console.log(`❌ [PAYMENT STATUS] Payment ${payment.id} ${newStatus.toLowerCase()}: ${mpPaymentStatus.statusDetail || 'No reason provided'}`)
             
             return NextResponse.json({
               ...payment,
@@ -278,7 +271,6 @@ export async function GET(req: NextRequest) {
       userId: payment.userId,
     }
     
-    console.log(`📤 [PAYMENT STATUS] Returning payment status for ${payment.id}: ${payment.status} (${payment.credits} credits)`)
 
     return NextResponse.json(response, {
       headers: {
