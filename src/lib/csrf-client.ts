@@ -30,6 +30,13 @@ export async function getCSRFToken(): Promise<string> {
 
     const data = await response.json()
 
+    console.log('🔧 [CSRF CLIENT] Token received:', {
+      success: data.success,
+      hasToken: !!data.token,
+      tokenLength: data.token?.length,
+      tokenPrefix: data.token?.substring(0, 8)
+    })
+
     if (!data.success || !data.token) {
       throw new Error('Invalid CSRF token response')
     }
@@ -37,6 +44,8 @@ export async function getCSRFToken(): Promise<string> {
     // Cache the token for 25 minutes (5 minutes before actual expiry)
     cachedToken = data.token
     tokenExpiry = Date.now() + (25 * 60 * 1000)
+
+    console.log('✅ [CSRF CLIENT] Token cached successfully')
 
     return data.token
   } catch (error) {
@@ -54,17 +63,32 @@ export async function getCSRFToken(): Promise<string> {
 export async function secureApiRequest(url: string, options: RequestInit = {}): Promise<Response> {
   const token = await getCSRFToken()
 
+  console.log('🔐 [CSRF CLIENT] Making secure API request:', {
+    url,
+    method: options.method || 'GET',
+    hasToken: !!token,
+    tokenPrefix: token?.substring(0, 8)
+  })
+
   const headers = {
     'Content-Type': 'application/json',
     'X-CSRF-Token': token,
     ...options.headers,
   }
 
-  return fetch(url, {
+  const response = await fetch(url, {
     ...options,
     headers,
     credentials: 'same-origin',
   })
+
+  console.log('📨 [CSRF CLIENT] API response:', {
+    url,
+    status: response.status,
+    ok: response.ok
+  })
+
+  return response
 }
 
 /**

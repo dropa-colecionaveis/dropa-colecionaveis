@@ -173,7 +173,7 @@ export async function POST(req: NextRequest) {
     const { validateCSRFToken } = await import('@/lib/csrf-protection')
     const csrfValidation = await validateCSRFToken(req, authOptions, {
       consumeToken: true, // One-time use for payment operations
-      strictSessionCheck: true
+      strictSessionCheck: false
     })
 
     if (!csrfValidation.isValid) {

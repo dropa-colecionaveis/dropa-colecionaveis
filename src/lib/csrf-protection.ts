@@ -23,18 +23,24 @@ class CSRFProtection {
     const timestamp = Date.now().toString()
     const sessionIdentifier = sessionId || userId
 
+    // Debug: console.log('🔧 [CSRF] Generating token:', { userId, sessionId, sessionIdentifier, timestamp })
+
     // Create token using hash of random data + user info + timestamp
     const tokenData = `${randomData}-${userId}-${sessionIdentifier}-${timestamp}`
     const token = createHash('sha256').update(tokenData).digest('hex')
 
     // Store token with expiration
     const expiresAt = Date.now() + CSRF_TOKEN_EXPIRY
-    csrfTokens.set(token, {
+    const tokenInfo = {
       token,
       expiresAt,
       userId,
       sessionId: sessionIdentifier
-    })
+    }
+
+    csrfTokens.set(token, tokenInfo)
+
+    console.log('✅ [CSRF] Token generated:', { tokenPrefix: token.substring(0, 8), userId, totalTokens: csrfTokens.size })
 
     // Clean up expired tokens periodically
     this.cleanupExpiredTokens()
@@ -45,30 +51,36 @@ class CSRFProtection {
   // Validate a CSRF token
   validateToken(token: string, userId: string, sessionId?: string): boolean {
     if (!token || !userId) {
+      console.log('❌ [CSRF] Missing token or userId')
       return false
     }
 
     const tokenData = csrfTokens.get(token)
     if (!tokenData) {
+      console.log('❌ [CSRF] Token not found in storage. Available tokens:', csrfTokens.size)
       return false
     }
 
     // Check if token is expired
     if (Date.now() > tokenData.expiresAt) {
+      console.log('❌ [CSRF] Token expired')
       csrfTokens.delete(token)
       return false
     }
 
     // Check if token belongs to the correct user
     if (tokenData.userId !== userId) {
+      console.log('❌ [CSRF] User ID mismatch:', { expected: userId, found: tokenData.userId })
       return false
     }
 
     // Check session ID if provided
     if (sessionId && tokenData.sessionId !== sessionId) {
+      console.log('❌ [CSRF] Session ID mismatch:', { expected: sessionId, found: tokenData.sessionId })
       return false
     }
 
+    console.log('✅ [CSRF] Token validation successful for user:', userId)
     return true
   }
 
