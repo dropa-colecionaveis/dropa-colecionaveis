@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 
 // Direct Mercado Pago integration to avoid import issues
@@ -15,7 +15,7 @@ const payment = new Payment(client)
 
 // Credit packages now loaded dynamically from database
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const { authOptions } = await import('@/lib/auth')
     const { prisma } = await import('@/lib/prisma')
@@ -33,7 +33,15 @@ export async function POST(req: Request) {
       )
     }
 
-    console.log('✅ User authenticated:', session.user.id)
+    // Enhanced session validation for payment operations
+    const { validatePaymentSession } = await import('@/lib/session-validator')
+    const sessionValidation = await validatePaymentSession(req, authOptions)
+
+    if (!sessionValidation.isValid) {
+      return sessionValidation.response!
+    }
+
+    console.log('✅ User authenticated and session validated:', session.user.id)
 
     // 🛡️ RATE LIMITING CHECK
     const rateLimitResult = checkRateLimit(session.user.id, 'payment_create')
@@ -56,9 +64,76 @@ export async function POST(req: Request) {
       )
     }
 
-    const body = await req.json()
-    console.log('📦 Request body:', body)
-    
+    // Validate and sanitize input with enhanced security
+    const { inputValidator } = await import('@/lib/input-validator')
+    const { securityLogger } = await import('@/lib/security-logger')
+
+    let body
+    let validationResult
+
+    try {
+      body = await req.json()
+      console.log('📦 Request body received')
+
+      // Validate payment data with enhanced security
+      validationResult = inputValidator.validatePaymentData(body)
+
+      if (!validationResult.isValid) {
+        // Log validation failure
+        await securityLogger.log({
+          type: 'SUSPICIOUS_ACTIVITY',
+          severity: 'MEDIUM',
+          userId: session.user.id,
+          ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || undefined,
+          userAgent: req.headers.get('user-agent') || undefined,
+          endpoint: '/api/payments/mercadopago/pix',
+          method: 'POST',
+          description: `PIX payment validation failed: ${validationResult.errors.join(', ')}`,
+          metadata: {
+            validationErrors: validationResult.errors,
+            providedFields: Object.keys(body)
+          }
+        })
+
+        console.log('❌ Input validation failed:', validationResult.errors)
+        return NextResponse.json(
+          {
+            error: 'Invalid payment data',
+            details: validationResult.errors
+          },
+          { status: 400 }
+        )
+      }
+
+      // Use sanitized data
+      body = validationResult.sanitizedData
+
+      // Check for suspicious patterns
+      await inputValidator.checkSuspiciousPatterns(body, req, session.user.id)
+
+    } catch (error) {
+      // Log parsing/security error
+      await securityLogger.log({
+        type: 'SUSPICIOUS_ACTIVITY',
+        severity: 'HIGH',
+        userId: session.user.id,
+        ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || undefined,
+        userAgent: req.headers.get('user-agent') || undefined,
+        endpoint: '/api/payments/mercadopago/pix',
+        method: 'POST',
+        description: `PIX request parsing/validation error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        metadata: {
+          errorType: error instanceof Error ? error.constructor.name : 'Unknown'
+        }
+      })
+
+      console.log('❌ Request parsing/validation error:', error)
+      return NextResponse.json(
+        { error: 'Invalid request format or security violation' },
+        { status: 400 }
+      )
+    }
+
     if (!body.packageId) {
       console.log('❌ Missing package ID')
       return NextResponse.json(
@@ -200,16 +275,55 @@ export async function POST(req: Request) {
       message: 'PIX payment created successfully'
     }
 
+    // Log successful payment creation
+    await securityLogger.logPayment(
+      true,
+      user.id,
+      creditPackage.price,
+      'PIX',
+      req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || undefined,
+      {
+        paymentId: paymentRecord.id,
+        externalId: pixPayment.id,
+        packageId: body.packageId,
+        credits: creditPackage.credits,
+        userAgent: req.headers.get('user-agent')
+      }
+    )
+
     console.log(`✅ PIX payment created for user ${user.id}: ${paymentRecord.id}`)
 
     return NextResponse.json(apiResponse, {
       headers: {
         'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
-        'X-RateLimit-Reset': rateLimitResult.resetTime.toString()
+        'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY',
+        'X-XSS-Protection': '1; mode=block',
+        'Referrer-Policy': 'strict-origin-when-cross-origin'
       }
     })
 
   } catch (error) {
+    // Log payment failure
+    const { authOptions } = await import('@/lib/auth')
+    const { securityLogger } = await import('@/lib/security-logger')
+    const session = await getServerSession(authOptions)
+    if (session?.user?.id) {
+      await securityLogger.logPayment(
+        false,
+        session.user.id,
+        0, // Amount unknown in error case
+        'PIX',
+        req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || undefined,
+        {
+          errorMessage: error instanceof Error ? error.message : 'Unknown error',
+          errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+          userAgent: req.headers.get('user-agent')
+        }
+      )
+    }
+
     console.error('💥 PIX payment creation error:', error)
     console.error('💥 Error details:', {
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -217,11 +331,19 @@ export async function POST(req: Request) {
       cause: error instanceof Error ? error.cause : undefined,
     })
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Internal server error' 
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Internal server error'
       },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          'X-Content-Type-Options': 'nosniff',
+          'X-Frame-Options': 'DENY',
+          'X-XSS-Protection': '1; mode=block',
+          'Referrer-Policy': 'strict-origin-when-cross-origin'
+        }
+      }
     )
   }
 }

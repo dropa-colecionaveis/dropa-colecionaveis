@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   try {
     const { authOptions } = await import('@/lib/auth')
     const { prisma } = await import('@/lib/prisma')
@@ -16,6 +16,14 @@ export async function GET(req: Request) {
         { error: 'Unauthorized' },
         { status: 401 }
       )
+    }
+
+    // Enhanced session validation for payment operations
+    const { validatePaymentSession } = await import('@/lib/session-validator')
+    const sessionValidation = await validatePaymentSession(req, authOptions)
+
+    if (!sessionValidation.isValid) {
+      return sessionValidation.response!
     }
 
     // 🛡️ RATE LIMITING CHECK para status checks
@@ -39,12 +47,54 @@ export async function GET(req: Request) {
       )
     }
 
+    // Enhanced input validation for query parameters
+    const { inputValidator } = await import('@/lib/input-validator')
+    const { securityLogger } = await import('@/lib/security-logger')
+
     const { searchParams } = new URL(req.url)
     const paymentId = searchParams.get('paymentId')
 
     if (!paymentId) {
+      await securityLogger.log({
+        type: 'SUSPICIOUS_ACTIVITY',
+        severity: 'MEDIUM',
+        userId: session.user.id,
+        ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || undefined,
+        userAgent: req.headers.get('user-agent') || undefined,
+        endpoint: '/api/payments/status',
+        method: 'GET',
+        description: 'Payment status check attempted without payment ID',
+        metadata: {
+          queryParams: Object.fromEntries(searchParams.entries())
+        }
+      })
+
       return NextResponse.json(
         { error: 'Payment ID is required' },
+        { status: 400 }
+      )
+    }
+
+    // Validate payment ID format (should be UUID)
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    if (!uuidPattern.test(paymentId)) {
+      await securityLogger.log({
+        type: 'SUSPICIOUS_ACTIVITY',
+        severity: 'HIGH',
+        userId: session.user.id,
+        ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || undefined,
+        userAgent: req.headers.get('user-agent') || undefined,
+        endpoint: '/api/payments/status',
+        method: 'GET',
+        description: 'Invalid payment ID format provided',
+        metadata: {
+          providedPaymentId: paymentId.substring(0, 10) + '...', // Log partial ID for security
+          validationError: 'Invalid UUID format'
+        }
+      })
+
+      return NextResponse.json(
+        { error: 'Invalid payment ID format' },
         { status: 400 }
       )
     }
@@ -233,7 +283,12 @@ export async function GET(req: Request) {
     return NextResponse.json(response, {
       headers: {
         'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
-        'X-RateLimit-Reset': rateLimitResult.resetTime.toString()
+        'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY',
+        'X-XSS-Protection': '1; mode=block',
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
+        'Cache-Control': 'no-cache, no-store, must-revalidate'
       }
     })
 
