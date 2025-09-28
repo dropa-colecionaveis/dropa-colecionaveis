@@ -65,7 +65,7 @@ export async function GET(req: Request) {
     
     // Criar mapa para lookup rápido
     const globalStatsMap = new Map(
-      achievementGlobalStats.map(stat => [stat.achievementId, stat])
+      achievementGlobalStats.map((stat: any) => [stat.achievementId, stat])
     )
     
     // Criar mapa para facilitar lookup
@@ -81,9 +81,9 @@ export async function GET(req: Request) {
       return {
         achievement: {
           ...achievement,
-          globalCompletionRate: globalStats?.globalCompletionRate || 0,
-          globalCompletedCount: globalStats?.completedCount || 0,
-          globalTotalUsers: globalStats?.totalUsers || 0
+          globalCompletionRate: (globalStats as any)?.globalCompletionRate || 0,
+          globalCompletedCount: (globalStats as any)?.completedCount || 0,
+          globalTotalUsers: (globalStats as any)?.totalUsers || 0
         },
         progress: userProgress?.progress || 0,
         isCompleted: userProgress?.isCompleted || false,

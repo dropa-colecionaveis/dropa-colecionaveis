@@ -4,13 +4,26 @@ import type { WebhookNotification, PaymentStatusUpdate } from '@/types/payments'
 export async function POST(req: Request) {
   try {
     const { prisma } = await import('@/lib/prisma')
-    const { getPaymentStatus, mapMercadoPagoStatus } = await import('@/lib/mercadopago')
+    const { getPaymentStatus, mapMercadoPagoStatus, validateMercadoPagoSignature } = await import('@/lib/mercadopago')
     const { userStatsService } = await import('@/lib/user-stats')
 
     const body = await req.text()
+
+    // 🔒 VALIDAÇÃO DE ASSINATURA DO WEBHOOK
+    const signature = req.headers.get('x-signature')
+    const requestId = req.headers.get('x-request-id')
+
+    if (!validateMercadoPagoSignature(body, signature, requestId)) {
+      console.error('🚫 Webhook com assinatura inválida rejeitado')
+      return NextResponse.json(
+        { error: 'Invalid webhook signature' },
+        { status: 403 }
+      )
+    }
+
     const notification: WebhookNotification = JSON.parse(body)
 
-    console.log('Received webhook notification:', notification)
+    console.log('✅ Webhook válido recebido:', notification)
 
     // Only process payment notifications
     if (notification.type !== 'payment') {

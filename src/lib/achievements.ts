@@ -463,7 +463,7 @@ export class AchievementEngine {
     // Verificações para conquistas customizadas baseadas em condições
     if (achievement.category === 'DAILY') {
       // Verificar tipo de condição para determinar evento relevante
-      const rawConditions = achievement.condition
+      const rawConditions = achievement.conditions
       let conditions = Array.isArray(rawConditions) ? rawConditions : [rawConditions]
       
       for (const condition of conditions) {
@@ -1053,7 +1053,7 @@ export class AchievementEngine {
   // Obter todas as conquistas disponíveis no sistema
   async getAllAchievements(): Promise<any[]> {
     const cached = achievementCache.get('all_achievements')
-    if (cached) {
+    if (cached && Array.isArray(cached)) {
       return cached
     }
 

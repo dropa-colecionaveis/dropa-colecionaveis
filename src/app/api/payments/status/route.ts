@@ -7,13 +7,35 @@ export async function GET(req: Request) {
   try {
     const { authOptions } = await import('@/lib/auth')
     const { prisma } = await import('@/lib/prisma')
-    
+    const { checkRateLimit } = await import('@/lib/rate-limit')
+
     const session = await getServerSession(authOptions)
-    
+
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
+      )
+    }
+
+    // 🛡️ RATE LIMITING CHECK para status checks
+    const rateLimitResult = checkRateLimit(session.user.id, 'payment_status')
+
+    if (!rateLimitResult.allowed) {
+      console.warn(`⚠️ Status check rate limit exceeded for user ${session.user.id}`)
+      return NextResponse.json(
+        {
+          error: 'Too many status check attempts',
+          retryAfter: rateLimitResult.retryAfter
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': rateLimitResult.retryAfter?.toString() || '300',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': rateLimitResult.resetTime.toString()
+          }
+        }
       )
     }
 
@@ -207,8 +229,13 @@ export async function GET(req: Request) {
     }
     
     console.log(`📤 [PAYMENT STATUS] Returning payment status for ${payment.id}: ${payment.status} (${payment.credits} credits)`)
-    
-    return NextResponse.json(response)
+
+    return NextResponse.json(response, {
+      headers: {
+        'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+        'X-RateLimit-Reset': rateLimitResult.resetTime.toString()
+      }
+    })
 
   } catch (error) {
     console.error('Payment status check error:', error)

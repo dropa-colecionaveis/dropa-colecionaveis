@@ -19,11 +19,12 @@ export async function POST(req: Request) {
   try {
     const { authOptions } = await import('@/lib/auth')
     const { prisma } = await import('@/lib/prisma')
-    
+    const { checkRateLimit } = await import('@/lib/rate-limit')
+
     console.log('🔥 PIX API called')
-    
+
     const session = await getServerSession(authOptions)
-    
+
     if (!session?.user?.id) {
       console.log('❌ Unauthorized - no session')
       return NextResponse.json(
@@ -33,6 +34,27 @@ export async function POST(req: Request) {
     }
 
     console.log('✅ User authenticated:', session.user.id)
+
+    // 🛡️ RATE LIMITING CHECK
+    const rateLimitResult = checkRateLimit(session.user.id, 'payment_create')
+
+    if (!rateLimitResult.allowed) {
+      console.warn(`⚠️ Rate limit exceeded for user ${session.user.id}`)
+      return NextResponse.json(
+        {
+          error: 'Too many payment attempts',
+          retryAfter: rateLimitResult.retryAfter
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': rateLimitResult.retryAfter?.toString() || '900',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': rateLimitResult.resetTime.toString()
+          }
+        }
+      )
+    }
 
     const body = await req.json()
     console.log('📦 Request body:', body)
@@ -180,7 +202,12 @@ export async function POST(req: Request) {
 
     console.log(`✅ PIX payment created for user ${user.id}: ${paymentRecord.id}`)
 
-    return NextResponse.json(apiResponse)
+    return NextResponse.json(apiResponse, {
+      headers: {
+        'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+        'X-RateLimit-Reset': rateLimitResult.resetTime.toString()
+      }
+    })
 
   } catch (error) {
     console.error('💥 PIX payment creation error:', error)

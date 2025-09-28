@@ -1,4 +1,5 @@
 import { MercadoPagoConfig, Payment, PreApprovalPlan } from 'mercadopago'
+import { createHash, createHmac } from 'crypto'
 
 // Initialize Mercado Pago client
 const client = new MercadoPagoConfig({
@@ -285,6 +286,78 @@ export async function getCreditPackage(packageId: number) {
 export function clearCreditPackagesCache() {
   cachedPackages = null
   cacheExpiry = 0
+}
+
+// Validação de assinatura do webhook do Mercado Pago
+export function validateMercadoPagoSignature(
+  body: string,
+  signature: string | null,
+  requestId: string | null
+): boolean {
+  try {
+    // Se não há assinatura, rejeitar em produção
+    if (!signature) {
+      console.warn('⚠️ Webhook sem assinatura recebido')
+      return process.env.NODE_ENV === 'development' // Permitir apenas em dev
+    }
+
+    // Extrair timestamp e hash da assinatura
+    // Formato: "ts=1234567890,v1=hash"
+    const signatureParts = signature.split(',')
+    let timestamp = ''
+    let hash = ''
+
+    for (const part of signatureParts) {
+      const [key, value] = part.split('=')
+      if (key === 'ts') timestamp = value
+      if (key === 'v1') hash = value
+    }
+
+    if (!timestamp || !hash) {
+      console.warn('⚠️ Formato de assinatura inválido:', signature)
+      return false
+    }
+
+    // Verificar se timestamp não é muito antigo (máximo 5 minutos)
+    const now = Math.floor(Date.now() / 1000)
+    const webhookTime = parseInt(timestamp)
+    const timeDiff = now - webhookTime
+
+    if (timeDiff > 300) { // 5 minutos
+      console.warn('⚠️ Webhook muito antigo:', timeDiff, 'segundos')
+      return false
+    }
+
+    // Criar string para validação
+    const dataToSign = `${requestId || 'unknown'};${timestamp};${body}`
+
+    // Criar hash esperado usando webhook secret
+    const webhookSecret = process.env.MERCADO_PAGO_WEBHOOK_SECRET
+    if (!webhookSecret) {
+      console.warn('⚠️ MERCADO_PAGO_WEBHOOK_SECRET não configurado')
+      return process.env.NODE_ENV === 'development' // Permitir apenas em dev
+    }
+
+    const expectedHash = createHmac('sha256', webhookSecret)
+      .update(dataToSign)
+      .digest('hex')
+
+    // Comparar hashes de forma segura
+    const isValid = hash === expectedHash
+
+    if (!isValid) {
+      console.warn('⚠️ Assinatura de webhook inválida')
+      console.warn('Expected:', expectedHash)
+      console.warn('Received:', hash)
+      console.warn('Data:', dataToSign)
+    }
+
+    return isValid
+
+  } catch (error) {
+    console.error('❌ Erro na validação de assinatura:', error)
+    return false
+  }
 }
 
 export default client
