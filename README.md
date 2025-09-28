@@ -18,6 +18,35 @@ pnpm dev
 bun dev
 ```
 
+### 🛠️ Troubleshooting EPERM Errors (Windows/WSL)
+
+Se você encontrar erros EPERM relacionados ao trace do Next.js, use um dos scripts de correção:
+
+**Windows (CMD/PowerShell):**
+```cmd
+fix-eperm.bat
+```
+
+**Linux/WSL/macOS:**
+```bash
+./fix-eperm.sh
+```
+
+**Ou execute manualmente:**
+```bash
+# Limpar cache
+rm -rf .next node_modules/.cache
+
+# Rodar com telemetria desabilitada
+NEXT_TELEMETRY_DISABLED=1 npm run dev
+```
+
+**Configuração permanente no .env.local:**
+```env
+NEXT_TELEMETRY_DISABLED=1
+DISABLE_OPENCOLLECTIVE=1
+```
+
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.

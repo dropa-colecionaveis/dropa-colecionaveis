@@ -5,6 +5,8 @@ const nextConfig = {
   experimental: {
     // Fix for WSL/Windows path issues
     esmExternals: 'loose',
+    // Disable instrumentation that can cause EPERM errors
+    instrumentationHook: false,
   },
   webpack: (config, { isServer, dev }) => {
     // Fix for Windows/WSL path issues
@@ -23,7 +25,13 @@ const nextConfig = {
         poll: 1000,
         aggregateTimeout: 300,
       };
+
+      // Disable cache in development to prevent EPERM errors
+      config.cache = false;
     }
+
+    // Disable webpack persistent cache to prevent permission issues
+    config.cache = false;
     
     return config;
   },
