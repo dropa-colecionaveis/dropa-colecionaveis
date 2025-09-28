@@ -350,6 +350,9 @@ class InputValidator {
 
   // Validate common payment data
   validatePaymentData(data: any): ValidationResult {
+    // For PIX payments, installments are not required
+    const isPIXPayment = data.method === 'PIX'
+
     const schema: ValidationSchema = {
       packageId: {
         required: true,
@@ -385,7 +388,7 @@ class InputValidator {
         max: 2050
       },
       installments: {
-        required: true,
+        required: !isPIXPayment, // Not required for PIX payments
         type: 'number',
         min: 1,
         max: 12

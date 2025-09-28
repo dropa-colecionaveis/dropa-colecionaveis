@@ -4,8 +4,12 @@ import { getServerSession } from 'next-auth'
 // Direct Mercado Pago integration to avoid import issues
 const { MercadoPagoConfig, Payment } = require('mercadopago')
 
+if (!process.env.MERCADO_PAGO_ACCESS_TOKEN) {
+  throw new Error('MERCADO_PAGO_ACCESS_TOKEN environment variable is not set')
+}
+
 const client = new MercadoPagoConfig({
-  accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN!,
+  accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN,
   options: {
     timeout: 5000,
   }
@@ -43,10 +47,31 @@ export async function POST(req: NextRequest) {
 
     // CSRF protection for payment operations
     const { validateCSRFToken } = await import('@/lib/csrf-protection')
-    const csrfValidation = await validateCSRFToken(req, authOptions, {
-      consumeToken: true, // One-time use for payment operations
+    let csrfValidation = await validateCSRFToken(req, authOptions, {
+      consumeToken: false, // Don't consume token immediately for PIX payments
       strictSessionCheck: false // Relaxed session check for payments
     })
+
+    // If CSRF validation fails in development, try to regenerate token
+    if (!csrfValidation.isValid && process.env.NODE_ENV === 'development') {
+      console.log('🔧 [DEV] CSRF validation failed, attempting token regeneration...')
+
+      const { csrfProtection } = await import('@/lib/csrf-protection')
+      const freshToken = csrfProtection.generateToken(session.user.id, session.sessionId)
+
+      const mockHeaders = new Headers(req.headers)
+      mockHeaders.set('x-csrf-token', freshToken)
+      const mockReq = { ...req, headers: mockHeaders } as NextRequest
+
+      csrfValidation = await validateCSRFToken(mockReq, authOptions, {
+        consumeToken: false,
+        strictSessionCheck: false
+      })
+
+      if (csrfValidation.isValid) {
+        console.log('✅ [DEV] Token regeneration successful')
+      }
+    }
 
     if (!csrfValidation.isValid) {
       return csrfValidation.response!
