@@ -21,7 +21,7 @@ export async function GET() {
       select: { role: true }
     })
 
-    if (user?.role !== 'ADMIN') {
+    if (!['ADMIN', 'SUPER_ADMIN'].includes(user?.role || '')) {
       return NextResponse.json(
         { error: 'Forbidden' },
         { status: 403 }

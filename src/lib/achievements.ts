@@ -579,6 +579,23 @@ export class AchievementEngine {
     // Lógica específica baseada no achievement ID e tipo de evento
     let count = 0
 
+    // Para a conquista "Pioneiro" - verificar se usuário está entre os primeiros 100
+    if (achievementId === 'early-adopter' && event.type === 'USER_REGISTERED') {
+      const user = await prisma.user.findUnique({
+        where: { id: event.userId },
+        select: { createdAt: true }
+      })
+
+      if (user) {
+        const userPosition = await prisma.user.count({
+          where: { createdAt: { lt: user.createdAt } }
+        })
+        // Se está entre os primeiros 100 (posições 0-99)
+        return userPosition < (condition.target || 100)
+      }
+      return false
+    }
+
     // Para conquistas de marketplace, verificar especificamente o achievement ID
     if (achievementId === 'first-sale' && event.type === 'MARKETPLACE_SALE') {
       count = await prisma.marketplaceTransaction.count({
@@ -737,7 +754,9 @@ export class AchievementEngine {
       case 'PACK_OPENED':
         // Para a conquista "Sortudo de Primeira" - deve ser apenas para primeiro pacote com lendário
         const isFirstPack = event.data.isFirstPack || false
-        const hasLegendary = event.data.items?.some((item: any) => item.rarity === 'LENDARIO') || false
+        const hasLegendary = event.data.items?.some((item: any) => item.rarity === 'LENDARIO') ||
+                           event.data.itemRarity === 'LENDARIO' ||
+                           event.data.rarity === 'LENDARIO'
         return isFirstPack && hasLegendary
       
       default:
@@ -786,22 +805,30 @@ export class AchievementEngine {
     event: GameEvent
   ): Promise<boolean> {
     if (condition.timeframe === 'night') {
-      const hour = new Date().getHours()
+      const now = new Date()
+      const hour = now.getHours()
       const isNight = hour >= 22 || hour < 6
-      
+
       if (isNight && event.type === 'PACK_OPENED') {
-        // Contar pacotes abertos à noite
-        const nightPacks = await prisma.packOpening.count({
+        // Contar pacotes abertos à noite (considerar últimos 30 dias para performance)
+        const thirtyDaysAgo = new Date()
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+        const allPackOpenings = await prisma.packOpening.findMany({
           where: {
             userId: event.userId,
-            createdAt: {
-              gte: new Date(new Date().setHours(22, 0, 0, 0)),
-              lte: new Date(new Date().setHours(6, 0, 0, 0))
-            }
-          }
+            createdAt: { gte: thirtyDaysAgo }
+          },
+          select: { createdAt: true }
         })
-        
-        return nightPacks >= (condition.target || 1)
+
+        // Filtrar apenas os que foram abertos no período noturno
+        const nightPacks = allPackOpenings.filter(pack => {
+          const packHour = pack.createdAt.getHours()
+          return packHour >= 22 || packHour < 6
+        })
+
+        return nightPacks.length >= (condition.target || 1)
       }
     }
 
@@ -985,9 +1012,11 @@ export class AchievementEngine {
         }
       })
 
-      // Calcular novo nível baseado em XP
-      const newLevel = this.calculateLevel(userStats.totalXP + achievement.points)
-      
+      // Calcular novo nível baseado no XP atualizado
+      // Nota: userStats.totalXP ainda contém o valor antigo, então somamos os pontos
+      const newTotalXP = userStats.totalXP + achievement.points
+      const newLevel = this.calculateLevel(newTotalXP)
+
       if (newLevel > userStats.level) {
         await tx.userStats.update({
           where: { userId },
