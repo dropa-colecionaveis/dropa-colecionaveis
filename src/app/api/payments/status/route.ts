@@ -143,7 +143,7 @@ export async function GET(req: NextRequest) {
         // If status changed, update in database
         if (newStatus !== payment.status) {
 
-          if (newStatus === 'APPROVED' && payment.status !== 'APPROVED') {
+          if (newStatus === 'APPROVED') {
             // Handle approved payment with idempotency check
             await prisma.$transaction(async (tx) => {
               // First, check if credits were already added for this payment

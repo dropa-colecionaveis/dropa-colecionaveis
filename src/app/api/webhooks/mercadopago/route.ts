@@ -255,7 +255,7 @@ async function processPaymentUpdate(
       })
 
       // If payment was approved and credits weren't added yet
-      if (mappedStatus === 'APPROVED' && payment.status !== 'APPROVED') {
+      if (mappedStatus === 'APPROVED') {
         // Check if credits were already added for this payment
         const existingTransaction = await tx.transaction.findFirst({
           where: {

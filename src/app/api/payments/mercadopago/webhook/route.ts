@@ -74,7 +74,7 @@ export async function POST(req: Request) {
     }
 
     // Handle approved payments
-    if (newStatus === 'APPROVED' && payment.status !== 'APPROVED') {
+    if (newStatus === 'APPROVED') {
       statusUpdate.approvedAt = new Date()
 
       // Add credits to user and record transaction with idempotency check
