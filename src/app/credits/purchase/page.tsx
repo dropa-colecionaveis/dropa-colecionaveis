@@ -9,6 +9,7 @@ import { useUserRankings } from '@/hooks/useUserRankings'
 // Removido import direto - vamos usar API route
 import type { PaymentMethod, PaymentResponse, CreditPackage } from '@/types/payments'
 import { HeaderStatsSkeleton, CreditPackagesSkeleton } from '@/components/SkeletonLoader'
+import { secureApiRequest } from '@/lib/csrf-client'
 
 export default function PurchaseCredits() {
   const { data: session, status } = useSession()
@@ -180,11 +181,8 @@ export default function PurchaseCredits() {
     setLoading(true)
 
     try {
-      const response = await fetch('/api/payments/mercadopago/pix', {
+      const response = await secureApiRequest('/api/payments/mercadopago/pix', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           packageId: selectedPackage?.id,
           method: selectedPaymentMethod,
@@ -203,8 +201,16 @@ export default function PurchaseCredits() {
         alert(data.error || 'Erro ao criar pagamento PIX. Tente novamente.')
         setShowPaymentModal(false)
       }
-    } catch (error) {
-      alert('Erro na comunicação. Tente novamente.')
+    } catch (error: any) {
+      console.error('PIX Payment Error:', error)
+      if (error.message?.includes('Authentication required')) {
+        alert('Sessão expirada. Faça login novamente.')
+        window.location.href = '/auth/signin'
+      } else if (error.message?.includes('CSRF')) {
+        alert('Erro de segurança. Recarregue a página e tente novamente.')
+      } else {
+        alert('Erro na comunicação. Tente novamente.')
+      }
       setShowPaymentModal(false)
     } finally {
       setLoading(false)
@@ -215,11 +221,8 @@ export default function PurchaseCredits() {
     setLoading(true)
 
     try {
-      const response = await fetch('/api/payments/mercadopago/card', {
+      const response = await secureApiRequest('/api/payments/mercadopago/card', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           packageId: selectedPackage?.id,
           method: selectedPaymentMethod,
@@ -259,8 +262,16 @@ export default function PurchaseCredits() {
         }
         setShowPaymentModal(false)
       }
-    } catch (error) {
-      alert('Erro na comunicação. Tente novamente.')
+    } catch (error: any) {
+      console.error('Card Payment Error:', error)
+      if (error.message?.includes('Authentication required')) {
+        alert('Sessão expirada. Faça login novamente.')
+        window.location.href = '/auth/signin'
+      } else if (error.message?.includes('CSRF')) {
+        alert('Erro de segurança. Recarregue a página e tente novamente.')
+      } else {
+        alert('Erro na comunicação. Tente novamente.')
+      }
       setShowPaymentModal(false)
     } finally {
       setLoading(false)
