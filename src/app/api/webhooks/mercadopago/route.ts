@@ -256,27 +256,45 @@ async function processPaymentUpdate(
 
       // If payment was approved and credits weren't added yet
       if (mappedStatus === 'APPROVED' && payment.status !== 'APPROVED') {
-        console.log(`💰 Adding credits to user ${payment.userId}: ${payment.credits} credits`)
-
-        // Add credits to user
-        await tx.user.update({
-          where: { id: payment.userId },
-          data: {
-            credits: {
-              increment: payment.credits
+        // Check if credits were already added for this payment
+        const existingTransaction = await tx.transaction.findFirst({
+          where: {
+            userId: payment.userId,
+            type: 'PURCHASE_CREDITS',
+            description: {
+              contains: `Payment ${payment.id}`
             }
           }
         })
 
-        // Create transaction record
-        await tx.transaction.create({
-          data: {
-            userId: payment.userId,
-            type: 'PURCHASE_CREDITS',
-            amount: payment.credits,
-            description: `Purchased ${payment.credits} credits for R$ ${payment.amount} (Webhook Confirmation)`
-          }
-        })
+        // Only process if transaction doesn't exist yet
+        if (!existingTransaction) {
+          console.log(`💰 Adding credits to user ${payment.userId}: ${payment.credits} credits`)
+
+          // Add credits to user
+          await tx.user.update({
+            where: { id: payment.userId },
+            data: {
+              credits: {
+                increment: payment.credits
+              }
+            }
+          })
+
+          // Create transaction record with unique payment reference
+          await tx.transaction.create({
+            data: {
+              userId: payment.userId,
+              type: 'PURCHASE_CREDITS',
+              amount: payment.credits,
+              description: `Purchased ${payment.credits} credits for R$ ${payment.amount} (Webhook Confirmation) - Payment ${payment.id}`
+            }
+          })
+
+          console.log(`✅ [WEBHOOK ALT] Credits added for payment ${payment.id}: ${payment.credits} credits`)
+        } else {
+          console.log(`⚠️ [WEBHOOK ALT] Credits already added for payment ${payment.id}, skipping duplicate`)
+        }
 
         // Track achievement progress
         try {

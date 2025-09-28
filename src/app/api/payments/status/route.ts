@@ -142,31 +142,49 @@ export async function GET(req: NextRequest) {
         
         // If status changed, update in database
         if (newStatus !== payment.status) {
-          
-          if (newStatus === 'APPROVED') {
-            // Handle approved payment
+
+          if (newStatus === 'APPROVED' && payment.status !== 'APPROVED') {
+            // Handle approved payment with idempotency check
             await prisma.$transaction(async (tx) => {
-              // Update user credits
-              await tx.user.update({
-                where: { id: payment.userId },
-                data: {
-                  credits: {
-                    increment: payment.credits
+              // First, check if credits were already added for this payment
+              const existingTransaction = await tx.transaction.findFirst({
+                where: {
+                  userId: payment.userId,
+                  type: 'PURCHASE_CREDITS',
+                  description: {
+                    contains: `Payment ${payment.id}`
                   }
                 }
               })
 
-              // Record transaction
-              await tx.transaction.create({
-                data: {
-                  userId: payment.userId,
-                  type: 'PURCHASE_CREDITS',
-                  amount: payment.credits,
-                  description: `Purchased ${payment.credits} credits for R$ ${payment.amount} (${payment.method})`,
-                }
-              })
+              // Only process if transaction doesn't exist yet
+              if (!existingTransaction) {
+                // Update user credits
+                await tx.user.update({
+                  where: { id: payment.userId },
+                  data: {
+                    credits: {
+                      increment: payment.credits
+                    }
+                  }
+                })
 
-              // Update payment status
+                // Record transaction with unique reference
+                await tx.transaction.create({
+                  data: {
+                    userId: payment.userId,
+                    type: 'PURCHASE_CREDITS',
+                    amount: payment.credits,
+                    description: `Purchased ${payment.credits} credits for R$ ${payment.amount} (${payment.method}) - Payment ${payment.id}`,
+                  }
+                })
+
+                console.log(`✅ Credits added for payment ${payment.id}: ${payment.credits} credits`)
+              } else {
+                console.log(`⚠️ Credits already added for payment ${payment.id}, skipping duplicate`)
+              }
+
+              // Always update payment status regardless
               await tx.payment.update({
                 where: { id: payment.id },
                 data: {
