@@ -281,7 +281,7 @@ export async function generateCSRFTokenResponse(
 
     if (!session?.user?.id) {
       return NextResponse.json(
-        { error: 'Authentication required' },
+        { success: false, error: 'Authentication required' },
         { status: 401 }
       )
     }
@@ -302,7 +302,8 @@ export async function generateCSRFTokenResponse(
     })
 
     return NextResponse.json({
-      csrfToken: token,
+      success: true,
+      token: token,
       expiresIn: CSRF_TOKEN_EXPIRY
     }, {
       headers: {
@@ -325,7 +326,7 @@ export async function generateCSRFTokenResponse(
     })
 
     return NextResponse.json(
-      { error: 'Failed to generate CSRF token' },
+      { success: false, error: 'Failed to generate CSRF token' },
       { status: 500 }
     )
   }
