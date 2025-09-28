@@ -236,12 +236,84 @@ class InputValidator {
     }
   }
 
-  // Sanitize string input
+  // Enhanced sanitization methods
   private sanitizeString(input: string): string {
     return input
       .trim()
       .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters
       .replace(/\s+/g, ' ') // Normalize whitespace
+      .replace(/[<>'"&]/g, '') // Remove potentially dangerous HTML characters
+  }
+
+  // Sanitize HTML content (removes all HTML tags)
+  sanitizeHtmlContent(input: string): string {
+    return input
+      .replace(/<[^>]*>/g, '') // Remove HTML tags
+      .replace(/&[a-zA-Z0-9#]+;/g, '') // Remove HTML entities
+      .trim()
+      .replace(/\s+/g, ' ')
+  }
+
+  // Sanitize user name (keeps only letters, spaces, and accents)
+  sanitizeUserName(input: string): string {
+    return input
+      .trim()
+      .replace(/[^a-zA-ZÀ-ÿ\s]/g, '') // Keep only letters and spaces
+      .replace(/\s+/g, ' ') // Normalize whitespace
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
+  }
+
+  // Sanitize phone number (keeps only numbers and common separators)
+  sanitizePhoneNumber(input: string): string {
+    return input
+      .replace(/[^\d\+\-\(\)\s]/g, '') // Keep only numbers and phone separators
+      .trim()
+  }
+
+  // Sanitize email (basic cleaning)
+  sanitizeEmail(input: string): string {
+    return input
+      .trim()
+      .toLowerCase()
+      .replace(/[^\w@.-]/g, '') // Keep only valid email characters
+  }
+
+  // Sanitize credit card number (removes spaces and keeps only digits)
+  sanitizeCreditCard(input: string): string {
+    return input
+      .replace(/\D/g, '') // Keep only digits
+  }
+
+  // Sanitize Brazilian CPF/CNPJ
+  sanitizeBrazilianDocument(input: string): string {
+    return input
+      .replace(/\D/g, '') // Keep only digits
+  }
+
+  // Deep sanitization for nested objects
+  deepSanitize(obj: any): any {
+    if (typeof obj === 'string') {
+      return this.sanitizeString(obj)
+    }
+
+    if (Array.isArray(obj)) {
+      return obj.map(item => this.deepSanitize(item))
+    }
+
+    if (obj && typeof obj === 'object') {
+      const sanitized: any = {}
+      for (const [key, value] of Object.entries(obj)) {
+        // Sanitize keys too
+        const sanitizedKey = key.replace(/[^a-zA-Z0-9_]/g, '')
+        sanitized[sanitizedKey] = this.deepSanitize(value)
+      }
+      return sanitized
+    }
+
+    return obj
   }
 
   // Check for suspicious patterns
@@ -340,6 +412,230 @@ class InputValidator {
         minLength: 3,
         maxLength: 4,
         pattern: /^\d{3,4}$/
+      }
+    }
+
+    return this.validate(data, schema)
+  }
+
+  // Enhanced credit card validation
+  validateCreditCardData(data: any): ValidationResult {
+    const schema: ValidationSchema = {
+      packageId: {
+        required: true,
+        type: 'number',
+        min: 1,
+        max: 10
+      },
+      token: {
+        required: true,
+        type: 'string',
+        minLength: 10,
+        maxLength: 500,
+        pattern: /^[a-zA-Z0-9_-]+$/
+      },
+      cardNumber: {
+        required: false,
+        type: 'string',
+        customValidator: (value: string) => this.validateLuhn(value?.replace(/\s/g, ''))
+      },
+      expirationMonth: {
+        required: false,
+        type: 'number',
+        min: 1,
+        max: 12
+      },
+      expirationYear: {
+        required: false,
+        type: 'number',
+        min: new Date().getFullYear(),
+        max: new Date().getFullYear() + 10,
+        customValidator: (year: number) => {
+          // Check if expiration is not in the past
+          const currentYear = new Date().getFullYear()
+          const currentMonth = new Date().getMonth() + 1
+          return year > currentYear || (year === currentYear)
+        }
+      },
+      installments: {
+        required: true,
+        type: 'number',
+        min: 1,
+        max: 12
+      },
+      identificationType: {
+        required: true,
+        type: 'string',
+        allowedValues: ['CPF', 'CNPJ']
+      },
+      identificationNumber: {
+        required: true,
+        type: 'string',
+        minLength: 11,
+        maxLength: 18,
+        customValidator: (value: string) => {
+          const cleaned = value.replace(/\D/g, '')
+          return cleaned.length === 11 || cleaned.length === 14 // CPF or CNPJ
+        }
+      },
+      cardholderName: {
+        required: true,
+        type: 'string',
+        minLength: 3,
+        maxLength: 100,
+        pattern: /^[a-zA-ZÀ-ÿ\s]+$/,
+        customValidator: (value: string) => {
+          // Should have at least first and last name
+          const words = value.trim().split(/\s+/)
+          return words.length >= 2 && words.every(word => word.length >= 2)
+        }
+      },
+      securityCode: {
+        required: true,
+        type: 'string',
+        minLength: 3,
+        maxLength: 4,
+        pattern: /^\d{3,4}$/
+      }
+    }
+
+    const result = this.validate(data, schema)
+
+    // Additional cross-field validation
+    if (result.isValid && data.expirationMonth && data.expirationYear) {
+      const currentDate = new Date()
+      const expirationDate = new Date(data.expirationYear, data.expirationMonth - 1)
+
+      if (expirationDate < currentDate) {
+        result.isValid = false
+        result.errors.push('Card expiration date is in the past')
+      }
+    }
+
+    return result
+  }
+
+  // Luhn algorithm for credit card validation
+  private validateLuhn(cardNumber: string): boolean {
+    if (!cardNumber || !/^\d{13,19}$/.test(cardNumber)) {
+      return false
+    }
+
+    let sum = 0
+    let isEven = false
+
+    // Loop through values starting from the rightmost digit
+    for (let i = cardNumber.length - 1; i >= 0; i--) {
+      let digit = parseInt(cardNumber[i])
+
+      if (isEven) {
+        digit *= 2
+        if (digit > 9) {
+          digit -= 9
+        }
+      }
+
+      sum += digit
+      isEven = !isEven
+    }
+
+    return sum % 10 === 0
+  }
+
+  // Validate Brazilian CPF
+  validateBrazilianCPF(cpf: string): ValidationResult {
+    const schema: ValidationSchema = {
+      cpf: {
+        required: true,
+        type: 'string',
+        customValidator: (value: string) => {
+          const cleaned = value.replace(/\D/g, '')
+
+          // Check length
+          if (cleaned.length !== 11) return false
+
+          // Check for repeated digits
+          if (/^(.)\1+$/.test(cleaned)) return false
+
+          // Calculate verification digits
+          let sum = 0
+          for (let i = 0; i < 9; i++) {
+            sum += parseInt(cleaned[i]) * (10 - i)
+          }
+          let digit1 = 11 - (sum % 11)
+          if (digit1 > 9) digit1 = 0
+
+          sum = 0
+          for (let i = 0; i < 10; i++) {
+            sum += parseInt(cleaned[i]) * (11 - i)
+          }
+          let digit2 = 11 - (sum % 11)
+          if (digit2 > 9) digit2 = 0
+
+          return parseInt(cleaned[9]) === digit1 && parseInt(cleaned[10]) === digit2
+        }
+      }
+    }
+
+    return this.validate({ cpf }, schema)
+  }
+
+  // Enhanced user data validation
+  validateUserProfileData(data: any): ValidationResult {
+    const schema: ValidationSchema = {
+      name: {
+        required: true,
+        type: 'string',
+        minLength: 2,
+        maxLength: 100,
+        pattern: /^[a-zA-ZÀ-ÿ\s]+$/,
+        customValidator: (value: string) => {
+          // Check for reasonable name format
+          const words = value.trim().split(/\s+/)
+          return words.length >= 1 && words.every(word => word.length >= 2)
+        }
+      },
+      email: {
+        required: true,
+        type: 'email',
+        maxLength: 255,
+        customValidator: (value: string) => {
+          // Additional email validation beyond basic regex
+          const parts = value.split('@')
+          if (parts.length !== 2) return false
+
+          const [local, domain] = parts
+
+          // Check local part
+          if (local.length > 64 || local.startsWith('.') || local.endsWith('.')) return false
+          if (local.includes('..')) return false
+
+          // Check domain part
+          if (domain.length > 253 || domain.startsWith('-') || domain.endsWith('-')) return false
+          if (!domain.includes('.')) return false
+
+          return true
+        }
+      },
+      phone: {
+        required: false,
+        type: 'string',
+        pattern: /^\+?[\d\s\-\(\)]+$/,
+        minLength: 10,
+        maxLength: 20
+      },
+      birthDate: {
+        required: false,
+        type: 'string',
+        pattern: /^\d{4}-\d{2}-\d{2}$/,
+        customValidator: (value: string) => {
+          const date = new Date(value)
+          const now = new Date()
+          const minAge = new Date(now.getFullYear() - 120, now.getMonth(), now.getDate())
+          const maxAge = new Date(now.getFullYear() - 13, now.getMonth(), now.getDate())
+
+          return date >= minAge && date <= maxAge
+        }
       }
     }
 

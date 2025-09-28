@@ -41,7 +41,18 @@ export async function POST(req: NextRequest) {
       return sessionValidation.response!
     }
 
-    console.log('✅ User authenticated and session validated:', session.user.id)
+    // CSRF protection for payment operations
+    const { validateCSRFToken } = await import('@/lib/csrf-protection')
+    const csrfValidation = await validateCSRFToken(req, authOptions, {
+      consumeToken: true, // One-time use for payment operations
+      strictSessionCheck: true
+    })
+
+    if (!csrfValidation.isValid) {
+      return csrfValidation.response!
+    }
+
+    console.log('✅ User authenticated, session validated, and CSRF protected:', session.user.id)
 
     // 🛡️ RATE LIMITING CHECK
     const rateLimitResult = checkRateLimit(session.user.id, 'payment_create')

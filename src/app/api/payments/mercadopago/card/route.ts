@@ -161,28 +161,65 @@ export async function POST(req: NextRequest) {
 
     console.log('✅ User authenticated:', session.user.id)
 
-    // Read and validate input data
+    // Enhanced session validation for payment operations
+    const { validatePaymentSession } = await import('@/lib/session-validator')
+    const sessionValidation = await validatePaymentSession(req, authOptions)
+
+    if (!sessionValidation.isValid) {
+      return sessionValidation.response!
+    }
+
+    // CSRF protection for payment operations
+    const { validateCSRFToken } = await import('@/lib/csrf-protection')
+    const csrfValidation = await validateCSRFToken(req, authOptions, {
+      consumeToken: true, // One-time use for payment operations
+      strictSessionCheck: true
+    })
+
+    if (!csrfValidation.isValid) {
+      return csrfValidation.response!
+    }
+
+    // Read and validate input data with enhanced validation
     const rawBody = await req.json()
-    const validation = inputValidator.validatePaymentData(rawBody)
+
+    // Check for suspicious patterns first
+    await inputValidator.checkSuspiciousPatterns(rawBody, req, session.user.id)
+
+    // Use enhanced credit card validation
+    const validation = inputValidator.validateCreditCardData(rawBody)
     if (!validation.isValid) {
-      console.log('❌ Input validation failed:', validation.errors)
-      
+      console.log('❌ Enhanced input validation failed:', validation.errors)
+
       await securityLogger.log({
         type: 'SUSPICIOUS_ACTIVITY',
-        severity: 'MEDIUM',
+        severity: 'HIGH',
         userId: session.user.id,
         userEmail: session.user.email,
         ipAddress,
         userAgent,
         endpoint: '/api/payments/mercadopago/card',
         method: 'POST',
-        description: `Payment input validation failed: ${validation.errors.join(', ')}`,
-        metadata: { validationErrors: validation.errors }
+        description: `Credit card validation failed: ${validation.errors.join(', ')}`,
+        metadata: {
+          validationErrors: validation.errors,
+          providedFields: Object.keys(rawBody),
+          hasToken: !!rawBody.token,
+          hasCardNumber: !!rawBody.cardNumber
+        }
       })
-      
+
       return NextResponse.json(
-        { error: 'Invalid input data', details: validation.errors },
-        { status: 400 }
+        { error: 'Invalid credit card data', details: validation.errors },
+        {
+          status: 400,
+          headers: {
+            'X-Content-Type-Options': 'nosniff',
+            'X-Frame-Options': 'DENY',
+            'X-XSS-Protection': '1; mode=block',
+            'Referrer-Policy': 'strict-origin-when-cross-origin'
+          }
+        }
       )
     }
 
@@ -900,7 +937,15 @@ export async function POST(req: NextRequest) {
 
     console.log(`✅ Card payment created for user ${user.id}: ${paymentRecord.id} - Status: ${mappedStatus}`)
 
-    return NextResponse.json(apiResponse)
+    return NextResponse.json(apiResponse, {
+      headers: {
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY',
+        'X-XSS-Protection': '1; mode=block',
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
+        'Cache-Control': 'no-cache, no-store, must-revalidate'
+      }
+    })
 
   } catch (error) {
     console.error('💥 Card payment creation error:', error)
@@ -934,11 +979,19 @@ export async function POST(req: NextRequest) {
     }
     
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Internal server error' 
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Internal server error'
       },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          'X-Content-Type-Options': 'nosniff',
+          'X-Frame-Options': 'DENY',
+          'X-XSS-Protection': '1; mode=block',
+          'Referrer-Policy': 'strict-origin-when-cross-origin'
+        }
+      }
     )
   }
 }
