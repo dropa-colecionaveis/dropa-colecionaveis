@@ -12,8 +12,9 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({
     }
   },
   transactionOptions: {
-    maxWait: 60000, // 60 seconds max wait time
-    timeout: 120000 // 2 minutes transaction timeout
+    maxWait: 10000, // 10 seconds max wait time (reduced for faster failure)
+    timeout: 30000, // 30 seconds transaction timeout (reduced)
+    isolationLevel: 'ReadCommitted' // Less strict isolation for better performance
   }
 })
 

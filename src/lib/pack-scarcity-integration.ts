@@ -184,11 +184,20 @@ export class PackScarcityIntegration {
   /**
    * Processa o drop de um item, atualizando contadores de escassez
    */
-  static async processItemDrop(itemId: string, userId: string): Promise<{ success: boolean, message?: string }> {
+  static async processItemDrop(itemId: string, userId: string, tx?: any): Promise<{ success: boolean, message?: string }> {
     try {
-      return await prisma.$transaction(async (tx) => {
+      // Se uma transação for fornecida, usa ela. Senão, cria uma nova.
+      const executeInTransaction = async (transactionFn: (txClient: any) => Promise<any>) => {
+        if (tx) {
+          return transactionFn(tx)
+        } else {
+          return await prisma.$transaction(transactionFn)
+        }
+      }
+
+      return await executeInTransaction(async (txClient) => {
         // Obter informações do item
-        const item = await tx.item.findUnique({
+        const item = await txClient.item.findUnique({
           where: { id: itemId },
           include: {
             collection: true
@@ -212,13 +221,13 @@ export class PackScarcityIntegration {
           }
 
           // Marcar como possuído
-          await tx.item.update({
+          await txClient.item.update({
             where: { id: itemId },
             data: { uniqueOwnerId: userId }
           })
 
           // Criar entrada de UserItem
-          await tx.userItem.create({
+          await txClient.userItem.create({
             data: {
               userId,
               itemId
@@ -234,18 +243,40 @@ export class PackScarcityIntegration {
             return { success: false, message: 'Edições esgotadas' }
           }
 
-          // Usar o sistema existente de mintagem
-          const mintResult = await ScarcityManager.mintLimitedEdition(itemId, userId)
-          
-          if (!mintResult.success) {
-            return { success: false, message: 'Erro ao obter edição limitada' }
-          }
+          // Incrementar contador e obter novo serial
+          const updatedItem = await txClient.item.update({
+            where: { id: itemId },
+            data: {
+              currentEditions: {
+                increment: 1
+              }
+            }
+          })
 
-          return { success: true, message: `Edição #${mintResult.serialNumber} obtida!` }
+          const serialNumber = updatedItem.currentEditions
+
+          // Criar UserItem
+          const userItem = await txClient.userItem.create({
+            data: {
+              userId,
+              itemId
+            }
+          })
+
+          // Criar registro de edição limitada
+          await txClient.limitedEdition.create({
+            data: {
+              userItemId: userItem.id,
+              serialNumber,
+              mintedAt: new Date()
+            }
+          })
+
+          return { success: true, message: `Edição #${serialNumber} obtida!` }
         }
 
         // Para itens normais
-        await tx.userItem.create({
+        await txClient.userItem.create({
           data: {
             userId,
             itemId
@@ -254,7 +285,7 @@ export class PackScarcityIntegration {
 
         // Atualizar suprimento da coleção se aplicável
         if (item.collection?.totalSupply) {
-          await tx.collection.update({
+          await txClient.collection.update({
             where: { id: item.collectionId! },
             data: {
               currentSupply: {

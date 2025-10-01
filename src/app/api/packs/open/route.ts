@@ -145,8 +145,8 @@ export async function POST(req: Request) {
         }
       })
 
-      // Usar o novo sistema de processamento de drops
-      const dropResult = await PackScarcityIntegration.processItemDrop(selectedItem.id, session.user.id)
+      // Usar o novo sistema de processamento de drops (passando a transação)
+      const dropResult = await PackScarcityIntegration.processItemDrop(selectedItem.id, session.user.id, tx)
       
       if (!dropResult.success) {
         throw new Error(dropResult.message || 'Failed to process item drop')
