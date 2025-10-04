@@ -15,23 +15,52 @@ export async function GET(req: Request) {
       )
     }
 
-    // Tentar buscar do cache primeiro
-    const { achievementCache } = await import('@/lib/achievement-cache')
-    let userStats = achievementCache.getUserStats(session.user.id)
-    
-    if (!userStats) {
-      userStats = await userStatsService.getRankingStats(session.user.id)
-      
-      if (!userStats) {
-        return NextResponse.json(
-          { error: 'User stats not found' },
-          { status: 404 }
-        )
-      }
+    // Calcular estatísticas em tempo real para garantir precisão
+    const { prisma } = await import('@/lib/prisma')
 
-      // Salvar no cache por 2 minutos
-      achievementCache.setUserStats(session.user.id, userStats, 2 * 60 * 1000)
+    // Buscar dados reais em paralelo
+    const [
+      totalPacksOpened,
+      totalItemsCollected,
+      legendaryItems,
+      userStatsRecord
+    ] = await Promise.all([
+      // Total de pacotes abertos
+      prisma.packOpening.count({
+        where: { userId: session.user.id }
+      }),
+
+      // Total de itens coletados
+      prisma.userItem.count({
+        where: { userId: session.user.id }
+      }),
+
+      // Itens lendários
+      prisma.userItem.count({
+        where: {
+          userId: session.user.id,
+          item: {
+            rarity: 'LENDARIO'
+          }
+        }
+      }),
+
+      // Buscar registro da UserStats para outros dados (XP, etc)
+      userStatsService.getRankingStats(session.user.id)
+    ])
+
+    // Criar objeto com dados atualizados
+    const userStats = {
+      ...userStatsRecord,
+      totalPacksOpened,
+      totalItemsCollected,
+      legendaryItemsFound: legendaryItems,
+      lastUpdated: new Date()
     }
+
+    // Tentar buscar do cache para dados menos críticos
+    const { achievementCache } = await import('@/lib/achievement-cache')
+    achievementCache.setUserStats(session.user.id, userStats, 2 * 60 * 1000)
 
     // Calcular XP correto apenas das conquistas
     const { achievementEngine } = await import('@/lib/achievements')

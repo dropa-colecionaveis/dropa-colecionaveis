@@ -132,8 +132,7 @@ export default function Dashboard() {
     try {
       setStatsLoading(true)
       const response = await fetch('/api/user/stats', {
-        cache: 'force-cache',
-        next: { revalidate: 180 } // Cache 3min with ISR - shorter because stats change more frequently
+        cache: 'no-store' // Sempre buscar dados atuais para estatísticas críticas
       })
 
       if (response.ok) {

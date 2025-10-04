@@ -273,6 +273,14 @@ export async function POST(req: Request) {
         } catch (cacheError) {
           console.warn('Failed to clear activity cache:', cacheError)
         }
+
+        // Invalidar cache de estatísticas do usuário para sincronização imediata
+        try {
+          const { achievementCache } = await import('@/lib/achievement-cache')
+          achievementCache.invalidateUserStats(session.user.id)
+        } catch (cacheError) {
+          console.warn('Failed to clear user stats cache:', cacheError)
+        }
         
         // Auto-validate achievements for new users (prevent missing achievements)
         if (isFirstPack) {

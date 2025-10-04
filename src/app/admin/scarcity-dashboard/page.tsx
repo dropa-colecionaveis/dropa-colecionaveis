@@ -27,6 +27,46 @@ interface ScarcityStats {
   }
 }
 
+interface UniqueItemDetail {
+  userItemId: string
+  obtainedAt: string
+  user: {
+    id: string
+    email: string
+    name: string | null
+  }
+  pack: {
+    id: string
+    name: string
+    price: number
+    type: string
+  } | null
+  packOpeningId: string | null
+}
+
+interface UniqueItemGroup {
+  item: {
+    id: string
+    name: string
+    imageUrl: string | null
+    rarity: string
+    scarcityLevel: string
+    uniqueOwnerId: string | null
+  }
+  acquisitions: UniqueItemDetail[]
+}
+
+interface UniqueItemsData {
+  groupedByItem: Record<string, UniqueItemGroup>
+  allAcquisitions: (UniqueItemDetail & { item: UniqueItemGroup['item'] })[]
+  stats: {
+    totalUniqueItems: number
+    totalAcquisitions: number
+    uniqueUsers: number
+    packsSources: string[]
+  }
+}
+
 export default function ScarcityDashboard() {
   const { data: session, status } = useSession()
   const router = useRouter()
@@ -35,6 +75,9 @@ export default function ScarcityDashboard() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [showDebug, setShowDebug] = useState(false)
+  const [showUniqueDetails, setShowUniqueDetails] = useState(false)
+  const [uniqueItemsData, setUniqueItemsData] = useState<UniqueItemsData | null>(null)
+  const [loadingUniqueDetails, setLoadingUniqueDetails] = useState(false)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -81,6 +124,25 @@ export default function ScarcityDashboard() {
       alert('❌ Erro ao atualizar estatísticas')
     } finally {
       setRefreshing(false)
+    }
+  }
+
+  const fetchUniqueItemsDetails = async () => {
+    setLoadingUniqueDetails(true)
+    try {
+      const response = await fetch('/api/admin/unique-items-details')
+      if (response.ok) {
+        const data = await response.json()
+        setUniqueItemsData(data.data)
+        setShowUniqueDetails(true)
+      } else {
+        alert('❌ Erro ao carregar detalhes dos itens únicos')
+      }
+    } catch (error) {
+      console.error('Error fetching unique items details:', error)
+      alert('❌ Erro ao carregar detalhes dos itens únicos')
+    } finally {
+      setLoadingUniqueDetails(false)
     }
   }
 
@@ -198,12 +260,25 @@ export default function ScarcityDashboard() {
                     ></div>
                   </div>
                   <div className="text-xs text-gray-400 mt-1 text-center">
-                    {stats.uniqueItems.total > 0 
+                    {stats.uniqueItems.total > 0
                       ? `${Math.round((stats.uniqueItems.claimed / stats.uniqueItems.total) * 100)}% reivindicados`
                       : 'Nenhum item único'
                     }
                   </div>
                 </div>
+
+                {/* Botão para ver detalhes */}
+                {stats.uniqueItems.claimed > 0 && (
+                  <div className="mt-4">
+                    <button
+                      onClick={fetchUniqueItemsDetails}
+                      disabled={loadingUniqueDetails}
+                      className="w-full px-3 py-2 bg-pink-600 hover:bg-pink-700 disabled:bg-gray-600 text-white rounded text-sm transition duration-200"
+                    >
+                      {loadingUniqueDetails ? '⏳ Carregando...' : '👥 Ver Detalhes dos Proprietários'}
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Edições Limitadas */}
@@ -233,15 +308,24 @@ export default function ScarcityDashboard() {
                 {stats.limitedEditions.maxEditions > 0 && (
                   <div className="mt-4">
                     <div className="w-full bg-gray-700 rounded-full h-3">
-                      <div 
-                        className="bg-purple-500 h-3 rounded-full" 
-                        style={{ 
-                          width: `${(stats.limitedEditions.totalEditions / stats.limitedEditions.maxEditions) * 100}%` 
+                      <div
+                        className="bg-purple-500 h-3 rounded-full"
+                        style={{
+                          width: `${Math.max((stats.limitedEditions.totalEditions / stats.limitedEditions.maxEditions) * 100, stats.limitedEditions.totalEditions > 0 ? 2 : 0)}%`
                         }}
                       ></div>
                     </div>
                     <div className="text-xs text-gray-400 mt-1 text-center">
-                      {Math.round((stats.limitedEditions.totalEditions / stats.limitedEditions.maxEditions) * 100)}% das edições mintadas
+                      {(() => {
+                        const percentage = (stats.limitedEditions.totalEditions / stats.limitedEditions.maxEditions) * 100
+                        if (percentage < 0.1 && percentage > 0) {
+                          return `<0.1% das edições mintadas`
+                        } else if (percentage < 1) {
+                          return `${percentage.toFixed(1)}% das edições mintadas`
+                        } else {
+                          return `${Math.round(percentage)}% das edições mintadas`
+                        }
+                      })()}
                     </div>
                   </div>
                 )}
@@ -368,6 +452,108 @@ export default function ScarcityDashboard() {
                       <div className="text-white text-lg">{item._count}</div>
                     </div>
                   ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Modal de Detalhes dos Itens Únicos */}
+          {showUniqueDetails && uniqueItemsData && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden">
+                <div className="bg-black/20 backdrop-blur-lg border-b border-white/10 p-6">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h2 className="text-2xl font-bold text-white">👥 Detalhes dos Itens Únicos</h2>
+                      <p className="text-gray-300 mt-1">
+                        {uniqueItemsData.stats.totalUniqueItems} itens únicos • {uniqueItemsData.stats.totalAcquisitions} aquisições • {uniqueItemsData.stats.uniqueUsers} usuários únicos
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setShowUniqueDetails(false)}
+                      className="text-white hover:text-red-400 text-2xl font-bold transition duration-200"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+                  {/* Estatísticas Resumidas */}
+                  <div className="grid md:grid-cols-4 gap-4 mb-6">
+                    <div className="bg-black/20 rounded-lg p-4 text-center">
+                      <div className="text-2xl text-pink-400 font-bold">{uniqueItemsData.stats.totalUniqueItems}</div>
+                      <div className="text-sm text-gray-300">Itens Únicos</div>
+                    </div>
+                    <div className="bg-black/20 rounded-lg p-4 text-center">
+                      <div className="text-2xl text-blue-400 font-bold">{uniqueItemsData.stats.totalAcquisitions}</div>
+                      <div className="text-sm text-gray-300">Total Aquisições</div>
+                    </div>
+                    <div className="bg-black/20 rounded-lg p-4 text-center">
+                      <div className="text-2xl text-green-400 font-bold">{uniqueItemsData.stats.uniqueUsers}</div>
+                      <div className="text-sm text-gray-300">Usuários Únicos</div>
+                    </div>
+                    <div className="bg-black/20 rounded-lg p-4 text-center">
+                      <div className="text-2xl text-yellow-400 font-bold">{uniqueItemsData.stats.packsSources.length}</div>
+                      <div className="text-sm text-gray-300">Tipos de Pacotes</div>
+                    </div>
+                  </div>
+
+                  {/* Lista de Itens e Proprietários */}
+                  <div className="space-y-6">
+                    {Object.values(uniqueItemsData.groupedByItem).map((itemGroup) => (
+                      <div key={itemGroup.item.id} className="bg-black/20 rounded-lg p-6 border border-white/10">
+                        <div className="flex items-center space-x-4 mb-4">
+                          <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
+                            {itemGroup.item.imageUrl ? (
+                              <img src={itemGroup.item.imageUrl} alt={itemGroup.item.name} className="w-full h-full object-cover rounded-lg" />
+                            ) : (
+                              <span className="text-2xl">🌟</span>
+                            )}
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-bold text-pink-400">{itemGroup.item.name}</h3>
+                            <div className="flex space-x-4 text-sm text-gray-300">
+                              <span>Raridade: <span className="text-purple-400">{itemGroup.item.rarity}</span></span>
+                              <span>Escassez: <span className="text-pink-400">{itemGroup.item.scarcityLevel}</span></span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3">
+                          <h4 className="text-lg font-semibold text-white">Aquisições ({itemGroup.acquisitions.length})</h4>
+                          {itemGroup.acquisitions.map((acquisition, index) => (
+                            <div key={acquisition.userItemId} className="bg-white/5 rounded-lg p-4">
+                              <div className="grid md:grid-cols-4 gap-4 text-sm">
+                                <div>
+                                  <span className="text-gray-400">Usuário:</span>
+                                  <div className="text-white font-medium">{acquisition.user.email}</div>
+                                  {acquisition.user.name && (
+                                    <div className="text-gray-300">{acquisition.user.name}</div>
+                                  )}
+                                </div>
+                                <div>
+                                  <span className="text-gray-400">Data/Hora:</span>
+                                  <div className="text-white">{new Date(acquisition.obtainedAt).toLocaleString('pt-BR')}</div>
+                                </div>
+                                <div>
+                                  <span className="text-gray-400">Pacote:</span>
+                                  <div className="text-white">{acquisition.pack?.name || 'N/A'}</div>
+                                  {acquisition.pack && (
+                                    <div className="text-gray-300">{acquisition.pack.price} créditos</div>
+                                  )}
+                                </div>
+                                <div>
+                                  <span className="text-gray-400">Tipo:</span>
+                                  <div className="text-white">{acquisition.pack?.type || 'N/A'}</div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
