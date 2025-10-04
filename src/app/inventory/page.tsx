@@ -202,6 +202,17 @@ export default function Inventory() {
     }
   }
 
+  const getImageBorderColor = (rarity: string) => {
+    switch (rarity) {
+      case 'COMUM': return 'border-gray-500/60'
+      case 'INCOMUM': return 'border-green-500/80 shadow-green-500/30'
+      case 'RARO': return 'border-blue-500/80 shadow-blue-500/40'
+      case 'EPICO': return 'border-purple-500/90 shadow-purple-500/50'
+      case 'LENDARIO': return 'border-yellow-500/90 shadow-yellow-500/60'
+      default: return 'border-gray-500/60'
+    }
+  }
+
   const getFilteredItems = () => {
     if (selectedRarity === 'ALL') {
       return userItems
@@ -616,20 +627,20 @@ export default function Inventory() {
               {filteredItems.map((userItem) => (
                 <div
                   key={userItem.id}
-                  className={`bg-white/10 backdrop-blur-lg rounded-lg p-6 border-2 ${getRarityColor(userItem.item.rarity)}`}
+                  className={`inventory-card backdrop-blur-lg rounded-xl p-6 shadow-xl ${getRarityColor(userItem.item.rarity)}`}
                 >
                   <div className="text-center mb-4">
                     <div className="relative group">
-                      <div 
-                        className="w-32 h-32 mx-auto bg-gray-700 rounded-xl mb-4 flex items-center justify-center text-4xl overflow-hidden cursor-pointer transition-transform hover:scale-105 shadow-lg"
+                      <div
+                        className={`card-image w-40 h-40 mx-auto bg-gradient-to-br from-gray-700 to-gray-800 rounded-xl mb-4 flex items-center justify-center text-5xl overflow-hidden cursor-pointer shadow-2xl border-2 ${getImageBorderColor(userItem.item.rarity)}`}
                         onClick={() => {
                           setSelectedItem(userItem.item)
                           setSelectedImage(userItem.item.imageUrl || '/items/default.jpg')
                         }}
                       >
                         {userItem.item.imageUrl && userItem.item.imageUrl !== '/items/default.jpg' ? (
-                          <img 
-                            src={userItem.item.imageUrl} 
+                          <img
+                            src={userItem.item.imageUrl}
                             alt={userItem.item.name}
                             className="w-full h-full object-cover"
                             onError={(e) => {
@@ -638,7 +649,7 @@ export default function Inventory() {
                             }}
                           />
                         ) : (
-                          <span className="text-4xl">🏆</span>
+                          <span className="text-6xl drop-shadow-lg">🏆</span>
                         )}
                       </div>
                       <button
@@ -646,26 +657,29 @@ export default function Inventory() {
                           setSelectedItem(userItem.item)
                           setSelectedImage(userItem.item.imageUrl || '/items/default.jpg')
                         }}
-                        className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                        className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-xs px-4 py-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 border border-blue-400/30"
                       >
-                        Ver Detalhes
+                        <span className="flex items-center space-x-1">
+                          <span>✨</span>
+                          <span>Ver Detalhes</span>
+                        </span>
                       </button>
                     </div>
                     
-                    <h3 className={`text-lg font-bold mb-1 ${getRarityColor(userItem.item.rarity).split(' ')[0]}`}>
+                    <h3 className={`text-xl font-bold mb-2 ${getRarityColor(userItem.item.rarity).split(' ')[0]} drop-shadow-lg`}>
                       {userItem.item.name}
                       {userItem.limitedEdition && (
-                        <span className="text-purple-400 ml-1">
+                        <span className="text-purple-400 ml-2 text-sm">
                           🏆 #{userItem.limitedEdition.serialNumber}
                         </span>
                       )}
                     </h3>
-                    
-                    <p className="text-gray-300 text-sm mb-3">
+
+                    <p className="text-gray-300 text-sm mb-4 leading-relaxed">
                       {userItem.item.description}
                     </p>
-                    
-                    <div className={`inline-block px-2 py-1 rounded-full text-xs font-semibold mb-2 ${getRarityColor(userItem.item.rarity)}`}>
+
+                    <div className={`inline-block px-3 py-1.5 rounded-full text-xs font-bold mb-3 shadow-lg ${getRarityColor(userItem.item.rarity)}`}>
                       {getRarityName(userItem.item.rarity)}
                     </div>
                   </div>
@@ -702,11 +716,12 @@ export default function Inventory() {
                   
                   {/* Marketplace Status */}
                   {isItemListed(userItem) && (
-                    <div className="mb-4 p-2 bg-green-500/20 border border-green-500/30 rounded-lg">
-                      <div className="text-green-400 text-xs font-semibold text-center">
-                        📈 Listado no Marketplace
+                    <div className="mb-4 p-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/40 rounded-xl shadow-lg">
+                      <div className="text-green-400 text-xs font-bold text-center flex items-center justify-center space-x-1">
+                        <span>📈</span>
+                        <span>Listado no Marketplace</span>
                       </div>
-                      <div className="text-green-400 text-xs text-center">
+                      <div className="text-green-300 text-xs text-center mt-1 font-semibold">
                         {userItem.marketplaceListings![0].price} créditos
                       </div>
                     </div>
@@ -717,18 +732,18 @@ export default function Inventory() {
                     {userItem.item.collection && (
                       <Link
                         href={`/collections/${userItem.item.collection.id}`}
-                        className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs text-center transition duration-200"
+                        className="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg text-xs text-center transition-all duration-300 font-semibold shadow-lg hover:shadow-xl hover:scale-105 border border-blue-400/30"
                       >
-                        Ver Coleção
+                        📚 Ver Coleção
                       </Link>
                     )}
-                    
+
                     {!isItemListed(userItem) && (
                       <button
                         onClick={() => startListing(userItem)}
-                        className="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-xs text-center transition duration-200"
+                        className="flex-1 px-4 py-2.5 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg text-xs text-center transition-all duration-300 font-semibold shadow-lg hover:shadow-xl hover:scale-105 border border-green-400/30"
                       >
-                        Vender
+                        💰 Vender
                       </button>
                     )}
                   </div>
@@ -992,20 +1007,20 @@ export default function Inventory() {
             <div className="text-center flex-1 flex flex-col">
               {/* Centered Image Container */}
               <div className="flex justify-center items-center mb-4 sm:mb-6 flex-shrink-0">
-                <div className="w-64 h-64 sm:w-80 sm:h-80 bg-gray-700 rounded-xl flex items-center justify-center overflow-hidden shadow-2xl">
+                <div className={`w-64 h-64 sm:w-80 sm:h-80 bg-gradient-to-br from-gray-700 to-gray-800 rounded-xl flex items-center justify-center overflow-hidden shadow-2xl border-4 ${selectedItem ? getImageBorderColor(selectedItem.rarity) : 'border-gray-500/60'}`}>
                   {selectedImage && selectedImage !== '/items/default.jpg' ? (
-                    <img 
-                      src={selectedImage} 
+                    <img
+                      src={selectedImage}
                       alt={selectedItem.name}
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none'
                         const parent = e.currentTarget.parentElement!
-                        parent.innerHTML = '<span class="text-6xl sm:text-8xl">🏆</span>'
+                        parent.innerHTML = '<span class="text-6xl sm:text-8xl drop-shadow-lg">🏆</span>'
                       }}
                     />
                   ) : (
-                    <span className="text-6xl sm:text-8xl">🏆</span>
+                    <span className="text-6xl sm:text-8xl drop-shadow-lg">🏆</span>
                   )}
                 </div>
               </div>
@@ -1086,19 +1101,19 @@ export default function Inventory() {
             
             {/* Item Preview */}
             <div className="text-center mb-4 sm:mb-6">
-              <div className="w-24 h-24 mx-auto bg-gray-700 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
+              <div className={`w-28 h-28 mx-auto bg-gradient-to-br from-gray-700 to-gray-800 rounded-xl mb-3 flex items-center justify-center overflow-hidden shadow-xl border-2 ${getImageBorderColor(listingItem.item.rarity)}`}>
                 {listingItem.item.imageUrl && listingItem.item.imageUrl !== '/items/default.jpg' ? (
-                  <img 
-                    src={listingItem.item.imageUrl} 
+                  <img
+                    src={listingItem.item.imageUrl}
                     alt={listingItem.item.name}
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none'
-                      e.currentTarget.parentElement!.innerHTML = '🏆'
+                      e.currentTarget.parentElement!.innerHTML = '<span class="text-3xl drop-shadow-lg">🏆</span>'
                     }}
                   />
                 ) : (
-                  <span className="text-2xl">🏆</span>
+                  <span className="text-3xl drop-shadow-lg">🏆</span>
                 )}
               </div>
               <h4 className={`text-lg font-bold ${getRarityColor(listingItem.item.rarity).split(' ')[0]}`}>

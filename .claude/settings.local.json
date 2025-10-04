@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "WebFetch(domain:www.mercadopago.com.br)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Read(//mnt/c/Users/mateus.pereira/Pictures/Screenpresso/**)"
     ],
     "deny": [],
     "ask": []

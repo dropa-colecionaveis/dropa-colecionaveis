@@ -33,6 +33,8 @@ export default function ScarcityDashboard() {
   const { isAdmin, loading: adminLoading } = useAdmin()
   const [stats, setStats] = useState<ScarcityStats | null>(null)
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [showDebug, setShowDebug] = useState(false)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -58,6 +60,27 @@ export default function ScarcityDashboard() {
       console.error('Error fetching scarcity stats:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const refreshStats = async () => {
+    setRefreshing(true)
+    try {
+      const response = await fetch('/api/admin/refresh-scarcity-stats', {
+        method: 'POST'
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setStats(data.data)
+        alert('✅ Estatísticas atualizadas com sucesso!')
+      } else {
+        alert('❌ Erro ao atualizar estatísticas')
+      }
+    } catch (error) {
+      console.error('Error refreshing stats:', error)
+      alert('❌ Erro ao atualizar estatísticas')
+    } finally {
+      setRefreshing(false)
     }
   }
 
@@ -117,12 +140,28 @@ export default function ScarcityDashboard() {
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-4xl font-bold text-white">🌟 Dashboard de Escassez</h1>
-            <button
-              onClick={fetchStats}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition duration-200"
-            >
-              🔄 Atualizar
-            </button>
+            <div className="flex space-x-3">
+              <button
+                onClick={fetchStats}
+                disabled={loading}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white rounded transition duration-200"
+              >
+                📊 Recarregar
+              </button>
+              <button
+                onClick={refreshStats}
+                disabled={refreshing}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white rounded transition duration-200"
+              >
+                {refreshing ? '⏳ Atualizando...' : '🔄 Refresh DB'}
+              </button>
+              <button
+                onClick={() => setShowDebug(!showDebug)}
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded transition duration-200"
+              >
+                🔍 {showDebug ? 'Ocultar' : 'Debug'}
+              </button>
+            </div>
           </div>
 
           {stats && (
@@ -273,6 +312,63 @@ export default function ScarcityDashboard() {
                       <div className="text-xs text-gray-400">itens</div>
                     </div>
                   ))}
+              </div>
+            </div>
+          )}
+
+          {/* Debug Information */}
+          {showDebug && stats && (stats as any)._debug && (
+            <div className="mt-8 bg-gray-800/50 backdrop-blur-lg rounded-lg p-6 border border-gray-600">
+              <h3 className="text-xl font-bold text-yellow-400 mb-4">🔍 Informações de Debug</h3>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="text-lg font-semibold text-white mb-3">📅 Dados da Consulta</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between text-gray-300">
+                      <span>Timestamp:</span>
+                      <span className="text-yellow-400">{new Date((stats as any)._debug.timestamp).toLocaleString('pt-BR')}</span>
+                    </div>
+                    <div className="flex justify-between text-gray-300">
+                      <span>Última atualização:</span>
+                      <span className="text-yellow-400">{new Date().toLocaleString('pt-BR')}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-lg font-semibold text-white mb-3">📊 Valores Brutos</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between text-gray-300">
+                      <span>Únicos Total:</span>
+                      <span className="text-pink-400">{(stats as any)._debug.rawStats[0]}</span>
+                    </div>
+                    <div className="flex justify-between text-gray-300">
+                      <span>Únicos Claimed:</span>
+                      <span className="text-red-400">{(stats as any)._debug.rawStats[1]}</span>
+                    </div>
+                    <div className="flex justify-between text-gray-300">
+                      <span>Limitadas Total:</span>
+                      <span className="text-purple-400">{(stats as any)._debug.rawStats[2]}</span>
+                    </div>
+                    <div className="flex justify-between text-gray-300">
+                      <span>Edições Mintadas:</span>
+                      <span className="text-purple-400">{(stats as any)._debug.rawStats[3]._sum.currentEditions || 0}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <h4 className="text-lg font-semibold text-white mb-3">🏷️ Distribuição de Escassez</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {(stats as any)._debug.scarcityBreakdown.map((item: any, index: number) => (
+                    <div key={index} className="bg-gray-700/50 rounded p-3 text-center">
+                      <div className="text-yellow-400 font-semibold">{item.scarcityLevel || 'NULL'}</div>
+                      <div className="text-white text-lg">{item._count}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}

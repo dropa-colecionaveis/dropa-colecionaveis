@@ -139,6 +139,24 @@ export function getRarityName(rarity: Rarity | string): string {
 export function getRarityColorFromString(rarity: string): string {
   switch (rarity) {
     case 'COMUM':
+      return 'text-gray-400 rarity-comum'
+    case 'INCOMUM':
+      return 'text-green-400 rarity-incomum'
+    case 'RARO':
+      return 'text-blue-400 rarity-raro'
+    case 'EPICO':
+      return 'text-purple-400 rarity-epico'
+    case 'LENDARIO':
+      return 'text-yellow-400 rarity-lendario'
+    default:
+      return 'text-gray-400 rarity-comum'
+  }
+}
+
+// Keep the old function for backward compatibility but use enhanced styles
+export function getRarityColorFromStringLegacy(rarity: string): string {
+  switch (rarity) {
+    case 'COMUM':
       return 'text-gray-400 bg-gray-500/20 border-gray-500'
     case 'INCOMUM':
       return 'text-green-400 bg-green-500/20 border-green-500'

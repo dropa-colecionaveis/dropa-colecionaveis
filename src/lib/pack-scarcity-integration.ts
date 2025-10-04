@@ -337,10 +337,12 @@ export class PackScarcityIntegration {
   }
 
   /**
-   * Obtém estatísticas de escassez para o admin
+   * Obtém estatísticas de escassez para o admin (com logs para debug)
    */
   static async getScarcityStats() {
     try {
+      console.log('🔄 Iniciando consulta de estatísticas de escassez...')
+
       const stats = await Promise.all([
         // Itens únicos
         prisma.item.count({
@@ -356,9 +358,9 @@ export class PackScarcityIntegration {
         }),
         prisma.item.aggregate({
           where: { isLimitedEdition: true, isActive: true },
-          _sum: { 
+          _sum: {
             currentEditions: true,
-            maxEditions: true 
+            maxEditions: true
           }
         }),
 
@@ -367,8 +369,8 @@ export class PackScarcityIntegration {
           where: { isTemporal: true, isActive: true }
         }),
         prisma.collection.count({
-          where: { 
-            isTemporal: true, 
+          where: {
+            isTemporal: true,
             isActive: true,
             availableUntil: { gt: new Date() }
           }
@@ -382,7 +384,17 @@ export class PackScarcityIntegration {
         })
       ])
 
-      return {
+      // Log detalhado para debug
+      console.log('📊 Estatísticas calculadas:')
+      console.log(`  - Itens únicos total: ${stats[0]}`)
+      console.log(`  - Itens únicos reivindicados: ${stats[1]}`)
+      console.log(`  - Itens únicos disponíveis: ${stats[0] - stats[1]}`)
+      console.log(`  - Edições limitadas total: ${stats[2]}`)
+      console.log(`  - Edições mintadas: ${stats[3]._sum.currentEditions || 0}`)
+      console.log(`  - Coleções temporais total: ${stats[4]}`)
+      console.log(`  - Coleções temporais ativas: ${stats[5]}`)
+
+      const result = {
         uniqueItems: {
           total: stats[0],
           claimed: stats[1],
@@ -400,10 +412,18 @@ export class PackScarcityIntegration {
         itemsByScarcity: stats[6].reduce((acc: any, item: any) => {
           acc[item.scarcityLevel] = item._count
           return acc
-        }, {})
+        }, {}),
+        _debug: {
+          timestamp: new Date().toISOString(),
+          rawStats: stats,
+          scarcityBreakdown: stats[6]
+        }
       }
+
+      console.log('✅ Estatísticas processadas com sucesso')
+      return result
     } catch (error) {
-      console.error('Error getting scarcity stats:', error)
+      console.error('❌ Error getting scarcity stats:', error)
       throw error
     }
   }
