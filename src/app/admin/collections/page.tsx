@@ -321,9 +321,7 @@ export default function AdminCollections() {
     { value: 'COMMON', label: '⚪ Comum' },
     { value: 'UNCOMMON', label: '🟢 Incomum' },
     { value: 'RARE', label: '🔵 Raro' },
-    { value: 'EPIC', label: '🟣 Épico' },
     { value: 'LEGENDARY', label: '🟡 Lendário' },
-    { value: 'MYTHIC', label: '🔴 Mítico' },
     { value: 'UNIQUE', label: '🌟 Único' }
   ]
 

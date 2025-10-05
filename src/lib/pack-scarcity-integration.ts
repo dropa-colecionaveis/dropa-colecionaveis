@@ -151,9 +151,7 @@ export class PackScarcityIntegration {
       [ScarcityLevel.COMMON]: 0,
       [ScarcityLevel.UNCOMMON]: -10,
       [ScarcityLevel.RARE]: -20,
-      [ScarcityLevel.EPIC]: -30,
       [ScarcityLevel.LEGENDARY]: -40,
-      [ScarcityLevel.MYTHIC]: -50,
       [ScarcityLevel.UNIQUE]: -60
     }
 
