@@ -89,17 +89,32 @@ export async function POST(req: Request) {
       }
       
       // Converter para formato esperado pelo sistema de escassez
-      availableItems = allAvailableItems.map(item => ({
-        id: item.id,
-        name: item.name,
-        rarity: item.rarity,
-        scarcityLevel: item.scarcityLevel || 'COMMON',
-        isUnique: item.isUnique || false,
-        isLimitedEdition: item.isLimitedEdition || false,
-        isTemporal: item.isTemporal || false,
-        availabilityScore: 100,
-        collectionId: item.collectionId
-      }))
+      // IMPORTANTE: Aplicar regras de escassez mesmo no fallback
+      availableItems = allAvailableItems
+        .filter(item => {
+          // Filtrar itens únicos já possuídos
+          if (item.isUnique && item.uniqueOwnerId) {
+            return false
+          }
+
+          // Filtrar edições limitadas esgotadas
+          if (item.isLimitedEdition && item.maxEditions && item.currentEditions >= item.maxEditions) {
+            return false
+          }
+
+          return true
+        })
+        .map(item => ({
+          id: item.id,
+          name: item.name,
+          rarity: item.rarity,
+          scarcityLevel: item.scarcityLevel || 'COMMON',
+          isUnique: item.isUnique || false,
+          isLimitedEdition: item.isLimitedEdition || false,
+          isTemporal: item.isTemporal || false,
+          availabilityScore: 100,
+          collectionId: item.collectionId
+        }))
     }
 
     // Select random rarity based on pack probabilities
