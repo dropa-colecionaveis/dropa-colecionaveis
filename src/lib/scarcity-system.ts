@@ -17,9 +17,7 @@ export enum ScarcityLevel {
   COMMON = 'COMMON',
   UNCOMMON = 'UNCOMMON',
   RARE = 'RARE',
-  EPIC = 'EPIC',
   LEGENDARY = 'LEGENDARY',
-  MYTHIC = 'MYTHIC',
   UNIQUE = 'UNIQUE'
 }
 
@@ -198,9 +196,7 @@ export class ScarcityManager {
       [ScarcityLevel.COMMON]: 'text-gray-400',
       [ScarcityLevel.UNCOMMON]: 'text-green-400',
       [ScarcityLevel.RARE]: 'text-blue-400',
-      [ScarcityLevel.EPIC]: 'text-purple-400',
       [ScarcityLevel.LEGENDARY]: 'text-yellow-400',
-      [ScarcityLevel.MYTHIC]: 'text-red-400',
       [ScarcityLevel.UNIQUE]: 'text-pink-400'
     }
     return colors[level] || colors[ScarcityLevel.COMMON]
@@ -214,9 +210,7 @@ export class ScarcityManager {
       [ScarcityLevel.COMMON]: 'Comum',
       [ScarcityLevel.UNCOMMON]: 'Incomum',
       [ScarcityLevel.RARE]: 'Raro',
-      [ScarcityLevel.EPIC]: 'Épico',
       [ScarcityLevel.LEGENDARY]: 'Lendário',
-      [ScarcityLevel.MYTHIC]: 'Mítico',
       [ScarcityLevel.UNIQUE]: 'Único'
     }
     return names[level] || names[ScarcityLevel.COMMON]
@@ -230,9 +224,7 @@ export class ScarcityManager {
       [ScarcityLevel.COMMON]: '⚪',
       [ScarcityLevel.UNCOMMON]: '🟢',
       [ScarcityLevel.RARE]: '🔵',
-      [ScarcityLevel.EPIC]: '🟣',
       [ScarcityLevel.LEGENDARY]: '🟡',
-      [ScarcityLevel.MYTHIC]: '🔴',
       [ScarcityLevel.UNIQUE]: '🌟'
     }
     return emojis[level] || emojis[ScarcityLevel.COMMON]

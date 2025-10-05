@@ -295,7 +295,6 @@ export default function AdminItems() {
       case 'COMUM': return 'text-gray-400'
       case 'INCOMUM': return 'text-green-400'
       case 'RARO': return 'text-blue-400'
-      case 'EPICO': return 'text-purple-400'
       case 'LENDARIO': return 'text-yellow-400'
       default: return 'text-gray-400'
     }
@@ -305,9 +304,7 @@ export default function AdminItems() {
     { value: 'COMMON', label: '⚪ Comum' },
     { value: 'UNCOMMON', label: '🟢 Incomum' },
     { value: 'RARE', label: '🔵 Raro' },
-    { value: 'EPIC', label: '🟣 Épico' },
     { value: 'LEGENDARY', label: '🟡 Lendário' },
-    { value: 'MYTHIC', label: '🔴 Mítico' },
     { value: 'UNIQUE', label: '🌟 Único' }
   ]
 
@@ -566,7 +563,6 @@ export default function AdminItems() {
                   <option value="COMUM">Comum</option>
                   <option value="INCOMUM">Incomum</option>
                   <option value="RARO">Raro</option>
-                  <option value="EPICO">Épico</option>
                   <option value="LENDARIO">Lendário</option>
                 </select>
               </div>

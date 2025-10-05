@@ -151,9 +151,7 @@ export default function ScarcityDashboard() {
       'COMMON': 'text-gray-400',
       'UNCOMMON': 'text-green-400',
       'RARE': 'text-blue-400',
-      'EPIC': 'text-purple-400',
       'LEGENDARY': 'text-yellow-400',
-      'MYTHIC': 'text-red-400',
       'UNIQUE': 'text-pink-400'
     }
     return colors[level as keyof typeof colors] || 'text-gray-400'
@@ -164,9 +162,7 @@ export default function ScarcityDashboard() {
       'COMMON': '⚪',
       'UNCOMMON': '🟢',
       'RARE': '🔵',
-      'EPIC': '🟣',
       'LEGENDARY': '🟡',
-      'MYTHIC': '🔴',
       'UNIQUE': '🌟'
     }
     return emojis[level as keyof typeof emojis] || '⚪'
@@ -383,7 +379,7 @@ export default function ScarcityDashboard() {
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {Object.entries(stats.itemsByScarcity)
                   .sort(([a], [b]) => {
-                    const order = ['COMMON', 'UNCOMMON', 'RARE', 'EPIC', 'LEGENDARY', 'MYTHIC', 'UNIQUE']
+                    const order = ['COMMON', 'UNCOMMON', 'RARE', 'LEGENDARY', 'UNIQUE']
                     return order.indexOf(a) - order.indexOf(b)
                   })
                   .map(([level, count]) => (

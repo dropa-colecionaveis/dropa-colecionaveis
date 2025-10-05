@@ -661,9 +661,7 @@ enum ScarcityLevel {
   COMMON
   UNCOMMON
   RARE
-  EPIC
   LEGENDARY
-  MYTHIC
   UNIQUE
 }
 
