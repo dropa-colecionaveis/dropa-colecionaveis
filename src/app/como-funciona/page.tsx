@@ -86,35 +86,40 @@ export default function ComoFunciona() {
       name: 'COMMON',
       emoji: '⚪',
       multiplier: '1.0x',
-      description: 'Multiplicador base - valor padrão da raridade',
+      chanceModifier: '0%',
+      description: 'Sem modificações - chance e valor normais',
       color: 'text-gray-300'
     },
     {
       name: 'UNCOMMON',
       emoji: '🟢',
       multiplier: '1.3x',
-      description: '+30% de valor - itens menos comuns',
+      chanceModifier: '-10%',
+      description: 'Menos comum - chance reduzida, mais valor',
       color: 'text-green-300'
     },
     {
       name: 'RARE',
       emoji: '🔵',
       multiplier: '1.6x',
-      description: '+60% de valor - itens difíceis de conseguir',
+      chanceModifier: '-20%',
+      description: 'Raro - bem menos chance, bem mais valor',
       color: 'text-blue-300'
     },
     {
       name: 'LEGENDARY',
       emoji: '🟡',
       multiplier: '2.0x',
-      description: '+100% de valor - dobra o valor base',
+      chanceModifier: '-40%',
+      description: 'Lendário - chance muito reduzida, valor dobrado',
       color: 'text-yellow-300'
     },
     {
       name: 'UNIQUE',
       emoji: '🌟',
       multiplier: '2.5x',
-      description: '+150% de valor + apenas 1 exemplar mundial',
+      chanceModifier: '-60%',
+      description: 'Único - chance mínima + apenas 1 no mundo',
       color: 'text-pink-300'
     }
   ]
@@ -334,10 +339,11 @@ export default function ComoFunciona() {
 
                   {/* Escassez */}
                   <div>
-                    <h3 className="text-2xl font-bold text-pink-400 mb-4">🎯 ESCASSEZ (Modificadores)</h3>
+                    <h3 className="text-2xl font-bold text-pink-400 mb-4">🎯 ESCASSEZ (Sistema Duplo)</h3>
                     <p className="text-gray-300 mb-4 text-sm">
-                      A escassez <span className="text-pink-400 font-semibold">modifica as chances</span> dentro da mesma raridade.
-                      Quanto maior a escassez, <span className="text-red-400 font-semibold">menor a chance</span> de aparecer:
+                      A escassez é um <span className="text-pink-400 font-semibold">sistema duplo</span> que afeta tanto
+                      <span className="text-red-400 font-semibold"> as chances de sorteio</span> quanto o
+                      <span className="text-green-400 font-semibold"> valor em créditos</span> dos itens:
                     </p>
                     <div className="space-y-3">
                       {scarcityLevels.map((level) => (
@@ -347,13 +353,34 @@ export default function ComoFunciona() {
                               <span className="text-xl">{level.emoji}</span>
                               <span className={`${level.color} font-semibold text-sm`}>{level.name}</span>
                             </div>
-                            <span className={`text-sm font-bold text-blue-400`}>
-                              {level.multiplier}
-                            </span>
+                            <div className="text-right">
+                              <div className={`text-sm font-bold text-blue-400`}>
+                                {level.multiplier}
+                              </div>
+                              <div className={`text-xs font-bold ${
+                                level.chanceModifier === '0%' ? 'text-green-400' : 'text-red-400'
+                              }`}>
+                                {level.chanceModifier}
+                              </div>
+                            </div>
                           </div>
                           <p className="text-gray-400 text-xs">{level.description}</p>
                         </div>
                       ))}
+                    </div>
+
+                    <div className="mt-4 bg-gradient-to-r from-purple-900/20 to-pink-900/20 rounded-lg p-4 border border-purple-500/30">
+                      <h4 className="text-purple-400 font-semibold mb-2">🔁 Como Funciona o Sistema Duplo:</h4>
+                      <div className="grid md:grid-cols-2 gap-4 text-xs">
+                        <div>
+                          <div className="text-red-400 font-semibold mb-1">🎲 Modificador de Chance:</div>
+                          <div className="text-gray-300">Afeta a probabilidade de conseguir o item dentro da mesma raridade nos pacotes</div>
+                        </div>
+                        <div>
+                          <div className="text-green-400 font-semibold mb-1">💰 Multiplicador de Valor:</div>
+                          <div className="text-gray-300">Multiplica o valor base da raridade para determinar o preço final em créditos</div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -441,24 +468,41 @@ export default function ComoFunciona() {
                   <h3 className="text-xl font-bold text-blue-400 mb-4">💡 Exemplos Práticos de Valor</h3>
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="bg-black/30 rounded-lg p-4">
-                      <h4 className="text-purple-400 font-semibold mb-2">📦 Mesmo Item, Escassez Diferente</h4>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-300">Item A: Comum/COMMON</span>
-                          <span className="text-green-400">5 créditos</span>
+                      <h4 className="text-purple-400 font-semibold mb-2">📦 Sistema Duplo em Ação</h4>
+                      <div className="space-y-3 text-sm">
+                        <div className="bg-gray-700/30 rounded p-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300">Item A: Comum/COMMON</span>
+                            <span className="text-green-400 font-bold">5 créditos</span>
+                          </div>
+                          <div className="text-xs text-gray-400 mt-1">
+                            💰 Valor: 5 × 1.0 = 5 | 🎲 Chance: Normal (0%)
+                          </div>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-300">Item B: Comum/UNCOMMON</span>
-                          <span className="text-blue-400">7 créditos</span>
+                        <div className="bg-blue-700/30 rounded p-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300">Item B: Comum/UNCOMMON</span>
+                            <span className="text-blue-400 font-bold">7 créditos</span>
+                          </div>
+                          <div className="text-xs text-gray-400 mt-1">
+                            💰 Valor: 5 × 1.3 = 7 | 🎲 Chance: -10% (mais raro)
+                          </div>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-300">Item C: Comum/UNIQUE 👑</span>
-                          <span className="text-pink-400">13 créditos</span>
+                        <div className="bg-pink-700/30 rounded p-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300">Item C: Comum/UNIQUE 👑</span>
+                            <span className="text-pink-400 font-bold">13 créditos</span>
+                          </div>
+                          <div className="text-xs text-gray-400 mt-1">
+                            💰 Valor: 5 × 2.5 = 13 | 🎲 Chance: -60% (muito raro)
+                          </div>
                         </div>
                       </div>
-                      <p className="text-yellow-400 text-xs mt-2">
-                        * Item C é único = 5 × 2.5 = 13 créditos
-                      </p>
+                      <div className="mt-3 p-2 bg-yellow-900/20 rounded border border-yellow-500/30">
+                        <p className="text-yellow-400 text-xs text-center">
+                          💡 <span className="font-semibold">Resultado:</span> Item C vale mais E é mais difícil de conseguir!
+                        </p>
+                      </div>
                     </div>
                     
                     <div className="bg-black/30 rounded-lg p-4">

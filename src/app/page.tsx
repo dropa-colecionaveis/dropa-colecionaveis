@@ -208,7 +208,7 @@ export default function Home() {
               </div>
               <div className="bg-black/20 rounded-xl p-4 border border-pink-500/20">
                 <div className="text-3xl mb-2">📊</div>
-                <h4 className="text-pink-400 font-bold mb-2">7 Níveis de Escassez</h4>
+                <h4 className="text-pink-400 font-bold mb-2">5 Níveis de Escassez</h4>
                 <p className="text-sm text-gray-300"><span className="text-pink-400">Sistema duplo</span> de raridade + escassez</p>
               </div>
             </div>
@@ -242,7 +242,7 @@ export default function Home() {
             </p>
 
             {/* Scarcity Levels */}
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-12">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-12">
               <div className="bg-gray-600/30 backdrop-blur-sm rounded-lg p-3 border border-gray-500/30 hover:scale-105 transition-transform">
                 <div className="text-3xl mb-2">⚪</div>
                 <h4 className="text-gray-300 font-semibold text-sm">Comum</h4>
@@ -258,20 +258,10 @@ export default function Home() {
                 <h4 className="text-blue-300 font-semibold text-sm">Raro</h4>
                 <p className="text-xs text-blue-400">Muito Limitado</p>
               </div>
-              <div className="bg-purple-600/30 backdrop-blur-sm rounded-lg p-3 border border-purple-500/30 hover:scale-105 transition-transform">
-                <div className="text-3xl mb-2">🟣</div>
-                <h4 className="text-purple-300 font-semibold text-sm">Épico</h4>
-                <p className="text-xs text-purple-400">Extremo</p>
-              </div>
               <div className="bg-yellow-600/30 backdrop-blur-sm rounded-lg p-3 border border-yellow-500/30 hover:scale-105 transition-transform">
                 <div className="text-3xl mb-2">🟡</div>
                 <h4 className="text-yellow-300 font-semibold text-sm">Lendário</h4>
-                <p className="text-xs text-yellow-400">Quase Impossível</p>
-              </div>
-              <div className="bg-red-600/30 backdrop-blur-sm rounded-lg p-3 border border-red-500/30 hover:scale-105 transition-transform">
-                <div className="text-3xl mb-2">🔴</div>
-                <h4 className="text-red-300 font-semibold text-sm">Mítico</h4>
-                <p className="text-xs text-red-400">Alguns Exemplares</p>
+                <p className="text-xs text-yellow-400">Muito Raro</p>
               </div>
               <div className="bg-pink-600/30 backdrop-blur-sm rounded-lg p-3 border border-pink-500/30 hover:scale-105 transition-transform animate-pulse">
                 <div className="text-3xl mb-2">🌟</div>
@@ -447,7 +437,7 @@ export default function Home() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Valor:</span>
-                  <span className="text-green-400 font-semibold">2.250 créditos</span>
+                  <span className="text-green-400 font-semibold">750 créditos</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Status:</span>
@@ -473,7 +463,7 @@ export default function Home() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Valor:</span>
-                  <span className="text-green-400 font-semibold">2.250 créditos</span>
+                  <span className="text-green-400 font-semibold">750 créditos</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Status:</span>
@@ -499,7 +489,7 @@ export default function Home() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Valor:</span>
-                  <span className="text-green-400 font-semibold">2.250 créditos</span>
+                  <span className="text-green-400 font-semibold">750 créditos</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Status:</span>
@@ -525,7 +515,7 @@ export default function Home() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Valor:</span>
-                  <span className="text-green-400 font-semibold">2.250 créditos</span>
+                  <span className="text-green-400 font-semibold">750 créditos</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Status:</span>
@@ -551,7 +541,7 @@ export default function Home() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Valor:</span>
-                  <span className="text-green-400 font-semibold">2.250 créditos</span>
+                  <span className="text-green-400 font-semibold">750 créditos</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Status:</span>
@@ -818,14 +808,14 @@ export default function Home() {
               <h4 className="text-white font-bold mb-4">Suporte & Legal</h4>
               <ul className="space-y-2">
                 <li>
-                  <Link href="/terms" className="text-gray-500 text-sm cursor-not-allowed">
+                  <span className="text-gray-500 text-sm">
                     Termos de Uso (Em Breve)
-                  </Link>
+                  </span>
                 </li>
                 <li>
-                  <Link href="/privacy" className="text-gray-500 text-sm cursor-not-allowed">
+                  <span className="text-gray-500 text-sm">
                     Política de Privacidade (Em Breve)
-                  </Link>
+                  </span>
                 </li>
                 <li>
                   <Link href="/suporte" className="text-gray-300 hover:text-white transition-colors text-sm">
