@@ -49,6 +49,7 @@ export default function AdminItems() {
   const [showModal, setShowModal] = useState(false)
   const [editingItem, setEditingItem] = useState<Item | null>(null)
   const [selectedCollection, setSelectedCollection] = useState<string>('ALL')
+  const [selectedRarity, setSelectedRarity] = useState<string>('ALL')
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -281,13 +282,21 @@ export default function AdminItems() {
   }
 
   const getFilteredItems = () => {
-    if (selectedCollection === 'ALL') {
-      return items
-    }
+    let filtered = items
+
+    // Filter by collection
     if (selectedCollection === 'NONE') {
-      return items.filter(item => !item.collectionId)
+      filtered = filtered.filter(item => !item.collectionId)
+    } else if (selectedCollection !== 'ALL') {
+      filtered = filtered.filter(item => item.collectionId === selectedCollection)
     }
-    return items.filter(item => item.collectionId === selectedCollection)
+
+    // Filter by rarity
+    if (selectedRarity !== 'ALL') {
+      filtered = filtered.filter(item => item.rarity === selectedRarity)
+    }
+
+    return filtered
   }
 
   const getRarityColor = (rarity: string) => {
@@ -307,6 +316,17 @@ export default function AdminItems() {
     { value: 'LEGENDARY', label: '🟡 Lendário' },
     { value: 'UNIQUE', label: '🌟 Único' }
   ]
+
+  const getRarityOptions = () => [
+    { value: 'COMUM', label: '⚪ Comum', color: 'text-gray-400' },
+    { value: 'INCOMUM', label: '🟢 Incomum', color: 'text-green-400' },
+    { value: 'RARO', label: '🔵 Raro', color: 'text-blue-400' },
+    { value: 'LENDARIO', label: '🟡 Lendário', color: 'text-yellow-400' }
+  ]
+
+  const getRarityCount = (rarity: string) => {
+    return items.filter(item => item.rarity === rarity).length
+  }
 
   if (status === 'loading' || adminLoading || loading) {
     return (
@@ -337,7 +357,17 @@ export default function AdminItems() {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-4xl font-bold text-white">Gerenciar Itens</h1>
+            <div>
+              <h1 className="text-4xl font-bold text-white">Gerenciar Itens</h1>
+              <p className="text-gray-300 mt-2">
+                Mostrando {getFilteredItems().length} de {items.length} itens
+                {(selectedCollection !== 'ALL' || selectedRarity !== 'ALL') && (
+                  <span className="text-blue-400 ml-2">
+                    (filtros ativos)
+                  </span>
+                )}
+              </p>
+            </div>
             <button
               onClick={() => {
                 resetForm()
@@ -351,29 +381,30 @@ export default function AdminItems() {
 
           {/* Collection Filter */}
           <div className="mb-6">
+            <h3 className="text-lg font-semibold text-white mb-3">🗂️ Filtrar por Coleção</h3>
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setSelectedCollection('ALL')}
                 className={`px-4 py-2 rounded-lg transition duration-200 ${
-                  selectedCollection === 'ALL' 
-                    ? 'bg-white/20 text-white' 
+                  selectedCollection === 'ALL'
+                    ? 'bg-white/20 text-white'
                     : 'bg-white/10 text-gray-300 hover:bg-white/15'
                 }`}
               >
                 Todos ({items.length})
               </button>
-              
+
               <button
                 onClick={() => setSelectedCollection('NONE')}
                 className={`px-4 py-2 rounded-lg transition duration-200 ${
-                  selectedCollection === 'NONE' 
-                    ? 'bg-white/20 text-white' 
+                  selectedCollection === 'NONE'
+                    ? 'bg-white/20 text-white'
                     : 'bg-white/10 text-gray-300 hover:bg-white/15'
                 }`}
               >
                 Sem Coleção ({items.filter(item => !item.collectionId).length})
               </button>
-              
+
               {collections.map((collection) => (
                 <button
                   key={collection.id}
@@ -390,6 +421,52 @@ export default function AdminItems() {
               ))}
             </div>
           </div>
+
+          {/* Rarity Filter */}
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-white mb-3">✨ Filtrar por Raridade</h3>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedRarity('ALL')}
+                className={`px-4 py-2 rounded-lg transition duration-200 ${
+                  selectedRarity === 'ALL'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-white/10 text-gray-300 hover:bg-white/15'
+                }`}
+              >
+                Todas ({items.length})
+              </button>
+
+              {getRarityOptions().map((rarity) => (
+                <button
+                  key={rarity.value}
+                  onClick={() => setSelectedRarity(rarity.value)}
+                  className={`px-4 py-2 rounded-lg transition duration-200 ${
+                    selectedRarity === rarity.value
+                      ? `bg-white/20 ${rarity.color}`
+                      : 'bg-white/10 text-gray-300 hover:bg-white/15'
+                  }`}
+                >
+                  {rarity.label} ({getRarityCount(rarity.value)})
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Clear Filters */}
+          {(selectedCollection !== 'ALL' || selectedRarity !== 'ALL') && (
+            <div className="mb-6 text-center">
+              <button
+                onClick={() => {
+                  setSelectedCollection('ALL')
+                  setSelectedRarity('ALL')
+                }}
+                className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition duration-200"
+              >
+                🗑️ Limpar Filtros
+              </button>
+            </div>
+          )}
 
           {/* Items Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
