@@ -50,6 +50,7 @@ export default function AdminItems() {
   const [editingItem, setEditingItem] = useState<Item | null>(null)
   const [selectedCollection, setSelectedCollection] = useState<string>('ALL')
   const [selectedRarity, setSelectedRarity] = useState<string>('ALL')
+  const [selectedScarcity, setSelectedScarcity] = useState<string>('ALL')
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -296,6 +297,11 @@ export default function AdminItems() {
       filtered = filtered.filter(item => item.rarity === selectedRarity)
     }
 
+    // Filter by scarcity
+    if (selectedScarcity !== 'ALL') {
+      filtered = filtered.filter(item => item.scarcityLevel === selectedScarcity)
+    }
+
     return filtered
   }
 
@@ -304,6 +310,7 @@ export default function AdminItems() {
       case 'COMUM': return 'text-gray-400'
       case 'INCOMUM': return 'text-green-400'
       case 'RARO': return 'text-blue-400'
+      case 'EPICO': return 'text-purple-400'
       case 'LENDARIO': return 'text-yellow-400'
       default: return 'text-gray-400'
     }
@@ -321,11 +328,16 @@ export default function AdminItems() {
     { value: 'COMUM', label: '⚪ Comum', color: 'text-gray-400' },
     { value: 'INCOMUM', label: '🟢 Incomum', color: 'text-green-400' },
     { value: 'RARO', label: '🔵 Raro', color: 'text-blue-400' },
+    { value: 'EPICO', label: '🟣 Épico', color: 'text-purple-400' },
     { value: 'LENDARIO', label: '🟡 Lendário', color: 'text-yellow-400' }
   ]
 
   const getRarityCount = (rarity: string) => {
     return items.filter(item => item.rarity === rarity).length
+  }
+
+  const getScarcityCount = (scarcity: string) => {
+    return items.filter(item => item.scarcityLevel === scarcity).length
   }
 
   if (status === 'loading' || adminLoading || loading) {
@@ -361,7 +373,7 @@ export default function AdminItems() {
               <h1 className="text-4xl font-bold text-white">Gerenciar Itens</h1>
               <p className="text-gray-300 mt-2">
                 Mostrando {getFilteredItems().length} de {items.length} itens
-                {(selectedCollection !== 'ALL' || selectedRarity !== 'ALL') && (
+                {(selectedCollection !== 'ALL' || selectedRarity !== 'ALL' || selectedScarcity !== 'ALL') && (
                   <span className="text-blue-400 ml-2">
                     (filtros ativos)
                   </span>
@@ -453,13 +465,45 @@ export default function AdminItems() {
             </div>
           </div>
 
+          {/* Scarcity Filter */}
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-white mb-3">🌟 Filtrar por Escassez</h3>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedScarcity('ALL')}
+                className={`px-4 py-2 rounded-lg transition duration-200 ${
+                  selectedScarcity === 'ALL'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-white/10 text-gray-300 hover:bg-white/15'
+                }`}
+              >
+                Todas ({items.length})
+              </button>
+
+              {getScarcityOptions().map((scarcity) => (
+                <button
+                  key={scarcity.value}
+                  onClick={() => setSelectedScarcity(scarcity.value)}
+                  className={`px-4 py-2 rounded-lg transition duration-200 ${
+                    selectedScarcity === scarcity.value
+                      ? `bg-white/20 ${ScarcityManager.getScarcityColor(scarcity.value as any)}`
+                      : 'bg-white/10 text-gray-300 hover:bg-white/15'
+                  }`}
+                >
+                  {scarcity.label} ({getScarcityCount(scarcity.value)})
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Clear Filters */}
-          {(selectedCollection !== 'ALL' || selectedRarity !== 'ALL') && (
+          {(selectedCollection !== 'ALL' || selectedRarity !== 'ALL' || selectedScarcity !== 'ALL') && (
             <div className="mb-6 text-center">
               <button
                 onClick={() => {
                   setSelectedCollection('ALL')
                   setSelectedRarity('ALL')
+                  setSelectedScarcity('ALL')
                 }}
                 className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition duration-200"
               >
@@ -640,6 +684,7 @@ export default function AdminItems() {
                   <option value="COMUM">Comum</option>
                   <option value="INCOMUM">Incomum</option>
                   <option value="RARO">Raro</option>
+                  <option value="EPICO">Épico</option>
                   <option value="LENDARIO">Lendário</option>
                 </select>
               </div>
