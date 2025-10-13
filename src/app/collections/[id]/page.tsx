@@ -620,10 +620,10 @@ export default function CollectionDetail({ params }: { params: { id: string } })
                   <div className="relative mb-3">
                     <div className="w-20 h-20 mx-auto bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden">
                       {item.imageUrl && item.imageUrl !== '/items/default.jpg' ? (
-                        <img 
-                          src={item.imageUrl} 
+                        <img
+                          src={item.imageUrl}
                           alt={item.name}
-                          className={`w-full h-full object-cover ${!item.isOwned ? 'grayscale' : ''}`}
+                          className={`w-full h-full object-cover ${!item.isOwned ? 'blur-sm grayscale opacity-40' : ''}`}
                           onError={(e) => {
                             e.currentTarget.style.display = 'none'
                             e.currentTarget.parentElement!.innerHTML = item.isOwned ? '🏆' : '❓'
@@ -633,11 +633,11 @@ export default function CollectionDetail({ params }: { params: { id: string } })
                         <span className="text-2xl">{item.isOwned ? '🏆' : '❓'}</span>
                       )}
                     </div>
-                    
+
                     <div className="absolute -top-1 -right-1 text-xs bg-gray-800 text-white px-1 rounded">
                       #{item.itemNumber}
                     </div>
-                    
+
                     {!item.isOwned && (
                       <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center">
                         <span className="text-white text-2xl">🔒</span>
@@ -909,20 +909,42 @@ export default function CollectionDetail({ params }: { params: { id: string } })
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center">
-              <div className="w-40 h-40 mx-auto bg-gray-700 rounded-xl mb-6 flex items-center justify-center overflow-hidden">
-                {selectedItem.imageUrl && selectedItem.imageUrl !== '/items/default.jpg' ? (
-                  <img 
-                    src={selectedItem.imageUrl} 
-                    alt={selectedItem.name}
-                    className={`w-full h-full object-cover ${!selectedItem.isOwned ? 'grayscale' : ''}`}
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none'
-                      const parent = e.currentTarget.parentElement!
-                      parent.innerHTML = `<span class="text-6xl">${selectedItem.isOwned ? '🏆' : '❓'}</span>`
-                    }}
-                  />
+              <div className="relative w-40 h-40 mx-auto bg-gray-700 rounded-xl mb-6 flex items-center justify-center overflow-hidden">
+                {selectedItem.isOwned ? (
+                  // Item possuído - mostra imagem normal
+                  <>
+                    {selectedItem.imageUrl && selectedItem.imageUrl !== '/items/default.jpg' ? (
+                      <img
+                        src={selectedItem.imageUrl}
+                        alt={selectedItem.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none'
+                          const parent = e.currentTarget.parentElement!
+                          parent.innerHTML = '<span class="text-6xl">🏆</span>'
+                        }}
+                      />
+                    ) : (
+                      <span className="text-6xl">🏆</span>
+                    )}
+                  </>
                 ) : (
-                  <span className="text-6xl">{selectedItem.isOwned ? '🏆' : '❓'}</span>
+                  // Item não possuído - mostra imagem borrada com cadeado
+                  <>
+                    {selectedItem.imageUrl && selectedItem.imageUrl !== '/items/default.jpg' ? (
+                      <img
+                        src={selectedItem.imageUrl}
+                        alt="Item bloqueado"
+                        className="w-full h-full object-cover blur-lg grayscale opacity-30"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none'
+                        }}
+                      />
+                    ) : null}
+                    <div className="absolute inset-0 bg-black/60 rounded-xl flex items-center justify-center">
+                      <span className="text-white text-6xl">🔒</span>
+                    </div>
+                  </>
                 )}
               </div>
               

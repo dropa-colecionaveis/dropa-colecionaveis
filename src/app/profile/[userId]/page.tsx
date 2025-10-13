@@ -679,20 +679,25 @@ export default function PublicProfilePage() {
                             )}
                             
                             {/* Larger Item Image */}
-                            <div className="aspect-square bg-gray-700/50 rounded-md mb-2 flex items-center justify-center overflow-hidden">
+                            <div className="relative aspect-square bg-gray-700/50 rounded-md mb-2 flex items-center justify-center overflow-hidden">
                               <Image
                                 src={item.imageUrl || '/placeholder-item.png'}
-                                alt={item.name}
+                                alt={item.owned ? item.name : 'Item bloqueado'}
                                 width={80}
                                 height={80}
-                                className="object-cover rounded-md"
+                                className={`object-cover rounded-md ${!item.owned ? 'blur-sm grayscale opacity-30' : ''}`}
                               />
+                              {!item.owned && (
+                                <div className="absolute inset-0 bg-black/40 rounded-md flex items-center justify-center">
+                                  <span className="text-white text-lg">🔒</span>
+                                </div>
+                              )}
                             </div>
                             
                             {/* Compact Item Info */}
                             <div className="text-center">
-                              <div className="text-white font-medium text-xs mb-1 line-clamp-2 leading-tight" title={item.name}>
-                                {item.name}
+                              <div className={`font-medium text-xs mb-1 line-clamp-2 leading-tight ${item.owned ? 'text-white' : 'text-gray-500'}`} title={item.owned ? item.name : 'Item não possuído'}>
+                                {item.owned ? item.name : '???'}
                               </div>
                               <div className={`text-xs font-bold ${getRarityColor(item.rarity)}`}>
                                 #{item.itemNumber}

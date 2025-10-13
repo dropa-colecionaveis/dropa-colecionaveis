@@ -4,10 +4,8 @@ import NextAuthProvider from "@/providers/session-provider";
 import CookieConsent from "@/components/CookieConsent";
 import "./globals.css";
 
-// Validate environment variables on app startup (server-side only)
-if (typeof window === 'undefined') {
-  import('@/lib/env-validator').catch(console.error);
-}
+// Environment validation is handled automatically in env-validator.ts
+// No dynamic import needed here as it's already executed on module load
 
 const inter = Inter({
   variable: "--font-inter",
