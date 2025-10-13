@@ -475,7 +475,21 @@ export default function CollectionDetail({ params }: { params: { id: string } })
           <div className={`bg-gradient-to-br ${getThemeColor(collection.theme)} backdrop-blur-lg rounded-lg p-8 mb-8`}>
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
               <div className="flex items-center space-x-4 mb-4 md:mb-0">
-                <span className="text-4xl">{getThemeEmoji(collection.theme)}</span>
+                {collection.imageUrl ? (
+                  <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-700 flex-shrink-0">
+                    <img
+                      src={collection.imageUrl}
+                      alt={collection.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none'
+                        e.currentTarget.parentElement!.innerHTML = `<span class="text-4xl w-full h-full flex items-center justify-center">${getThemeEmoji(collection.theme)}</span>`
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <span className="text-4xl">{getThemeEmoji(collection.theme)}</span>
+                )}
                 <div>
                   <div className="flex items-center space-x-2 mb-2">
                     <h1 className="text-3xl font-bold text-white">{collection.name}</h1>

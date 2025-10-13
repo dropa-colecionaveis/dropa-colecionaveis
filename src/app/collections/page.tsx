@@ -422,8 +422,22 @@ export default function Collections() {
                   style={{ animationDelay: `${index * 0.1}s`, opacity: 0 }}
                 >
                   <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-2xl">{getThemeEmoji(collection.theme)}</span>
+                    <div className="flex items-center space-x-3">
+                      {collection.imageUrl ? (
+                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-700 flex-shrink-0">
+                          <img
+                            src={collection.imageUrl}
+                            alt={collection.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none'
+                              e.currentTarget.parentElement!.innerHTML = `<span class="text-2xl w-full h-full flex items-center justify-center">${getThemeEmoji(collection.theme)}</span>`
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <span className="text-2xl">{getThemeEmoji(collection.theme)}</span>
+                      )}
                       <div>
                         <h3 className="text-xl font-bold text-white">{collection.name}</h3>
                         <div className="text-xs text-gray-300 capitalize">{collection.theme || 'Sem tema'}</div>

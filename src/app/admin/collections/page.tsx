@@ -81,6 +81,9 @@ export default function AdminCollections() {
     totalSupply: '',
     collectionRarity: ''
   })
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -122,20 +125,77 @@ export default function AdminCollections() {
     }
   }
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setSelectedFile(file)
+
+      // Create preview
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        setImagePreview(event.target?.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const uploadImage = async (): Promise<string | null> => {
+    if (!selectedFile) return null
+
+    setUploading(true)
+    try {
+      const uploadFormData = new FormData()
+      uploadFormData.append('file', selectedFile)
+
+      const response = await fetch('/api/admin/upload', {
+        method: 'POST',
+        body: uploadFormData
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        return data.imageUrl
+      } else {
+        const errorData = await response.json()
+        alert(`❌ Erro no upload: ${errorData.error}`)
+        return null
+      }
+    } catch (error) {
+      console.error('Upload error:', error)
+      alert('❌ Erro no upload da imagem')
+      return null
+    } finally {
+      setUploading(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!formData.name || (!selectedThemeId && !themeInput.trim()) || !formData.maxItems) {
       alert('❌ Nome, tema e máximo de itens são obrigatórios!')
       return
     }
 
     try {
+      let finalImageUrl = formData.imageUrl
+
+      // Upload new image if selected
+      if (selectedFile) {
+        const uploadedUrl = await uploadImage()
+        if (uploadedUrl) {
+          finalImageUrl = uploadedUrl
+        } else {
+          return // Stop if upload failed
+        }
+      }
+
       const url = editingCollection ? `/api/admin/collections/${editingCollection.id}` : '/api/admin/collections'
       const method = editingCollection ? 'PUT' : 'POST'
-      
+
       const submitData = {
         ...formData,
+        imageUrl: finalImageUrl,
         themeId: selectedThemeId,
         customTheme: selectedThemeId ? null : themeInput.trim(),
         // Processar campos do Sistema de Escassez
@@ -144,7 +204,7 @@ export default function AdminCollections() {
         availableUntil: formData.availableUntil ? new Date(formData.availableUntil).toISOString() : null,
         collectionRarity: formData.collectionRarity || null
       }
-      
+
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -194,7 +254,10 @@ export default function AdminCollections() {
       setSelectedThemeId(null)
       setThemeInput('')
     }
-    
+
+    // Reset file selection when editing
+    setSelectedFile(null)
+    setImagePreview(null)
     setShowModal(true)
   }
 
@@ -278,6 +341,8 @@ export default function AdminCollections() {
     setSelectedThemeId(null)
     setShowThemeDropdown(false)
     setEditingCollection(null)
+    setSelectedFile(null)
+    setImagePreview(null)
   }
 
   const getThemeDisplay = (collection: Collection) => {
@@ -701,14 +766,63 @@ export default function AdminCollections() {
               </div>
 
               <div>
-                <label className="block text-gray-300 mb-2">URL da Imagem:</label>
-                <input
-                  type="text"
-                  value={formData.imageUrl}
-                  onChange={(e) => setFormData({...formData, imageUrl: e.target.value})}
-                  className="w-full px-3 py-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="/collections/exemplo.jpg"
-                />
+                <label className="block text-gray-300 mb-2">Imagem da Coleção:</label>
+
+                {/* File Upload */}
+                <div className="mb-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                    className="w-full px-3 py-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-purple-600 file:text-white hover:file:bg-purple-700"
+                  />
+                  <div className="text-xs text-gray-400 mt-1">
+                    Formatos aceitos: JPG, PNG, GIF. Tamanho máximo: 5MB
+                  </div>
+                </div>
+
+                {/* Image Preview */}
+                {(imagePreview || (!selectedFile && formData.imageUrl)) && (
+                  <div className="mb-3">
+                    <div className="text-sm text-gray-300 mb-2">Preview:</div>
+                    <div className="w-24 h-24 border border-gray-600 rounded-lg overflow-hidden bg-gray-800 flex items-center justify-center">
+                      {imagePreview ? (
+                        <img
+                          src={imagePreview}
+                          alt="Preview"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : formData.imageUrl ? (
+                        <img
+                          src={formData.imageUrl}
+                          alt="Current"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none'
+                          }}
+                        />
+                      ) : (
+                        <div className="text-gray-500 text-xs text-center">
+                          🖼️<br/>Preview
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Fallback URL input (optional) */}
+                <details className="mb-2">
+                  <summary className="text-sm text-gray-400 cursor-pointer">
+                    📎 Ou usar URL externa (opcional)
+                  </summary>
+                  <input
+                    type="text"
+                    value={formData.imageUrl}
+                    onChange={(e) => setFormData({...formData, imageUrl: e.target.value})}
+                    className="w-full mt-2 px-3 py-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="https://exemplo.com/imagem.jpg"
+                  />
+                </details>
               </div>
 
               <div>
@@ -845,9 +959,10 @@ export default function AdminCollections() {
               <div className="flex space-x-3 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition duration-200"
+                  disabled={uploading}
+                  className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded transition duration-200"
                 >
-                  {editingCollection ? '✅ Atualizar' : '✅ Criar'}
+                  {uploading ? '📤 Enviando...' : editingCollection ? '✅ Atualizar' : '✅ Criar'}
                 </button>
                 <button
                   type="button"
