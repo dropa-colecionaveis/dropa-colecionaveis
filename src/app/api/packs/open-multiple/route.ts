@@ -98,9 +98,18 @@ export async function POST(req: Request) {
         const allItems = itemsByRarity[selectedRarity]
 
         const availableItems = allItems.filter(item => {
-          if (!item.isLimitedEdition) return true
-          if (!item.maxEditions) return true
-          return item.currentEditions < item.maxEditions
+          // CRÍTICO: Filtrar itens únicos já possuídos (se já tem dono, NUNCA pode ser obtido novamente)
+          if (item.isUnique && item.uniqueOwnerId) {
+            return false
+          }
+
+          // Filtrar edições limitadas esgotadas
+          if (item.isLimitedEdition) {
+            if (!item.maxEditions) return true
+            return item.currentEditions < item.maxEditions
+          }
+
+          return true
         })
 
         if (availableItems.length === 0) {
@@ -139,11 +148,39 @@ export async function POST(req: Request) {
 
       // Process items with updated edition counts
       let limitedEditionCounter = new Map()
-      
+
       for (let i = 0; i < selectedItems.length; i++) {
         const selectedItem = selectedItems[i]
         let limitedEditionId = null
         let limitedEditionInfo = null
+
+        // CRÍTICO: Para itens únicos, marcar como possuído e validar
+        if (selectedItem.isUnique) {
+          // Verificação dupla: garantir que o usuário não possui este item único
+          const existingUserItem = await tx.userItem.findFirst({
+            where: {
+              userId: session.user.id,
+              itemId: selectedItem.id
+            }
+          })
+
+          if (existingUserItem) {
+            throw new Error(`User already owns unique item: ${selectedItem.name}`)
+          }
+
+          // Marcar como possuído (com verificação de condição para evitar condições de corrida)
+          const updatedItem = await tx.item.updateMany({
+            where: {
+              id: selectedItem.id,
+              uniqueOwnerId: null // Só atualiza se ainda estiver disponível
+            },
+            data: { uniqueOwnerId: session.user.id }
+          })
+
+          if (updatedItem.count === 0) {
+            throw new Error(`Unique item no longer available: ${selectedItem.name}`)
+          }
+        }
 
         if (selectedItem.isLimitedEdition) {
           const updatedItem = updatedItemsMap.get(selectedItem.id)

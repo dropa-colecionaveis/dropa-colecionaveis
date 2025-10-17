@@ -60,16 +60,35 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Get random item of selected rarity (usando cache)
+    // Get random item of selected rarity (usando cache) with unique item filtering
     const { getCachedItemsByRarity } = await import('@/lib/rarity-system')
     const itemsByRarity = await getCachedItemsByRarity()
-    const items = itemsByRarity[selectedRarity as keyof typeof itemsByRarity]
+    const allItems = itemsByRarity[selectedRarity as keyof typeof itemsByRarity]
 
-    if (!items || items.length === 0) {
+    if (!allItems || allItems.length === 0) {
       return NextResponse.json({ error: 'No items available for this rarity' }, { status: 404 })
     }
 
-    const randomItem = items[Math.floor(Math.random() * items.length)]
+    // CRÍTICO: Filtrar itens únicos já possuídos (mesmo filtro dos outros endpoints)
+    const availableItems = allItems.filter(item => {
+      // Filtrar itens únicos já possuídos (se já tem dono, NUNCA pode ser obtido novamente)
+      if (item.isUnique && item.uniqueOwnerId) {
+        return false
+      }
+
+      // Filtrar edições limitadas esgotadas
+      if (item.isLimitedEdition && item.maxEditions && item.currentEditions >= item.maxEditions) {
+        return false
+      }
+
+      return true
+    })
+
+    if (availableItems.length === 0) {
+      return NextResponse.json({ error: 'No available items for this rarity at this time' }, { status: 404 })
+    }
+
+    const randomItem = availableItems[Math.floor(Math.random() * availableItems.length)]
 
     // Check if this is the user's first pack and first item BEFORE creating records
     const userPacksCount = await prisma.packOpening.count({
@@ -82,9 +101,37 @@ export async function POST(req: NextRequest) {
     const isFirstPack = userPacksCount === 0 // Will be first pack
     const isFirstItem = userItemsCount === 0 // Will be first item
 
-    // Create user item, pack opening record, and mark free pack as claimed
-    const [userItem, packOpening] = await prisma.$transaction([
-      prisma.userItem.create({
+    // Create user item, pack opening record, and mark free pack as claimed with unique item protection
+    const result = await prisma.$transaction(async (tx) => {
+      // CRÍTICO: Para itens únicos, marcar como possuído e validar (mesmo sistema dos outros endpoints)
+      if (randomItem.isUnique) {
+        // Verificação dupla: garantir que o usuário não possui este item único
+        const existingUserItem = await tx.userItem.findFirst({
+          where: {
+            userId: session.user.id,
+            itemId: randomItem.id
+          }
+        })
+
+        if (existingUserItem) {
+          throw new Error(`User already owns unique item: ${randomItem.name}`)
+        }
+
+        // Marcar como possuído (com verificação de condição para evitar condições de corrida)
+        const updatedItem = await tx.item.updateMany({
+          where: {
+            id: randomItem.id,
+            uniqueOwnerId: null // Só atualiza se ainda estiver disponível
+          },
+          data: { uniqueOwnerId: session.user.id }
+        })
+
+        if (updatedItem.count === 0) {
+          throw new Error(`Unique item no longer available: ${randomItem.name}`)
+        }
+      }
+
+      const userItem = await tx.userItem.create({
         data: {
           userId: session.user.id,
           itemId: randomItem.id
@@ -92,22 +139,28 @@ export async function POST(req: NextRequest) {
         include: {
           item: true
         }
-      }),
-      prisma.packOpening.create({
+      })
+
+      const packOpening = await tx.packOpening.create({
         data: {
           userId: session.user.id,
           packId: freePackGrant.packId,
           itemId: randomItem.id
         }
-      }),
-      prisma.freePackGrant.update({
+      })
+
+      await tx.freePackGrant.update({
         where: { id: freePackGrantId },
-        data: { 
+        data: {
           claimed: true,
           claimedAt: new Date()
         }
       })
-    ])
+
+      return { userItem, packOpening }
+    })
+
+    const { userItem, packOpening } = result
 
     // Process stats and achievements with integrity protection
     const { integrityGuard } = await import('@/lib/integrity-guard')
