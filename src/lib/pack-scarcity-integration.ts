@@ -53,7 +53,7 @@ export class PackScarcityIntegration {
                 isUnique: false,
                 isLimitedEdition: false
               },
-              // Itens únicos disponíveis
+              // Itens únicos REALMENTE disponíveis (sem dono)
               {
                 isUnique: true,
                 uniqueOwnerId: null
@@ -218,11 +218,30 @@ export class PackScarcityIntegration {
             return { success: false, message: 'Item único já possui proprietário' }
           }
 
-          // Marcar como possuído
-          await txClient.item.update({
-            where: { id: itemId },
+          // Verificação dupla: garantir que o usuário não possui este item único
+          const existingUserItem = await txClient.userItem.findFirst({
+            where: {
+              userId,
+              itemId
+            }
+          })
+
+          if (existingUserItem) {
+            return { success: false, message: 'Usuário já possui este item único' }
+          }
+
+          // Marcar como possuído (com verificação de condição para evitar condições de corrida)
+          const updatedItem = await txClient.item.updateMany({
+            where: {
+              id: itemId,
+              uniqueOwnerId: null // Só atualiza se ainda estiver disponível
+            },
             data: { uniqueOwnerId: userId }
           })
+
+          if (updatedItem.count === 0) {
+            return { success: false, message: 'Item único não está mais disponível' }
+          }
 
           // Criar entrada de UserItem
           await txClient.userItem.create({

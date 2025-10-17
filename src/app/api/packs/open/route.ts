@@ -92,7 +92,7 @@ export async function POST(req: Request) {
       // IMPORTANTE: Aplicar regras de escassez mesmo no fallback
       availableItems = allAvailableItems
         .filter(item => {
-          // Filtrar itens únicos já possuídos
+          // Filtrar itens únicos já possuídos (se já tem dono, NUNCA pode ser obtido novamente)
           if (item.isUnique && item.uniqueOwnerId) {
             return false
           }
