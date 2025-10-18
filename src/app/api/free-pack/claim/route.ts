@@ -88,7 +88,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No available items for this rarity at this time' }, { status: 404 })
     }
 
-    const randomItem = availableItems[Math.floor(Math.random() * availableItems.length)]
+    // CORREÇÃO: Aplicar seleção ponderada baseada em escassez
+    const { PackScarcityIntegration } = await import('@/lib/pack-scarcity-integration')
+    const { ScarcityManager } = await import('@/lib/scarcity-system')
+
+    // Calcular scores de escassez para todos os itens disponíveis
+    const itemsWithScores = availableItems.map(item => {
+      const scarcityInfo = ScarcityManager.calculateItemScarcity(item)
+      const availabilityScore = PackScarcityIntegration.calculateAvailabilityScore(item, scarcityInfo)
+      return {
+        ...item,
+        availabilityScore
+      }
+    })
+
+    // Usar seleção ponderada baseada em escassez
+    const randomItem = PackScarcityIntegration.selectItemByScarcityWeight(itemsWithScores) || availableItems[0]
 
     // Check if this is the user's first pack and first item BEFORE creating records
     const userPacksCount = await prisma.packOpening.count({

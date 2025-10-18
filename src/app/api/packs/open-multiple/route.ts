@@ -116,7 +116,22 @@ export async function POST(req: Request) {
           throw new Error(`No items available for rarity ${selectedRarity}`)
         }
 
-        const selectedItem = availableItems[Math.floor(Math.random() * availableItems.length)]
+        // CORREÇÃO: Aplicar seleção ponderada baseada em escassez
+        const { PackScarcityIntegration } = await import('@/lib/pack-scarcity-integration')
+        const { ScarcityManager } = await import('@/lib/scarcity-system')
+
+        // Calcular scores de escassez para todos os itens disponíveis
+        const itemsWithScores = availableItems.map(item => {
+          const scarcityInfo = ScarcityManager.calculateItemScarcity(item)
+          const availabilityScore = PackScarcityIntegration.calculateAvailabilityScore(item, scarcityInfo)
+          return {
+            ...item,
+            availabilityScore
+          }
+        })
+
+        // Usar seleção ponderada baseada em escassez
+        const selectedItem = PackScarcityIntegration.selectItemByScarcityWeight(itemsWithScores) || availableItems[0]
         selectedItems.push(selectedItem)
       }
 

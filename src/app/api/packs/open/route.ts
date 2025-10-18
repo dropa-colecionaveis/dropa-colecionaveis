@@ -104,17 +104,23 @@ export async function POST(req: Request) {
 
           return true
         })
-        .map(item => ({
-          id: item.id,
-          name: item.name,
-          rarity: item.rarity,
-          scarcityLevel: item.scarcityLevel || 'COMMON',
-          isUnique: item.isUnique || false,
-          isLimitedEdition: item.isLimitedEdition || false,
-          isTemporal: item.isTemporal || false,
-          availabilityScore: 100,
-          collectionId: item.collectionId
-        }))
+        .map(item => {
+          // CORREÇÃO: Calcular score de escassez mesmo no fallback
+          const scarcityInfo = ScarcityManager.calculateItemScarcity(item)
+          const availabilityScore = PackScarcityIntegration.calculateAvailabilityScore(item, scarcityInfo)
+
+          return {
+            id: item.id,
+            name: item.name,
+            rarity: item.rarity,
+            scarcityLevel: item.scarcityLevel || 'COMMON',
+            isUnique: item.isUnique || false,
+            isLimitedEdition: item.isLimitedEdition || false,
+            isTemporal: item.isTemporal || false,
+            availabilityScore,
+            collectionId: item.collectionId
+          }
+        })
     }
 
     // Select random rarity based on pack probabilities
@@ -123,15 +129,22 @@ export async function POST(req: Request) {
     // Filter available items by selected rarity
     const itemsOfSelectedRarity = availableItems.filter(item => item.rarity === selectedRarity)
 
-    if (itemsOfSelectedRarity.length === 0) {
-      // Fallback to any available item if none of selected rarity
-      const fallbackItem = availableItems[Math.floor(Math.random() * availableItems.length)]
-      console.log(`No items of rarity ${selectedRarity} available, using fallback item`)
+    // CORREÇÃO: Usar seleção ponderada baseada em escassez
+    const selectedItemData = itemsOfSelectedRarity.length > 0
+      ? PackScarcityIntegration.selectItemByScarcityWeight(itemsOfSelectedRarity)
+      : PackScarcityIntegration.selectItemByScarcityWeight(availableItems)
+
+    if (!selectedItemData) {
+      console.log(`No items available after scarcity selection for rarity ${selectedRarity}`)
+      return NextResponse.json(
+        { error: 'No items available at this time due to scarcity constraints' },
+        { status: 500 }
+      )
     }
 
-    const selectedItemData = itemsOfSelectedRarity.length > 0 
-      ? itemsOfSelectedRarity[Math.floor(Math.random() * itemsOfSelectedRarity.length)]
-      : availableItems[Math.floor(Math.random() * availableItems.length)]
+    if (itemsOfSelectedRarity.length === 0) {
+      console.log(`No items of rarity ${selectedRarity} available, using scarcity-weighted fallback item: ${selectedItemData.name}`)
+    }
 
     // Get full item data
     const selectedItem = await prisma.item.findUnique({

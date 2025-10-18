@@ -131,8 +131,9 @@ export class PackScarcityIntegration {
         availableItems.push(...filteredItems.filter(item => item !== null) as AvailableItem[])
       }
 
-      // Ordenar por score de disponibilidade (mais disponíveis primeiro para drops normais)
-      return availableItems.sort((a, b) => b.availabilityScore - a.availabilityScore)
+      // CORREÇÃO: Retornar itens com seus scores para seleção ponderada
+      // NÃO ordenar aqui - deixar para o sistema de seleção ponderada
+      return availableItems
 
     } catch (error) {
       console.error('Error getting available items for pack:', error)
@@ -142,41 +143,74 @@ export class PackScarcityIntegration {
 
   /**
    * Calcula score de disponibilidade baseado em escassez
+   * MENOR score = MAIS DIFÍCIL de obter (mais escasso)
+   * MAIOR score = MAIS FÁCIL de obter (menos escasso)
    */
-  private static calculateAvailabilityScore(item: any, scarcityInfo: any): number {
+  static calculateAvailabilityScore(item: any, scarcityInfo: any): number {
     let score = 100
 
-    // Reduzir score baseado no nível de escassez
-    const scarcityPenalty = {
-      [ScarcityLevel.COMMON]: 0,
-      [ScarcityLevel.UNCOMMON]: -10,
-      [ScarcityLevel.RARE]: -20,
-      [ScarcityLevel.LEGENDARY]: -40,
-      [ScarcityLevel.UNIQUE]: -60
+    // CORREÇÃO: Aplicar reduções de chance conforme especificações originais
+    const scarcityChanceReduction = {
+      [ScarcityLevel.COMMON]: 1.0,      // 0% redução de chance
+      [ScarcityLevel.UNCOMMON]: 0.9,    // -10% redução de chance
+      [ScarcityLevel.RARE]: 0.8,        // -20% redução de chance
+      [ScarcityLevel.LEGENDARY]: 0.6,   // -40% redução de chance
+      [ScarcityLevel.UNIQUE]: 0.4       // -60% redução de chance
     }
 
-    score += scarcityPenalty[item.scarcityLevel as ScarcityLevel] || 0
+    score *= scarcityChanceReduction[item.scarcityLevel as ScarcityLevel] || 1.0
 
-    // Penalizar itens únicos e limitados
-    if (item.isUnique) {
-      score -= 70
-    }
+    // Para itens únicos, aplicar apenas a redução base já configurada acima
+    // (não aplicar redução adicional, pois já está na escala de escassez)
 
+    // Reduzir score baseado na disponibilidade de edições limitadas
     if (item.isLimitedEdition && scarcityInfo.availabilityPercentage < 50) {
-      score -= (50 - scarcityInfo.availabilityPercentage)
+      const scarcityFactor = scarcityInfo.availabilityPercentage / 100
+      score *= scarcityFactor // Quanto menos disponível, menor o score
     }
 
-    // Bonificar itens temporais próximos do fim
+    // Reduzir score para itens temporais próximos do fim (mais valiosos)
     if (item.isTemporal && item.availableUntil) {
       const timeRemaining = new Date(item.availableUntil).getTime() - Date.now()
       const daysRemaining = timeRemaining / (1000 * 60 * 60 * 24)
-      
+
       if (daysRemaining < 7) {
-        score += 20 // Bonificar itens que expiram em breve
+        score *= 0.5 // 50% mais difícil para itens que expiram em breve
       }
     }
 
-    return Math.max(0, score)
+    return Math.max(0.1, score) // Garantir que sempre há uma chance mínima
+  }
+
+  /**
+   * Seleciona um item baseado em probabilidade ponderada pelos scores de escassez
+   * Itens com scores MAIORES têm MAIOR probabilidade de serem selecionados
+   */
+  static selectItemByScarcityWeight(items: AvailableItem[]): AvailableItem | null {
+    if (items.length === 0) return null
+    if (items.length === 1) return items[0]
+
+    // Calcular soma total dos scores
+    const totalScore = items.reduce((sum, item) => sum + item.availabilityScore, 0)
+
+    if (totalScore === 0) {
+      // Fallback para seleção aleatória se todos os scores forem 0
+      return items[Math.floor(Math.random() * items.length)]
+    }
+
+    // Gerar número aleatório entre 0 e totalScore
+    let randomValue = Math.random() * totalScore
+
+    // Selecionar item baseado na probabilidade ponderada
+    for (const item of items) {
+      randomValue -= item.availabilityScore
+      if (randomValue <= 0) {
+        return item
+      }
+    }
+
+    // Fallback para último item (não deveria acontecer)
+    return items[items.length - 1]
   }
 
   /**
