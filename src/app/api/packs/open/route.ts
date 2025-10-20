@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { selectRandomRarity, getCachedItemsByRarity } from '@/lib/rarity-system'
 import { userStatsService } from '@/lib/user-stats'
 import PackScarcityIntegration, { AvailableItem } from '@/lib/pack-scarcity-integration'
+import { ScarcityManager } from '@/lib/scarcity-system'
 
 export async function POST(req: Request) {
   try {
