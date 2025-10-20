@@ -3,6 +3,9 @@ import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
 
+export const dynamic = 'force-dynamic'
+
+
 // GET - Busca histórico de recompensas diárias do usuário
 export async function GET(request: Request) {
   try {

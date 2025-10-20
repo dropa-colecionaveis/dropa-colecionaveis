@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 
+export const dynamic = 'force-dynamic'
+
+
 export interface RecentActivity {
   id: string
   type: 'PACK_OPENED' | 'ITEM_OBTAINED' | 'MARKETPLACE_SALE' | 'MARKETPLACE_PURCHASE' | 'ACHIEVEMENT_UNLOCKED' | 'COLLECTION_COMPLETED' | 'CREDITS_PURCHASED' | 'DAILY_REWARD_CLAIMED'

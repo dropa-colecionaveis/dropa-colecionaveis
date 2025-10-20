@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { ListingStatus } from '@prisma/client'
+export const dynamic = 'force-dynamic'
+
 
 export async function GET(req: Request) {
   try {
