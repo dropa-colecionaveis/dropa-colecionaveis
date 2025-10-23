@@ -446,7 +446,20 @@ export default function OpenPack() {
                     <div className="relative mb-4 sm:mb-6">
                       <div className={`w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 mx-auto rounded-2xl mb-4 sm:mb-6 flex items-center justify-center text-3xl sm:text-5xl lg:text-6xl transform hover:scale-110 transition-transform duration-500 shadow-2xl ${getRarityColor(openResult.item.rarity).split(' ')[1]} relative overflow-hidden`}>
                         <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
-                        <div className="relative z-10">🏆</div>
+                        <img
+                          src={openResult.item.imageUrl || '/placeholder-item.svg'}
+                          alt={openResult.item.name}
+                          className="w-full h-full object-cover rounded-2xl relative z-10"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const fallbackDiv = target.parentElement?.querySelector('.fallback-icon') as HTMLElement;
+                            if (fallbackDiv) fallbackDiv.style.display = 'flex';
+                          }}
+                        />
+                        <div className="fallback-icon absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-2xl hidden items-center justify-center text-3xl sm:text-5xl lg:text-6xl z-10">
+                          🏆
+                        </div>
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
                       </div>
                       <div className={`absolute -inset-4 ${getRarityColor(openResult.item.rarity).split(' ')[1]} rounded-3xl blur-2xl opacity-40 animate-pulse`}></div>
@@ -581,7 +594,20 @@ export default function OpenPack() {
                           <div className="flex justify-center items-center mb-4 flex-shrink-0">
                             <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl shadow-lg transform group-hover:scale-110 transition-transform duration-300 ${getRarityColor(item.rarity).split(' ')[1]} relative overflow-hidden`}>
                               <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
-                              <div className="relative z-10">🏆</div>
+                              <img
+                                src={item.imageUrl || '/placeholder-item.svg'}
+                                alt={item.name}
+                                className="w-full h-full object-cover rounded-2xl relative z-10"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = 'none';
+                                  const fallbackDiv = target.parentElement?.querySelector('.fallback-icon') as HTMLElement;
+                                  if (fallbackDiv) fallbackDiv.style.display = 'flex';
+                                }}
+                              />
+                              <div className="fallback-icon absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-2xl hidden items-center justify-center text-2xl sm:text-3xl z-10">
+                                🏆
+                              </div>
                               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
                             </div>
                           </div>
@@ -687,7 +713,20 @@ export default function OpenPack() {
                         <div className="relative mb-6">
                           <div className={`w-36 h-36 mx-auto rounded-3xl mb-6 flex items-center justify-center text-5xl transform hover:scale-110 transition-transform duration-500 shadow-2xl ${getRarityColor(multipleOpenResult.items[currentItemIndex].rarity).split(' ')[1]} relative overflow-hidden`}>
                             <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
-                            <div className="relative z-10 animate-pulse">🏆</div>
+                            <img
+                              src={multipleOpenResult.items[currentItemIndex].imageUrl || '/placeholder-item.svg'}
+                              alt={multipleOpenResult.items[currentItemIndex].name}
+                              className="w-full h-full object-cover rounded-3xl relative z-10"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                const fallbackDiv = target.parentElement?.querySelector('.fallback-icon') as HTMLElement;
+                                if (fallbackDiv) fallbackDiv.style.display = 'flex';
+                              }}
+                            />
+                            <div className="fallback-icon absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-3xl hidden items-center justify-center text-5xl z-10">
+                              🏆
+                            </div>
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
                           </div>
                           <div className={`absolute -inset-4 ${getRarityColor(multipleOpenResult.items[currentItemIndex].rarity).split(' ')[1]} rounded-3xl blur-2xl opacity-30 animate-pulse`}></div>

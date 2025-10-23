@@ -209,11 +209,20 @@ export default function DailyRewardPackModal({ isOpen, onClose, onItemReceived }
             <p className="text-gray-300 mb-6">Você ganhou:</p>
             
             <div className="bg-gray-800 rounded-lg p-4 mb-6 border border-gray-600">
-              <img 
-                src={wonItem.imageUrl || '/placeholder-item.png'} 
+              <img
+                src={wonItem.imageUrl || '/placeholder-item.svg'}
                 alt={wonItem.name}
                 className="w-24 h-24 mx-auto mb-3 rounded-lg object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const fallbackDiv = target.parentElement?.querySelector('.fallback-icon') as HTMLElement;
+                  if (fallbackDiv) fallbackDiv.style.display = 'flex';
+                }}
               />
+              <div className="fallback-icon w-24 h-24 mx-auto mb-3 rounded-lg bg-gray-700 border border-gray-600 hidden items-center justify-center text-3xl">
+                🏆
+              </div>
               <h3 className="font-bold text-lg text-white mb-1">{wonItem.name}</h3>
               <p className="text-gray-400 text-sm mb-2">{wonItem.description}</p>
               <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
