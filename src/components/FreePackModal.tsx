@@ -318,9 +318,23 @@ export default function FreePackModal({ isOpen, onClose, onItemReceived }: FreeP
                 <div className={`absolute -inset-4 ${getRarityColor(wonItem.rarity)} rounded-3xl blur-2xl opacity-40 animate-pulse`}></div>
                 
                 <div className="relative z-10">
-                  <div className={`w-20 h-20 sm:w-28 sm:h-28 lg:w-32 lg:h-32 mx-auto rounded-2xl mb-4 sm:mb-6 flex items-center justify-center text-3xl sm:text-4xl lg:text-5xl shadow-2xl ${getRarityColor(wonItem.rarity)} relative overflow-hidden`}>
+                  <div className={`w-20 h-20 sm:w-28 sm:h-28 lg:w-32 lg:h-32 mx-auto rounded-2xl mb-4 sm:mb-6 shadow-2xl ${getRarityColor(wonItem.rarity)} relative overflow-hidden`}>
                     <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
-                    <div className="relative z-10">🏆</div>
+                    <img
+                      src={wonItem.imageUrl || '/placeholder-item.svg'}
+                      alt={wonItem.name}
+                      className="w-full h-full object-cover rounded-2xl relative z-10"
+                      onError={(e) => {
+                        // Fallback final para o ícone de troféu se nem a imagem nem o placeholder funcionarem
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const fallbackDiv = target.parentElement?.querySelector('.fallback-icon') as HTMLElement;
+                        if (fallbackDiv) fallbackDiv.style.display = 'flex';
+                      }}
+                    />
+                    <div className="fallback-icon absolute inset-0 flex items-center justify-center text-3xl sm:text-4xl lg:text-5xl relative z-10" style={{ display: 'none' }}>
+                      🏆
+                    </div>
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
                   </div>
                   
